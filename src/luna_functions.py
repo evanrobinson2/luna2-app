@@ -121,13 +121,16 @@ async def director_create_room(room_name: str):
             is_direct=False
         )
 
-        if isinstance(create_resp, RoomCreateResponse):
+        if isinstance(create_resp, RoomCreateResponse):            
             logger.info(f"Room created! ID: {create_resp.room_id}")
+            return create_resp.room_id
         else:
             logger.warning(f"Room creation response was not a success: {create_resp}")
+            return None
 
     except Exception as e:
         logger.error(f"Error creating room: {e}")
+        return None
 
 # 2. ADD PARTICIPANT (Invite arbitrary user)
 async def director_invite_user(room_id: str, user_id: str):
@@ -165,5 +168,4 @@ def get_director():
     """
     Return a string indicating if DIRECTOR_CLIENT is None or the Director's user_id.
     """
-    print (DIRECTOR_CLIENT)
     return DIRECTOR_CLIENT
