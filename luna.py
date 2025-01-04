@@ -17,6 +17,7 @@ from nio import RoomMessageText, InviteMemberEvent, AsyncClient, LoginResponse
 
 from src.luna_functions import director_login, on_room_message, on_invite_event, DIRECTOR_CLIENT
 from src.console_functions import console_loop
+import src.luna_functions
 
 def configure_logging():
     """
@@ -65,10 +66,8 @@ async def main_logic():
     # 2. Log in the Director
     resp = await client.login(password="12345", device_name="LunaDirector")
     if isinstance(resp, LoginResponse):
-        logger.info("Director logged in successfully.")
-        # Set the global DIRECTOR_CLIENT
-        global DIRECTOR_CLIENT
-        DIRECTOR_CLIENT = client
+        logger.info("Director logged in successfully.") 
+        src.luna_functions.DIRECTOR_CLIENT = client
     else:
         logger.error(f"Failed to log in: {resp}")
         sys.exit(1)

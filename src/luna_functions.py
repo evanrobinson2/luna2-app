@@ -33,7 +33,6 @@ AUTO_JOIN_ENABLED = True             # Toggle for auto-join
 DEFAULT_INVITE_USER = "@me:localhost"
 
 async def director_login(homeserver_url: str, username: str, password: str) -> AsyncClient:
-    global DIRECTOR_CLIENT
     logger.debug(f"director_login: homeserver_url={homeserver_url}, username={username}")
 
     client = AsyncClient(homeserver_url, f"@{username}:localhost")
@@ -166,7 +165,5 @@ def get_director():
     """
     Return a string indicating if DIRECTOR_CLIENT is None or the Director's user_id.
     """
-    if DIRECTOR_CLIENT is None:
-        return "Director is not initialized (None)."
-    else:
-        return f"Director is initialized as: {DIRECTOR_CLIENT}"
+    print (DIRECTOR_CLIENT)
+    return DIRECTOR_CLIENT
