@@ -31,11 +31,6 @@ def configure_logging():
 
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)  # Show INFO+ in console
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
-
     file_handler = logging.FileHandler("server.log", mode="a")  # Append to server.log
     file_handler.setLevel(logging.DEBUG)  # Store everything (DEBUG+) in the file
     file_handler.setFormatter(formatter)

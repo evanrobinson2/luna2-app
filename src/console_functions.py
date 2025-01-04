@@ -19,6 +19,9 @@ from src.luna_functions import (
 
 logger = logging.getLogger(__name__)
 
+LOGFILE_PATH = "server.log"  
+# Adjust if your log file is in a different location.
+
 def console_loop(loop):
     """
     A blocking loop reading console commands in a background thread.
@@ -31,7 +34,12 @@ def console_loop(loop):
             continue
 
         lower_cmd = cmd.strip().lower()
+
+        # We can still log if we want to, but it will only go to the file now.
         logger.debug(f"Raw input is: [{repr(cmd)}]")
+
+        # Show what the user typed + the current Director (just for demonstration)
+        # This won't appear in console if there's no StreamHandler, but it will go to the logfile.
         print("Command entered: " + lower_cmd + " while director is: " + str(src.luna_functions.DIRECTOR_CLIENT))
 
         if lower_cmd == "exit":
@@ -48,6 +56,10 @@ def console_loop(loop):
         elif lower_cmd == "autojoin off":
             set_auto_join(False)
             logger.info("Auto-join turned OFF.")
+
+        elif lower_cmd == "log":
+            # NEW COMMAND: Show the log file path (or info) to the user
+            print(f"Log file is located at: {LOGFILE_PATH}")
 
         elif cmd.startswith("send "):
             message_text = cmd[len("send "):].strip()
@@ -144,7 +156,6 @@ def console_loop(loop):
                 print("Object is: " + str(identity))
             else:
                 print("No Director Found")
-            
 
         else:
             logger.debug(f"Unrecognized command: {cmd}")
@@ -161,6 +172,7 @@ def show_help():
           "invite admin <roomId>          - Invite an 'admin' user to <roomId>\n"
           "clear                          - Clear the console screen\n"
           "who                            - Show whether Director is None or which user it's logged in as\n"
+          "log                            - Show the path of the logfile\n"
           "\n(Type the command, then press Enter.)\n")
     logger.info("Displayed help to the console user.")
 
