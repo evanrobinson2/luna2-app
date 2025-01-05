@@ -5,8 +5,9 @@ Contains:
 - Token-based login logic (load_or_login_client)
 - Global reference to the Director client
 - Message & invite callbacks
+- Utility to load/save sync token
 """
-
+from . import ai_functions
 import asyncio
 import logging
 import sys
@@ -23,15 +24,16 @@ from nio import (
 )
 
 logger = logging.getLogger(__name__)
+logging.getLogger("nio.responses").setLevel(logging.WARNING)
 
-DIRECTOR_CLIENT: AsyncClient = None  # Global reference for event callbacks
+DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
 TOKEN_FILE = "director_token.json"   # Where we store/reuse the access token
+SYNC_TOKEN_FILE = "sync_token.json"  # Where we store the last sync token
 
 async def load_or_login_client(homeserver_url: str, username: str, password: str) -> AsyncClient:
     """
-    Attempt to load a saved access token from TOKEN_FILE. If it exists,
-    reuse that token. Otherwise, do a password login, and store the new token.
-    Also sets DIRECTOR_CLIENT global so event callbacks can use it.
+    Attempt to load a saved access token. If found, reuse it.
+    Otherwise do a password login, store the new token, and return a client.
     """
     global DIRECTOR_CLIENT
 
@@ -53,13 +55,11 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
             client.access_token = saved_access_token
             client.device_id = saved_device_id
 
-            # Optionally, you could do a quick test (like a whoami or minimal sync).
-            # If that fails, fallback to password login. We'll skip that for brevity.
             DIRECTOR_CLIENT = client
             logger.info(f"Using saved token for user {saved_user_id}.")
             return client
 
-    # 2) If we get here, no valid token file. Perform password login.
+    # 2) If no valid token file, do a normal login
     logger.debug("No valid token found, attempting normal password login.")
     client = AsyncClient(homeserver=homeserver_url, user=full_user_id)
     resp = await client.login(password=password, device_name="LunaDirector")
@@ -89,10 +89,34 @@ def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     logger.debug(f"Token info for {user_id} saved to {TOKEN_FILE}.")
 
 
-###
-# Event Callbacks for Room Messages and Invites
-###
+### Sync Token Management
 
+def load_sync_token() -> str:
+    """
+    Load the previously saved sync token (next_batch).
+    Returns None if no file or invalid content.
+    """
+    if not os.path.exists(SYNC_TOKEN_FILE):
+        return None
+    try:
+        with open(SYNC_TOKEN_FILE, "r") as f:
+            return json.load(f).get("sync_token")
+    except Exception as e:
+        logger.warning(f"Failed to load sync token: {e}")
+    return None
+
+def store_sync_token(sync_token: str) -> None:
+    """
+    Persist the sync token so we won't re-fetch old messages on next run.
+    """
+    if not sync_token:
+        return
+    with open(SYNC_TOKEN_FILE, "w") as f:
+        json.dump({"sync_token": sync_token}, f)
+    logger.debug(f"Sync token saved to {SYNC_TOKEN_FILE}.")
+
+
+### Callbacks
 async def on_room_message(room, event):
     """
     Called whenever a RoomMessageText event is received in a room the client is in.
@@ -108,9 +132,44 @@ async def on_room_message(room, event):
 
     if isinstance(event, RoomMessageText):
         sender = event.sender
+        user_message = event.body
+        logger.info(f"Received message in {room.room_id} from {sender}: {user_message}")
+
+        # Call GPT for a response
+        gpt_reply = await ai_functions.get_gpt_response(user_message)
+        logger.info(f"GPT replied: {gpt_reply}")
+
+        # Send GPT response back to the room
+        await DIRECTOR_CLIENT.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": gpt_reply}
+        )
+
+
+
+async def on_room_message_dep(room, event):
+    """
+    Called whenever a RoomMessageText event is received in a room the client is in.
+    """
+    global DIRECTOR_CLIENT
+    if not DIRECTOR_CLIENT:
+        logger.warning("No DIRECTOR_CLIENT set. Cannot respond to messages.")
+        return
+
+    if event.sender == DIRECTOR_CLIENT.user:
+        logger.debug("Received message from ourselves; ignoring.")
+        return
+
+    logger.debug(f"Got an event of type: {type(event)}, content: {event.source}")
+
+    if isinstance(event, RoomMessageText):
+        sender = event.sender
         body = event.body
         logger.info(f"Received message in {room.room_id} from {sender}: {body}")
-
+        
+        ai_functions.get_ai_response(f'{body}')
+        logging.info(f"GPT Response: {ai_functions.get_ai_response(f'{body}')}")
         response = f"Hello {sender}, you said '{body}' (auto-respond)."
         logger.debug(f"Sending response: {response}")
 
@@ -119,7 +178,6 @@ async def on_room_message(room, event):
             message_type="m.room.message",
             content={"msgtype": "m.text", "body": response}
         )
-
 
 async def on_invite_event(room, event):
     """

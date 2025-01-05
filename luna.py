@@ -29,6 +29,7 @@ def configure_logging():
     Configure Python's logging so logs go to both console and server.log.
     """
     logger = logging.getLogger(__name__)
+    logging.getLogger("nio.responses").setLevel(logging.WARNING)
     logger.debug("Entering configure_logging function.")
 
     root_logger = logging.getLogger()
