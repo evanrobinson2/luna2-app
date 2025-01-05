@@ -16,7 +16,7 @@ from nio import RoomMessageText, InviteMemberEvent, AsyncClient, LoginResponse
 
 import src.luna_functions
 from src.luna_functions import on_room_message, on_invite_event
-from src.console_functions import console_loop
+from src.console_apparatus import console_loop
 
 # We'll store the main event loop globally so both the console thread
 # and the Director logic can access it.

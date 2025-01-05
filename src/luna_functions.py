@@ -8,7 +8,7 @@ Contains:
 - Helper to send messages
 - Helper to create new channels + auto-invite default user
 - Helper to invite arbitrary users or 'admin'
-- NOW: get_director_identity() to support the 'who' console command
+- Now includes get_auto_join_enabled() to support the 'autojoin' console command
 """
 
 import asyncio
@@ -27,7 +27,7 @@ from nio import (
 logger = logging.getLogger(__name__)
 
 DIRECTOR_CLIENT: AsyncClient = None  # Global reference
-AUTO_JOIN_ENABLED = True             # Toggle for auto-join
+AUTO_JOIN_ENABLED = True             # Toggle for auto-join (boolean)
 
 # Hard-code some user you want invited
 DEFAULT_INVITE_USER = "@me:localhost"
@@ -43,6 +43,7 @@ async def director_login(homeserver_url: str, username: str, password: str) -> A
 
     if isinstance(resp, LoginResponse):
         logger.info("Director logged in successfully.")
+        global DIRECTOR_CLIENT
         DIRECTOR_CLIENT = client
         return client
     else:
@@ -51,9 +52,18 @@ async def director_login(homeserver_url: str, username: str, password: str) -> A
         await client.close()
         sys.exit(1)
 
-def set_auto_join(enable: bool):
+def set_auto_join(enable: bool) -> None:
+    """
+    Enables (True) or disables (False) automatic joining of invites.
+    """
     global AUTO_JOIN_ENABLED
     AUTO_JOIN_ENABLED = enable
+
+def get_auto_join_enabled() -> bool:
+    """
+    Returns whether auto-join is currently enabled (True) or disabled (False).
+    """
+    return AUTO_JOIN_ENABLED
 
 async def on_room_message(room, event):
     if not DIRECTOR_CLIENT:
@@ -83,7 +93,9 @@ async def on_invite_event(room, event):
         logger.warning("No DIRECTOR_CLIENT set. Cannot handle invites.")
         return
 
+    # We log the current boolean state
     logger.info(f"Received invite to {room.room_id}, AUTO_JOIN_ENABLED={AUTO_JOIN_ENABLED}")
+
     if AUTO_JOIN_ENABLED:
         logger.info(f"Joining {room.room_id}...")
         await DIRECTOR_CLIENT.join(room.room_id)
@@ -121,7 +133,7 @@ async def director_create_room(room_name: str):
             is_direct=False
         )
 
-        if isinstance(create_resp, RoomCreateResponse):            
+        if isinstance(create_resp, RoomCreateResponse):
             logger.info(f"Room created! ID: {create_resp.room_id}")
             return create_resp.room_id
         else:
@@ -138,7 +150,7 @@ async def director_invite_user(room_id: str, user_id: str):
     Invite `user_id` to join the given `room_id`.
     """
     if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT available for inviting users.")
+        logger.warning("No DIRECTOR_CLIENT set. Cannot invite users.")
         return
 
     logger.info(f"Inviting user '{user_id}' to room {room_id}...")
@@ -166,6 +178,7 @@ async def director_invite_admin(room_id: str):
 
 def get_director():
     """
-    Return a string indicating if DIRECTOR_CLIENT is None or the Director's user_id.
+    Return the Director client object (if any) for advanced usage,
+    or None if not logged in.
     """
     return DIRECTOR_CLIENT
