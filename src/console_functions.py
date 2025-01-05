@@ -195,6 +195,58 @@ def cmd_rotate_logs(args, loop):
     Usage: rotate_logs
 
     Renames 'server.log' to a timestamped file (e.g. server-20250105-193045.log),
+    then reinitializes the logger so the new logs go into the fresh file.
+    """
+    logger.info("Rotating logs...")
+
+    # 1) Rotate the current file
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_file = "server.log"
+    rotated_file = f"server-{timestamp}.log"
+
+    if os.path.exists(log_file):
+        try:
+            os.rename(log_file, rotated_file)
+            print(f"SYSTEM: Rotated {log_file} -> {rotated_file}")
+        except Exception as e:
+            print(f"SYSTEM: Error rotating logs: {e}")
+            return
+    else:
+        print("SYSTEM: No server.log found to rotate.")
+
+    # 2) Create a fresh server.log
+    try:
+        with open(log_file, "w") as f:
+            pass
+        print("SYSTEM: New server.log created.")
+    except Exception as e:
+        print(f"SYSTEM: Error creating new server.log: {e}")
+
+    # 3) Re-init logging so future logs go into the new file
+    #    (Close the old handler, create a new FileHandler, attach it, etc.)
+
+    root_logger = logging.getLogger()
+    # Remove old file handlers
+    for handler in list(root_logger.handlers):
+        if isinstance(handler, logging.FileHandler):
+            root_logger.removeHandler(handler)
+            handler.close()
+
+    # Create a new file handler for "server.log"
+    new_handler = logging.FileHandler(log_file)
+    new_handler.setLevel(logging.DEBUG)  # match your preferred level
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    new_handler.setFormatter(formatter)
+    root_logger.addHandler(new_handler)
+
+    logger.info(f"Log rotation complete. Logging to {log_file} again.")
+    print(f"SYSTEM: Logging has been reinitialized to {log_file}.")
+
+def cmd_rotate_logs_dep(args, loop):
+    """
+    Usage: rotate_logs
+
+    Renames 'server.log' to a timestamped file (e.g. server-20250105-193045.log),
     then creates a new empty 'server.log'. This ensures old logs are preserved.
     """
     # Build a timestamp
@@ -360,6 +412,60 @@ def cmd_check_limit_dep(args, loop):
 
     future.add_done_callback(on_done)
 
+def cmd_fetch_all(args, loop):
+    """
+    Usage: fetch_all
+
+    Fetch all historical messages from all joined rooms in pages, 
+    storing them in a CSV. This might take a while if rooms are large.
+    """
+    logger.info("Console received 'fetch_all' command. Blocking until done...")
+
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.fetch_all_messages_once(
+            luna_functions.DIRECTOR_CLIENT,
+            room_ids=None,       # or specify a list of specific room IDs
+            page_size=100
+        ),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            fut.result()
+            print("SYSTEM: Successfully fetched all historical messages.")
+        except Exception as e:
+            logger.exception(f"Error in fetch_all: {e}")
+            print(f"SYSTEM: Error in fetch_all: {e}")
+
+    future.add_done_callback(on_done)
+
+
+def cmd_fetch_new(args, loop):
+    """
+    Usage: fetch_new
+
+    Incremental fetch: only retrieves events since the last sync token,
+    appending them to the CSV.
+    """
+    logger.info("Console received 'fetch_new' command. Blocking until done...")
+
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.fetch_all_new_messages(
+            luna_functions.DIRECTOR_CLIENT
+        ),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            fut.result()
+            print("SYSTEM: Successfully fetched new messages.")
+        except Exception as e:
+            logger.exception(f"Error in fetch_new: {e}")
+            print(f"SYSTEM: Error in fetch_new: {e}")
+
+    future.add_done_callback(on_done)
 
 
 ########################################################
@@ -381,6 +487,7 @@ COMMAND_ROUTER = {
     "create": cmd_create_room,
     "who": cmd_who,
     "clear": cmd_clear,
-    # Add more as needed...
+    
+    "fetch_all": cmd_fetch_all,
+    "fetch_new": cmd_fetch_new
 }
-
