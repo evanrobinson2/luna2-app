@@ -24,55 +24,40 @@ client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Adjust as needed
-logging.getLogger("nio.responses").setLevel(logging.WARNING)  # Suppress noisy nio responses
+logging.getLogger("nio.responses").setLevel(logging.CRITICAL)  # Suppress noisy nio responses
 
 if not OPENAI_API_KEY:
     logger.warning("No OPENAI_API_KEY found in environment variables.")
 
-# Set the API key for OpenAI
-openai.api_key = OPENAI_API_KEY
 
-async def get_gpt_response(prompt: str, model: str = "gpt-4", temperature: float = 0.7, max_tokens: int = 150) -> str:
+async def get_gpt_response(context: list, model: str = "gpt-4", temperature: float = 0.7, max_tokens: int = 300) -> str:
     """
-    Sends a user_input prompt to GPT and returns the response asynchronously.
+    Sends a conversation context to GPT and retrieves the response.
 
     Args:
-        prompt (str): The user's input message.
+        context (list): A list of messages in the format [{"role": "user", "content": "..."}].
         model (str): The GPT model to use (default: "gpt-4").
-        temperature (float): Sampling temperature (default: 0.7).
-        max_tokens (int): Maximum tokens for the response (default: 150).
+        temperature (float): Controls randomness (default: 0.7).
+        max_tokens (int): The maximum number of tokens in the response (default: 300).
 
     Returns:
-        str: The assistant's response or an error message.
+        str: The GPT response.
     """
-    logger.debug(f"get_gpt_response called with prompt: {prompt}")
+    logger.debug(f"get_gpt_response called with context: {context}")
 
     try:
-        # Make the API call
-        logger.info(f"Sending user_input to OpenAI using model '{model}', max_tokens={max_tokens}, temperature={temperature}.")
         response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
             model=model,
+            messages=context,
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        # Extract the assistant's response
-        answer = response.choices[0].message.content
-        logger.info(f"OpenAI responded successfully: {answer}")
-        return answer
-
-    except client.errors.APIConnectionError as e:
-        logger.exception(f"API connection error: {e}")
-        return "[Error: Unable to connect to OpenAI API.]"
-
-    except client.errors.AuthenticationError as e:
-        logger.exception(f"Authentication error: {e}")
-        return "[Error: Invalid OpenAI API key.]"
-
-    except client.errors.InvalidRequestError as e:
-        logger.exception(f"Invalid request: {e}")
-        return f"[Error: Invalid request. Details: {e}]"
-
+        return response.choices[0].message.content
     except Exception as e:
-        logger.exception(f"Unexpected error occurred: {e}")
-        return "[Error: An unexpected error occurred.]"
+        logger.exception(f"Error calling OpenAI API: {e}")
+        return "[Error: Unable to generate response.]"
+
+# Set the API key for OpenAI
+openai.api_key = OPENAI_API_KEY
+
+

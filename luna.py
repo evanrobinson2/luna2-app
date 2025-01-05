@@ -29,7 +29,7 @@ def configure_logging():
     Configure Python's logging so logs go to both console and server.log.
     """
     logger = logging.getLogger(__name__)
-    logging.getLogger("nio.responses").setLevel(logging.WARNING)
+    logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
     logger.debug("Entering configure_logging function.")
 
     root_logger = logging.getLogger()
@@ -78,6 +78,7 @@ async def main_logic():
 
     # 1. Acquire a client (token-based if possible, otherwise password)
     logger.debug("Attempting to load or log in the client.")
+    await asyncio.sleep(0.1)
     client: AsyncClient = await load_or_login_client(
         homeserver_url="http://localhost:8008",
         username="luna",   # e.g., @luna:localhost

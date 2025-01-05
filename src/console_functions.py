@@ -7,9 +7,6 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-
-
-
 ########################################################
 # 1) COMMAND HANDLER FUNCTIONS
 ########################################################
@@ -298,6 +295,72 @@ def cmd_purge_and_seed(args, loop):
 
     print("Purge, re-seed, and channel setup complete!")
 
+import asyncio
+from datetime import datetime
+import logging
+import sys
+import os
+import subprocess
+
+logger = logging.getLogger(__name__)
+
+# Existing imports...
+from . import luna_functions  # or however you import from the same package
+
+########################################################
+# NEW COMMAND HANDLER
+########################################################
+def cmd_check_limit(args, loop):
+    """
+    Usage: check-limit
+
+    Makes a single short sync request to see if we get rate-limited (HTTP 429).
+    Blocks until the request completes, then prints the result.
+    """
+    logger.info("Console received 'check-limit' command. Blocking until result is returned...")
+
+    try:
+        # run_coroutine_threadsafe returns a Future, then .result() blocks
+        # this background thread (the console thread) until the coroutine finishes.
+        result_msg = asyncio.run_coroutine_threadsafe(
+            luna_functions.check_rate_limit(),
+            loop
+        ).result()
+
+        # Now we have the final string from check_rate_limit()
+        print(f"SYSTEM: {result_msg}")
+
+    except Exception as e:
+        logger.exception(f"Error in check-limit: {e}")
+        print(f"SYSTEM: Error in check-limit: {e}")
+
+
+
+def cmd_check_limit_dep(args, loop):
+    """
+    Usage: check-matrix
+
+    Makes a single request to the Matrix server to see if we get rate-limited (HTTP 429).
+    If it returns 200, you're good. If 429, you're being throttled. Otherwise, see logs.
+    """
+    logger.info("Console received 'check-limit' command. Checking for rate-limit...")
+
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.check_rate_limit(),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            logger.exception(f"Error in check-limit: {e}")
+            print(f"SYSTEM: Error in check-limit: {e}")
+
+    future.add_done_callback(on_done)
+
+
 
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
@@ -312,6 +375,7 @@ COMMAND_ROUTER = {
     "autojoin": cmd_autojoin,
     "rotate_logs": cmd_rotate_logs,
     "purge_and_seed": cmd_purge_and_seed,
+    "check_matrix": cmd_check_limit,
 
     # Business or “bot” commands
     "create": cmd_create_room,
