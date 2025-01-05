@@ -1,73 +1,105 @@
 """
-src/luna_functions.py
+luna_functions.py
 
 Contains:
-- Global toggle and references
-- Director login logic
-- Invite and message callbacks
-- Helper to send messages
-- Helper to create new channels + auto-invite default user
-- Helper to invite arbitrary users or 'admin'
-- Now includes get_auto_join_enabled() to support the 'autojoin' console command
+- Token-based login logic (load_or_login_client)
+- Global reference to the Director client
+- Message & invite callbacks
 """
 
 import asyncio
 import logging
 import sys
-
+import json
+import os
 from nio import (
     AsyncClient,
     LoginResponse,
     RoomMessageText,
     InviteMemberEvent,
     RoomCreateResponse,
-    RoomInviteResponse
+    RoomInviteResponse,
+    LocalProtocolError
 )
 
 logger = logging.getLogger(__name__)
 
-DIRECTOR_CLIENT: AsyncClient = None  # Global reference
-AUTO_JOIN_ENABLED = True             # Toggle for auto-join (boolean)
+DIRECTOR_CLIENT: AsyncClient = None  # Global reference for event callbacks
+TOKEN_FILE = "director_token.json"   # Where we store/reuse the access token
 
-# Hard-code some user you want invited
-DEFAULT_INVITE_USER = "@me:localhost"
+async def load_or_login_client(homeserver_url: str, username: str, password: str) -> AsyncClient:
+    """
+    Attempt to load a saved access token from TOKEN_FILE. If it exists,
+    reuse that token. Otherwise, do a password login, and store the new token.
+    Also sets DIRECTOR_CLIENT global so event callbacks can use it.
+    """
+    global DIRECTOR_CLIENT
 
-async def director_login(homeserver_url: str, username: str, password: str) -> AsyncClient:
-    logger.debug(f"director_login: homeserver_url={homeserver_url}, username={username}")
+    full_user_id = f"@{username}:localhost"  # adapt if needed
+    client = None
 
-    client = AsyncClient(homeserver_url, f"@{username}:localhost")
-    logger.debug("Attempting to log in...")
+    # 1) Check for existing token file
+    if os.path.exists(TOKEN_FILE):
+        logger.debug(f"Found {TOKEN_FILE}, attempting token-based login.")
+        with open(TOKEN_FILE, "r") as f:
+            data = json.load(f)
+            saved_user_id = data.get("user_id")
+            saved_access_token = data.get("access_token")
+            saved_device_id = data.get("device_id")
 
+        if saved_user_id and saved_access_token:
+            logger.debug("Loading client with saved token credentials.")
+            client = AsyncClient(homeserver=homeserver_url, user=saved_user_id)
+            client.access_token = saved_access_token
+            client.device_id = saved_device_id
+
+            # Optionally, you could do a quick test (like a whoami or minimal sync).
+            # If that fails, fallback to password login. We'll skip that for brevity.
+            DIRECTOR_CLIENT = client
+            logger.info(f"Using saved token for user {saved_user_id}.")
+            return client
+
+    # 2) If we get here, no valid token file. Perform password login.
+    logger.debug("No valid token found, attempting normal password login.")
+    client = AsyncClient(homeserver=homeserver_url, user=full_user_id)
     resp = await client.login(password=password, device_name="LunaDirector")
-    logger.debug(f"Login response object: {resp}")
-
     if isinstance(resp, LoginResponse):
-        logger.info("Director logged in successfully.")
-        global DIRECTOR_CLIENT
+        logger.info("Password login succeeded, storing token.")
+        store_token_info(client.user_id, client.access_token, client.device_id)
+
         DIRECTOR_CLIENT = client
         return client
     else:
         logger.error(f"Failed to log in: {resp}")
-        logger.debug("Closing client due to login failure...")
+        logger.debug("Closing client due to login failure.")
         await client.close()
         sys.exit(1)
 
-def set_auto_join(enable: bool) -> None:
-    """
-    Enables (True) or disables (False) automatic joining of invites.
-    """
-    global AUTO_JOIN_ENABLED
-    AUTO_JOIN_ENABLED = enable
 
-def get_auto_join_enabled() -> bool:
+def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     """
-    Returns whether auto-join is currently enabled (True) or disabled (False).
+    Store user_id, device_id, and access_token in a JSON file so we can reuse them later.
     """
-    return AUTO_JOIN_ENABLED
+    with open(TOKEN_FILE, "w") as f:
+        json.dump({
+            "user_id": user_id,
+            "access_token": access_token,
+            "device_id": device_id,
+        }, f)
+    logger.debug(f"Token info for {user_id} saved to {TOKEN_FILE}.")
+
+
+###
+# Event Callbacks for Room Messages and Invites
+###
 
 async def on_room_message(room, event):
+    """
+    Called whenever a RoomMessageText event is received in a room the client is in.
+    """
+    global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT set. Cannot respond.")
+        logger.warning("No DIRECTOR_CLIENT set. Cannot respond to messages.")
         return
 
     if event.sender == DIRECTOR_CLIENT.user:
@@ -88,97 +120,18 @@ async def on_room_message(room, event):
             content={"msgtype": "m.text", "body": response}
         )
 
+
 async def on_invite_event(room, event):
+    """
+    Called whenever the client is invited to a room.
+    """
+    global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
         logger.warning("No DIRECTOR_CLIENT set. Cannot handle invites.")
         return
 
-    # We log the current boolean state
-    logger.info(f"Received invite to {room.room_id}, AUTO_JOIN_ENABLED={AUTO_JOIN_ENABLED}")
-
-    if AUTO_JOIN_ENABLED:
-        logger.info(f"Joining {room.room_id}...")
+    logger.info(f"Received invite to {room.room_id}, joining now.")
+    try:
         await DIRECTOR_CLIENT.join(room.room_id)
-    else:
-        logger.info(f"Auto-join is disabled; ignoring invite.")
-
-async def console_send_message(room_id: str, text: str):
-    logger.debug(f"console_send_message to {room_id}: {text}")
-    if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT available for sending.")
-        return
-
-    await DIRECTOR_CLIENT.room_send(
-        room_id=room_id,
-        message_type="m.room.message",
-        content={"msgtype": "m.text", "body": text},
-    )
-    logger.debug("Console-triggered message sent.")
-
-# 1. CREATE NEW ROOM
-async def director_create_room(room_name: str):
-    """
-    Creates a new Matrix room named `room_name` and invites `DEFAULT_INVITE_USER`.
-    """
-    if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT available for creating rooms.")
-        return
-
-    logger.info(f"Creating room with name: {room_name}, inviting {DEFAULT_INVITE_USER}...")
-
-    try:
-        create_resp = await DIRECTOR_CLIENT.room_create(
-            name=room_name,
-            invite=[DEFAULT_INVITE_USER],
-            is_direct=False
-        )
-
-        if isinstance(create_resp, RoomCreateResponse):
-            logger.info(f"Room created! ID: {create_resp.room_id}")
-            return create_resp.room_id
-        else:
-            logger.warning(f"Room creation response was not a success: {create_resp}")
-            return None
-
-    except Exception as e:
-        logger.error(f"Error creating room: {e}")
-        return None
-
-# 2. ADD PARTICIPANT (Invite arbitrary user)
-async def director_invite_user(room_id: str, user_id: str):
-    """
-    Invite `user_id` to join the given `room_id`.
-    """
-    if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT set. Cannot invite users.")
-        return
-
-    logger.info(f"Inviting user '{user_id}' to room {room_id}...")
-
-    try:
-        invite_resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
-
-        if isinstance(invite_resp, RoomInviteResponse):
-            logger.info(f"Invited {user_id} to {room_id} successfully.")
-        else:
-            logger.warning(f"Invite response was not a success: {invite_resp}")
-
-    except Exception as e:
-        logger.error(f"Error inviting user {user_id} to {room_id}: {e}")
-
-# 3. INVITE ADMIN
-async def director_invite_admin(room_id: str):
-    """
-    Invite an 'admin' user to the given room.
-    For demonstration, we assume the admin user is @admin:localhost or similar.
-    """
-    admin_user = "@admin:localhost"
-    logger.info(f"Inviting 'admin' user {admin_user} to room {room_id}...")
-    await director_invite_user(room_id, admin_user)
-
-def get_director():
-    """
-    Return the Director client object (if any) for advanced usage,
-    or None if not logged in.
-    """
-    return DIRECTOR_CLIENT
+    except LocalProtocolError as e:
+        logger.error(f"Error joining room {room.room_id}: {e}")
