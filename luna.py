@@ -81,7 +81,7 @@ async def main_logic():
     await asyncio.sleep(0.1)
     client: AsyncClient = await load_or_login_client(
         homeserver_url="http://localhost:8008",
-        username="luna",   # e.g., @luna:localhost
+        username="lunabot",   # e.g., @luna:localhost
         password="12345"
     )
     logger.debug("Client obtained. Storing reference to DIRECTOR_CLIENT in src.luna_functions.")

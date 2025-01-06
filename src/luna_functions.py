@@ -10,6 +10,7 @@ Contains:
 from . import ai_functions
 
 import asyncio
+import aiohttp
 import logging
 import sys
 import json
@@ -84,7 +85,99 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         await client.close()
         sys.exit(1)
 
-from nio import RoomMessageText
+import aiohttp
+import logging
+
+logger = logging.getLogger(__name__)
+
+import json
+import logging
+import aiohttp
+import asyncio
+
+from . import luna_functions  # for add_user_via_admin_api
+
+logger = logging.getLogger(__name__)
+
+async def create_user(username: str, password: str, is_admin: bool = False) -> str:
+    """
+    The single Luna function to create a user.
+    1) Loads the admin token from director_token.json.
+    2) Calls add_user_via_admin_api(...) from luna_functions.py.
+    3) Returns a success/error message.
+    """
+    # 1) Load admin token
+    HOMESERVER_URL = "http://localhost:8008"  # or read from config
+    try:
+        with open("director_token.json", "r") as f:
+            data = json.load(f)
+        admin_token = data["access_token"]
+    except Exception as e:
+        err_msg = f"Error loading admin token from director_token.json: {e}"
+        logger.error(err_msg)
+        return err_msg
+
+    # 2) Delegate the actual call to your existing function
+    result = await luna_functions.add_user_via_admin_api(
+        homeserver_url=HOMESERVER_URL,
+        admin_token=admin_token,
+        username=username,
+        password=password,
+        is_admin=is_admin
+    )
+
+    # 3) Return the result message
+    return result
+
+async def add_user_via_admin_api(
+    homeserver_url: str,
+    admin_token: str,
+    username: str,
+    password: str,
+    is_admin: bool = False
+) -> str:
+    """
+    Creates a new user by hitting the Synapse Admin API.
+    
+    :param homeserver_url: e.g. "http://localhost:8008"
+    :param admin_token: An admin user's access token (Bearer).
+    :param username: Localpart, e.g. "steveo"
+    :param password: Password for the new user.
+    :param is_admin: Whether to grant admin rights.
+    :return: Success message or error details.
+    """
+    user_id = f"@{username}:localhost"
+    url = f"{homeserver_url}/_synapse/admin/v2/users/{user_id}"
+
+    body = {
+        "password": password,
+        "admin": is_admin,
+        "deactivated": False
+    }
+    headers = {
+        "Authorization": f"Bearer {admin_token}"
+    }
+
+    logger.info(f"Creating user {user_id}, admin={is_admin} via {url}")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.request("PUT", url, headers=headers, json=body) as resp:
+                if resp.status in (200, 201):
+                    logger.info(f"Created user {user_id} (HTTP {resp.status})")
+                    return f"Created user {user_id} (admin={is_admin})."
+                else:
+                    text = await resp.text()
+                    logger.error(f"Error creating user {user_id}: {resp.status} => {text}")
+                    return f"HTTP {resp.status}: {text}"
+
+    except aiohttp.ClientError as e:
+        logger.exception(f"Network error creating user {user_id}")
+        return f"Network error: {e}"
+    except Exception as e:
+        logger.exception("Unexpected error.")
+        return f"Unexpected error: {e}"
+
 
 async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
     """

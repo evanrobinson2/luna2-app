@@ -4,14 +4,63 @@ import logging
 import subprocess
 import asyncio
 from datetime import datetime
+import textwrap
+from . import luna_functions  # or however you import from the same package
+from nio import AsyncClient
+from asyncio import CancelledError
+import json
 
 logger = logging.getLogger(__name__)
 
 ########################################################
 # 1) COMMAND HANDLER FUNCTIONS
 ########################################################
-
 def cmd_help(args, loop):
+    """
+    Usage: help
+
+    Show usage for all known commands in a more readable multi-line format.
+    """
+    logger.debug("Showing help to user.")
+    print("SYSTEM: Available commands:\n")
+
+    # A small utility to wrap text nicely at ~70 characters, for readability.
+    wrapper = textwrap.TextWrapper(width=70, subsequent_indent="    ")
+
+    for cmd_name, cmd_func in COMMAND_ROUTER.items():
+        doc = (cmd_func.__doc__ or "").strip()
+        if not doc:
+            usage_line = f"(No usage info for `{cmd_name}`)"
+            description = ""
+        else:
+            # Split docstring lines
+            lines = doc.splitlines()
+            usage_line = ""
+            description = ""
+
+            # We assume first line is "Usage:", subsequent lines are description
+            if lines:
+                first_line = lines[0].strip()
+                if first_line.startswith("Usage:"):
+                    usage_line = first_line
+                    # Join the rest as the description
+                    if len(lines) > 1:
+                        description = " ".join(l.strip() for l in lines[1:] if l.strip())
+                else:
+                    # If we didn't find "Usage:" up front, treat everything as description
+                    usage_line = "(No usage line found.)"
+                    description = " ".join(l.strip() for l in lines if l.strip())
+
+        # Wrap the usage and description
+        usage_line_wrapped = wrapper.fill(usage_line)
+        description_wrapped = wrapper.fill(description)
+
+        print(f"{cmd_name}\n  {usage_line_wrapped}")
+        if description_wrapped:
+            print(f"  {description_wrapped}")
+        print()  # blank line after each command
+
+def cmd_help_dep(args, loop):
     """
     Usage: help
 
@@ -47,7 +96,7 @@ def cmd_help(args, loop):
 
         # Print on one line, separated by tabs
         # Example output:
-        # create       Usage: create <roomName>     Creates a new room named <roomName>.
+        # create_room       Usage: create_room <roomName>     Creates a new room named <roomName>.
         print(f"{cmd_name}\t{usage_line}\t{description}")
 
     print()  # A blank line after the listing
@@ -89,12 +138,12 @@ def cmd_log(args, loop):
 
 def cmd_create_room(args, loop):
     """
-    Usage: create <roomName>
+    Usage: create_room <roomName>
 
     Creates a new room named <roomName>.
     """
     if not args:
-        print("SYSTEM: Usage: create <roomName>")
+        print("SYSTEM: Usage: create_room <roomName>")
         return
 
     room_name = args.strip()
@@ -278,33 +327,35 @@ def cmd_purge_and_seed(args, loop):
     """
     Usage: purge_and_seed
 
-    Removes 'homeserver.db', re-registers the admin/luna accounts,
-    creates a new 'Test' channel, and invites @evan:localhost + @luna:localhost.
+    1) Prompt user to shut down Synapse (type 'confirm' when done).
+    2) Remove 'homeserver.db' + local store files (CSV, sync_token.json, director_token.json).
+    3) Prompt user to start server again (type 'confirm').
+    4) Re-register admin/lunabot accounts on the freshly started server.
+    5) Prompt user to confirm if they'd like to restart Luna, which calls cmd_restart to relaunch with a fresh token.
 
-    Type 'y' to confirm and proceed.
+    This is a destructive operation. Type 'y' to confirm at the start.
     """
-    confirmation = input("This will REMOVE 'homeserver.db' and re-seed the database. Continue? (y/N): ")
-    if confirmation.lower().strip() != 'y':
+    # Step 0: Basic confirmation
+    confirm_initial = input("This will REMOVE 'homeserver.db' and local store files. Continue? (y/N): ")
+    if confirm_initial.lower().strip() != 'y':
         print("Aborted.")
         return
 
-    # 1) Remove homeserver.db
+    # Step 1: Prompt user to stop the server
+    print("\nPlease STOP your Synapse server now. Type 'confirm' once it's fully stopped.")
+    confirm_stop = input("> ").lower().strip()
+    if confirm_stop != "confirm":
+        print("Aborted: server may still be running.")
+        return
+
+    # Step 2: Remove homeserver.db
     try:
-        # Define the base directory and file name
-        base_dir = os.path.expanduser("~/Documents/luna2/matrix")
-        db_file = "homeserver.db"
-
-        # Compose the full path
-        db_path = os.path.join(base_dir, db_file)
-
-        # Define the base directory and file name
         base_dir = os.path.expanduser("~/Documents/luna2/matrix")
         db_file = "homeserver.db"
         db_path = os.path.join(base_dir, db_file)
 
-        # Check if the file exists and handle its removal
         if os.path.exists(db_path):
-            print(f"{db_path} exists.")
+            print(f"{db_path} exists. Removing it now.")
             os.remove(db_path)
             print("Removed homeserver.db.")
         else:
@@ -313,11 +364,35 @@ def cmd_purge_and_seed(args, loop):
         print(f"Error removing homeserver.db: {e}")
         return
 
-    # 2) Register admin user
+    # Step 3: Remove local store files
+    local_store_files = [
+        "luna_messages.csv",    # MESSAGES_CSV
+        "sync_token.json",      # SYNC_TOKEN_FILE
+        "director_token.json"   # Forces fresh login on next run
+    ]
+    for store_file in local_store_files:
+        if os.path.exists(store_file):
+            try:
+                os.remove(store_file)
+                print(f"Removed local store file: {store_file}")
+            except Exception as e:
+                print(f"Error removing {store_file}: {e}")
+        else:
+            print(f"{store_file} not found, skipping removal.")
+
+    print("\nPurge complete (database + local store).")
+    print("Now, please START your Synapse server again (e.g. `systemctl start matrix-synapse`).")
+    print("Type 'confirm' once the server is running, or anything else to abort.")
+    confirm_start = input("> ").lower().strip()
+    if confirm_start != "confirm":
+        print("Aborted: server may still be offline.")
+        return
+
+    # Step 4: Re-register admin user (needs server up)
     cmd_admin = [
         "register_new_matrix_user",
         "-c", "/Users/evanrobinson/Documents/Luna2/matrix/homeserver.yaml",
-        "-u", "admin:localhost",
+        "-u", "admin",
         "-p", "12345",
         "--admin",
         "http://localhost:8008"
@@ -329,11 +404,11 @@ def cmd_purge_and_seed(args, loop):
         print(f"Error registering admin: {e}")
         return
 
-    # 3) Register luna user
+    # Step 5: Register lunabot user
     cmd_luna = [
         "register_new_matrix_user",
         "-c", "/Users/evanrobinson/Documents/Luna2/matrix/homeserver.yaml",
-        "-u", "luna:localhost",
+        "-u", "lunabot",
         "-p", "12345",
         "--admin",
         "http://localhost:8008"
@@ -345,19 +420,16 @@ def cmd_purge_and_seed(args, loop):
         print(f"Error registering luna: {e}")
         return
 
-    print("Purge, re-seed, and channel setup complete!")
+    print("\nServer has been purged and seeded with new admin + lunabot accounts.")
+    print("If Luna is currently running, it will still have an old token until it restarts.")
+    print("Type 'confirm' to restart Luna now (calling `cmd_restart`), or anything else to skip.")
+    final_confirm = input("> ").lower().strip()
+    if final_confirm == "confirm":
+        print("Restarting Luna process now...")
+        cmd_restart("", loop)
+    else:
+        print("Skipping Luna restart. If you want a fresh token, please exit or restart Luna manually.")
 
-import asyncio
-from datetime import datetime
-import logging
-import sys
-import os
-import subprocess
-
-logger = logging.getLogger(__name__)
-
-# Existing imports...
-from . import luna_functions  # or however you import from the same package
 
 ########################################################
 # NEW COMMAND HANDLER
@@ -468,6 +540,49 @@ def cmd_fetch_new(args, loop):
     future.add_done_callback(on_done)
 
 
+def cmd_create_user(args, loop):
+    """
+    Usage: create_user <username> <password> [--admin]
+
+    Example:
+      create_user alice supersecret
+      create_user bob mypass --admin
+
+    Parses console arguments, then calls `luna.create_user(...)`.
+    The actual user creation is handled entirely in Luna.
+    """
+    parts = args.strip().split()
+    if len(parts) < 2:
+        print("Usage: create_user <username> <password> [--admin]")
+        return
+
+    username, password = parts[:2]
+    is_admin = False
+
+    # If the third argument is "--admin", set admin flag
+    if len(parts) > 2 and parts[2].lower() == "--admin":
+        is_admin = True
+
+    # Schedule the async call to Luna's create_user(...)
+    future = asyncio.run_coroutine_threadsafe(
+    luna_functions.create_user(username, password, is_admin),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            result = fut.result()
+            print(result)  # e.g. "Created user @alice:localhost (admin=True)." or an error message
+        except Exception as e:
+            print(f"Error while creating user '{username}': {e}")
+            logger.exception("Exception in cmd_create_user callback.")
+
+    future.add_done_callback(on_done)
+
+    print(f"SYSTEM: Asking Luna to create user '{username}' (admin={is_admin})...")
+
+
+
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
 ########################################################
@@ -482,9 +597,10 @@ COMMAND_ROUTER = {
     "rotate_logs": cmd_rotate_logs,
     "purge_and_seed": cmd_purge_and_seed,
     "check_matrix": cmd_check_limit,
+    "create_user": cmd_create_user,
 
     # Business or “bot” commands
-    "create": cmd_create_room,
+    "create_room": cmd_create_room,
     "who": cmd_who,
     "clear": cmd_clear,
     
