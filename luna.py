@@ -15,8 +15,8 @@ from src.console_apparatus import console_loop
 from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
+from src.luna_functions_handledispatch import on_room_message
 from src.luna_functions import (
-    on_room_message,
     on_invite_event,
     load_or_login_client,
 )

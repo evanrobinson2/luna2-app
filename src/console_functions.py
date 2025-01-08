@@ -4,12 +4,15 @@ import logging
 import subprocess
 import asyncio
 from datetime import datetime
-import textwrap
-from . import luna_functions  # or however you import from the same package
+import textwrap # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
 from src.cmd_shutdown import request_shutdown
+from . import luna_personas
+from . import luna_functions
+from nio.api import RoomVisibility
+
 
 logger = logging.getLogger(__name__)
 
@@ -104,42 +107,128 @@ def cmd_create_room(args, loop):
     """
     Usage: create_room <roomName>
 
-    Creates a new room named <roomName>.
+    Creates a new room named <roomName> using a direct approach:
+    1) Loads the director token from `director_token.json`.
+    2) Instantiates an AsyncClient with that token.
+    3) Schedules `room_create(...)` on the existing event loop with run_coroutine_threadsafe().
+    4) Blocks on .result().
+    5) Schedules client.close() as well.
+
+    This version includes extensive debugging logs to trace every step.
+    """
+    logger.debug(f"cmd_create_room called with args='{args}', loop={loop}")
+
+    if not args:
+        logger.debug("No args provided. Displaying usage message and returning.")
+        print("SYSTEM: Usage: create_room <roomName>")
+        return
+
+    room_name = args.strip()
+    logger.info(f"SYSTEM: Creating a new room named '{room_name}'...")  # user-facing print
+
+    # Step 1) Load the director token from disk
+    logger.debug("Attempting to load token from 'director_token.json'...")
+    try:
+        with open("director_token.json", "r") as f:
+            data = json.load(f)
+        user_id = data.get("user_id")
+        access_token = data.get("access_token")
+        device_id = data.get("device_id")
+        logger.debug(f"Loaded token data. user_id={user_id}, access_token=(redacted), device_id={device_id}")
+    except Exception as e:
+        logger.exception("Error reading 'director_token.json'.")
+        print(f"SYSTEM: Error loading director token => {e}")
+        return
+
+    # Step 2) Create a local AsyncClient with that token
+    from nio import AsyncClient, RoomCreateResponse
+    HOMESERVER_URL = "http://localhost:8008"  # Adjust if needed
+    logger.debug(f"Creating local AsyncClient for user_id='{user_id}' with homeserver='{HOMESERVER_URL}'")
+
+    client = AsyncClient(homeserver=HOMESERVER_URL, user=user_id)
+    client.access_token = access_token
+    client.device_id = device_id
+
+    # We'll define a small coroutine to do the room creation
+    async def do_create_room():
+        """
+        Coroutine that calls room_create and returns the response.
+        """
+        logger.debug(f"do_create_room: about to call room_create(name='{room_name}', visibility='public')")
+        try:
+            resp = await client.room_create(name=room_name, visibility=RoomVisibility.public,)
+            logger.debug(f"do_create_room: room_create call returned {resp}")
+            return resp
+        except Exception as exc:
+            logger.exception("Exception in do_create_room during room_create.")
+            raise exc
+
+    # Another small coroutine to close the client
+    async def do_close_client():
+        logger.debug("do_close_client: closing the AsyncClient.")
+        await client.close()
+        logger.debug("do_close_client: client closed successfully.")
+
+    # 3) Schedule the create-room coroutine on the existing loop
+    logger.debug("Scheduling do_create_room() on the existing loop with run_coroutine_threadsafe.")
+    future_create = asyncio.run_coroutine_threadsafe(do_create_room(), loop)
+
+    try:
+        # 4) Block on the future’s .result()
+        logger.debug("Blocking on future_create.result() to get the room_create response.")
+        resp = future_create.result()
+        logger.debug(f"future_create.result() returned => {resp}")
+
+        if isinstance(resp, RoomCreateResponse):
+            logger.info(f"SYSTEM: Created room '{room_name}' => {resp.room_id}")
+        else:
+            # Possibly an ErrorResponse or some unexpected type
+            logger.warning(f"room_create returned a non-RoomCreateResponse => {resp}")
+            print(f"SYSTEM: Error creating room => {resp}")
+
+    except Exception as e:
+        logger.exception("Exception while creating room in cmd_create_room.")
+        print(f"SYSTEM: Exception while creating room => {e}")
+
+    finally:
+        # 5) Clean up: schedule the close() coroutine
+        logger.debug("Scheduling do_close_client() to gracefully close the AsyncClient.")
+        future_close = asyncio.run_coroutine_threadsafe(do_close_client(), loop)
+        try:
+            logger.debug("Blocking on future_close.result() to confirm the client is closed.")
+            future_close.result()
+        except Exception as e2:
+            logger.exception("Error while closing the client in cmd_create_room final block.")
+            print(f"SYSTEM: Error closing client => {e2}")
+        logger.debug("cmd_create_room: Done with final block.")
+
+
+
+def cmd_create_room_dep(args, loop):
+    """
+    Usage: create_room <roomName>
+    Creates a new room named <roomName> via the normal client API (room_create).
     """
     if not args:
         print("SYSTEM: Usage: create_room <roomName>")
         return
 
     room_name = args.strip()
-    logger.info(f"(Console) Scheduling creation of room '{room_name}'")
     print(f"SYSTEM: Creating a new room named '{room_name}'...")
 
-    # Here you'd call the actual async logic (e.g. from luna_functions)
-    future = asyncio.run_coroutine_threadsafe(
-        luna_functions.create_room(room_name),
-        loop
-    )
+    # fut = asyncio.run_coroutine_threadsafe(
+    #     luna_functions.create_room_with_clientapi(room_name, is_public=True),
+    #     loop
+    # )
 
-    def on_done(fut):
+    def on_done(f):
         try:
-            room_id = fut.result()
-            if room_id:
-                print(f"SYSTEM: Created room '{room_name}' => {room_id}")
-            else:
-                print(f"SYSTEM: Failed to create room '{room_name}'")
+            msg = f.result()
+            print(f"SYSTEM: {msg}")
         except Exception as e:
-            print(f"SYSTEM: Error creating room '{room_name}': {e}")
+            print(f"SYSTEM: Error creating room => {e}")
 
-    future.add_done_callback(on_done)
-
-async def mock_async_create_room(room_name):
-    """
-    A placeholder async function that simulates creating a room.
-    In real usage, you'd call something like `director_create_room(room_name)`
-    from `luna_functions.py`.
-    """
-    await asyncio.sleep(0.1)  # simulate network
-    return "!mockRoomId:localhost"
+    fut.add_done_callback(on_done)
 
 def cmd_who(args, loop):
     """
@@ -587,6 +676,56 @@ def cmd_list_users(args, loop):
     """
     Usage: list_users [--json]
 
+    Fetches a list of users from the Synapse server,
+    prints them in a table or JSON, then returns control to the console.
+    """
+    parts = args.strip().split()
+    json_flag = ("--json" in parts)
+
+    try:
+        # Directly block the console thread until the future completes
+        users_info = asyncio.run_coroutine_threadsafe(
+            luna_functions.list_users(), loop
+        ).result(timeout=10)  # optional timeout in seconds
+
+        if not users_info:
+            print("SYSTEM: No users found or we failed to query the server.")
+            return
+
+        if json_flag:
+            # Print as JSON
+            print(json.dumps(users_info, indent=2))
+        else:
+            _print_users_table(users_info)
+
+    except Exception as e:
+        logger.exception(f"Exception in cmd_list_users: {e}")
+        print(f"SYSTEM: Error listing users: {e}")
+
+
+def _print_users_table(users_info: list[dict]):
+    """
+    Helper function to print a table of user data:
+      USER ID (up to ~25 chars) | ADMIN | DEACT | DISPLAYNAME
+    """
+    header = f"{'USER ID':25} | {'ADMIN':5} | {'DEACT'} | DISPLAYNAME"
+    print(header)
+    print("-" * 70)
+
+    for user in users_info:
+        user_id = (user['user_id'] or "")[:25]
+        admin_str = "Yes" if user.get("admin") else "No"
+        deact_str = "Yes" if user.get("deactivated") else "No"
+        display = user.get("displayname") or ""
+
+        row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
+        print(row)
+
+
+def cmd_list_users_dep(args, loop):    
+    """
+    Usage: list_users [--json]
+
     Fetches a list of users (user_id, displayname, admin flag, etc.) from the Synapse server.
     If you provide '--json', it will print the output as JSON instead of a table.
     """
@@ -622,7 +761,7 @@ def cmd_list_users(args, loop):
     future.add_done_callback(on_done)
     print("SYSTEM: Fetching users. Please wait...")
 
-def _print_users_table(users_info: list[dict]):
+def _print_users_table_dep(users_info: list[dict]):
     """
     Helper function to print a table of user data:
       USER ID (up to ~25 chars) | ADMIN | DEACTIVATED | DISPLAYNAME
@@ -675,6 +814,115 @@ def cmd_invite_user(args, loop):
     future.add_done_callback(on_done)
     print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
 
+def cmd_create_bot_user(args, loop):
+    """
+    Usage:
+      create_bot <localpart> <displayname> <system_prompt> <password> [traits...]
+    """
+    parts = args.strip().split()
+    if len(parts) < 4:
+        print("SYSTEM: Usage: create_bot <localpart> <displayname> <system_prompt> <password> [traits...]")
+        return
+
+    localpart = parts[0]
+    displayname = parts[1]
+    system_prompt = parts[2]
+    password = parts[3]
+    trait_pairs = parts[4:]  # e.g. ["age=40", "color=blue"]
+
+    # Parse traits if provided
+    traits = {}
+    for t in trait_pairs:
+        if "=" in t:
+            k, v = t.split("=", 1)
+            traits[k] = v
+
+    bot_id = f"@{localpart}:localhost"
+
+    # Step A: Create local persona
+    try:
+        persona = luna_personas.create_bot(
+            bot_id=bot_id,
+            displayname=displayname,
+            creator_user_id="@lunabot:localhost",  # or whomever
+            system_prompt=system_prompt,
+            traits=traits
+        )
+        print(f"SYSTEM: Local persona created => {persona}")
+    except ValueError as ve:
+        print(f"SYSTEM: Error creating persona: {ve}")
+        return
+    except Exception as e:
+        print(f"SYSTEM: Unexpected error => {e}")
+        return
+
+    # Step B: Register user with Synapse (async call)
+    from src.luna_functions import create_user as matrix_create_user
+
+    fut = asyncio.run_coroutine_threadsafe(
+        matrix_create_user(localpart, password, is_admin=False),
+        loop
+    )
+
+    try:
+        # BLOCK here until the future completes or times out.
+        # You can specify a timeout if desired, e.g. .result(timeout=10)
+        result_msg = fut.result()
+        print(f"SYSTEM: Matrix user creation => {result_msg}")
+    except Exception as e:
+        print(f"SYSTEM: Error creating matrix user => {e}")
+
+def cmd_delete_bot(args, loop):
+    """
+    Usage: delete_bot <bot_localpart>
+
+    Example:
+      delete_bot jamiebot
+
+    Steps:
+    1) Remove the local persona entry from personalities.json.
+    2) Delete the Matrix user @jamiebot:localhost from the server via admin API.
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("SYSTEM: Usage: delete_bot <bot_localpart>")
+        return
+
+    localpart = parts[0].lower()
+    bot_id = f"@{localpart}:localhost"
+
+    # Step A: Delete local persona from personalities.json
+    try:
+        from luna_functions import delete_bot_persona
+        delete_bot_persona(bot_id)  
+        print(f"SYSTEM: Successfully removed persona record for {bot_id}")
+    except FileNotFoundError:
+        print("SYSTEM: personalities.json not found; skipping local removal.")
+    except KeyError as ke:
+        print(f"SYSTEM: {ke}")
+    except Exception as e:
+        print(f"SYSTEM: Unexpected error removing {bot_id} from local store: {e}")
+        return
+
+    # Step B: Delete user from Synapse
+    from src.luna_functions import delete_matrix_user
+    future = asyncio.run_coroutine_threadsafe(
+        delete_matrix_user(localpart),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            print(f"SYSTEM: Error deleting Matrix user {bot_id}: {e}")
+
+    future.add_done_callback(on_done)
+    print(f"SYSTEM: Initiating Matrix user deletion for {bot_id}...")
+
+
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
 ########################################################
@@ -687,18 +935,22 @@ COMMAND_ROUTER = {
     "log": cmd_log,
     "autojoin": cmd_autojoin,
     "rotate_logs": cmd_rotate_logs,
-    "purge_and_seed": cmd_purge_and_seed,
     "check_matrix": cmd_check_limit,
-    "create_user": cmd_create_user,
     "show_shutdown":cmd_show_shutdown,
-    # Business or “bot” commands
-    "create_room": cmd_create_room,
     "who": cmd_who,
-    "clear": cmd_clear,
     
+    "clear": cmd_clear,
+    "purge_and_seed": cmd_purge_and_seed,
+    
+
+    "create_room": cmd_create_room,
+    "create_bot": cmd_create_bot_user,
+
     "fetch_all": cmd_fetch_all,
     "fetch_new": cmd_fetch_new,
+
     "list_users": cmd_list_users,
     "list_rooms": cmd_list_rooms,
+
     "invite_user": cmd_invite_user
 }

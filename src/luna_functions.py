@@ -30,16 +30,21 @@ from nio.responses import ErrorResponse, SyncResponse, RoomMessagesResponse
 logger = logging.getLogger(__name__)
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 
+# ──────────────────────────────────────────────────────────
+# GLOBALS
+# ──────────────────────────────────────────────────────────
 DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
 TOKEN_FILE = "director_token.json"   # Where we store/reuse the access token
 SYNC_TOKEN_FILE = "sync_token.json"  # Where we store the last sync token
-MESSAGES_CSV = "luna_messages.csv"  # We'll store all messages in this CSV
+MESSAGES_CSV = "luna_messages.csv"   # We'll store all messages in this CSV
 
-# Global context dictionary
+# Global context dictionary (if needed by your logic)
 room_context = {}
 MAX_CONTEXT_LENGTH = 100  # Limit to the last 100 messages per room
 
-
+# ──────────────────────────────────────────────────────────
+# TOKEN-BASED LOGIN
+# ──────────────────────────────────────────────────────────
 async def load_or_login_client(homeserver_url: str, username: str, password: str) -> AsyncClient:
     """
     Attempt to load a saved access token. If found, reuse it.
@@ -85,20 +90,25 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         await client.close()
         sys.exit(1)
 
-import aiohttp
-import logging
+async def create_room_with_clientapi(room_name: str, is_public: bool = True) -> str:
+    from src.luna_functions import DIRECTOR_CLIENT
+    if not DIRECTOR_CLIENT:
+        return "Error: No DIRECTOR_CLIENT set."
 
-logger = logging.getLogger(__name__)
+    try:
+        visibility = "public" if is_public else "private"
+        response = await DIRECTOR_CLIENT.room_create(name=room_name, visibility=visibility)
+        if isinstance(response, RoomCreateResponse):
+            return f"Created room '{room_name}' => {response.room_id}"
+        else:
+            # Possibly an ErrorResponse
+            return f"Error creating room => {response}"
+    except Exception as e:
+        return f"Exception while creating room => {e}"
 
-import json
-import logging
-import aiohttp
-import asyncio
-
-from . import luna_functions  # for add_user_via_admin_api
-
-logger = logging.getLogger(__name__)
-
+# ──────────────────────────────────────────────────────────
+# CREATE USER LOGIC
+# ──────────────────────────────────────────────────────────
 async def create_user(username: str, password: str, is_admin: bool = False) -> str:
     """
     The single Luna function to create a user.
@@ -118,7 +128,8 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
         return err_msg
 
     # 2) Delegate the actual call to your existing function
-    result = await luna_functions.add_user_via_admin_api(
+    #    (Yes, ironically still referencing `luna_functions`, but that’s how your code is structured)
+    result = await add_user_via_admin_api(
         homeserver_url=HOMESERVER_URL,
         admin_token=admin_token,
         username=username,
@@ -129,20 +140,9 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
     # 3) Return the result message
     return result
 
-# luna_functions.py
-
-from nio import RoomCreateResponse, ErrorResponse
-
-# luna_functions.py
-
-from nio import AsyncClient
-import logging
-
-logger = logging.getLogger(__name__)
-
-# The global client; must already be logged in/synced for accurate data
-DIRECTOR_CLIENT: AsyncClient = None  
-
+# ──────────────────────────────────────────────────────────
+# LIST ROOMS
+# ──────────────────────────────────────────────────────────
 async def list_rooms() -> list[dict]:
     """
     Returns a list of rooms that DIRECTOR_CLIENT knows about, 
@@ -162,12 +162,7 @@ async def list_rooms() -> list[dict]:
 
     rooms_info = []
     for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
-        # room_obj has a .display_name which can be None if unknown
         room_name = room_obj.display_name or "(unnamed)"
-
-        # Gather participant names/IDs
-        # `room_obj.users` is a dict of user_id -> MatrixUser objects
-        # This example just uses user_id. Adjust if you prefer .display_name
         participant_list = [user_id for user_id in room_obj.users.keys()]
 
         rooms_info.append({
@@ -180,7 +175,9 @@ async def list_rooms() -> list[dict]:
     return rooms_info
 
 
-
+# ──────────────────────────────────────────────────────────
+# ADMIN API FOR CREATING USERS
+# ──────────────────────────────────────────────────────────
 async def add_user_via_admin_api(
     homeserver_url: str,
     admin_token: str,
@@ -190,13 +187,6 @@ async def add_user_via_admin_api(
 ) -> str:
     """
     Creates a new user by hitting the Synapse Admin API.
-    
-    :param homeserver_url: e.g. "http://localhost:8008"
-    :param admin_token: An admin user's access token (Bearer).
-    :param username: Localpart, e.g. "steveo"
-    :param password: Password for the new user.
-    :param is_admin: Whether to grant admin rights.
-    :return: Success message or error details.
     """
     user_id = f"@{username}:localhost"
     url = f"{homeserver_url}/_synapse/admin/v2/users/{user_id}"
@@ -230,30 +220,21 @@ async def add_user_via_admin_api(
         logger.exception("Unexpected error.")
         return f"Unexpected error: {e}"
 
-
+# ──────────────────────────────────────────────────────────
+# RECENT MESSAGES
+# ──────────────────────────────────────────────────────────
 async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
     """
     Fetches the most recent messages from a Matrix room.
-
-    Args:
-        client: The Matrix client instance.
-        room_id (str): The ID of the room to query.
-        limit (int): The number of messages to fetch (default: 100).
-
-    Returns:
-        list: A list of messages in the format [{"role": "user", "content": "..."}].
     """
     logger.info(f"Fetching last {limit} messages from room {room_id}.")
 
     try:
-        # Fetch recent messages
         response = await client.room_messages(
             room_id=room_id,
             start=None,  # None fetches the latest messages
             limit=limit,
         )
-
-        # Process the messages into OpenAI-compatible format
         formatted_messages = []
         for event in response.chunk:
             if isinstance(event, RoomMessageText):
@@ -270,6 +251,9 @@ async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
         return []
 
 
+# ──────────────────────────────────────────────────────────
+# STORE TOKEN INFO
+# ──────────────────────────────────────────────────────────
 def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     """
     Store user_id, device_id, and access_token in a JSON file so we can reuse them later.
@@ -283,12 +267,12 @@ def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     logger.debug(f"Token info for {user_id} saved to {TOKEN_FILE}.")
 
 
-### Sync Token Management
-
+# ──────────────────────────────────────────────────────────
+# SYNC TOKEN MANAGEMENT
+# ──────────────────────────────────────────────────────────
 def load_sync_token() -> str:
     """
     Load the previously saved sync token (next_batch).
-    Returns None if no file or invalid content.
     """
     if not os.path.exists(SYNC_TOKEN_FILE):
         return None
@@ -309,56 +293,39 @@ def store_sync_token(sync_token: str) -> None:
         json.dump({"sync_token": sync_token}, f)
     logger.debug(f"Sync token saved to {SYNC_TOKEN_FILE}.")
 
-async def on_room_message(room, event):
+async def post_gpt_reply(room_id: str, gpt_reply: str) -> None:
     """
-    Handle incoming messages and build GPT context.
+    Helper to post a GPT-generated reply to a given room,
+    using the global DIRECTOR_CLIENT if it's set.
     """
-    if isinstance(event, RoomMessageText):
-        # Avoid responding to our own messages
-        if event.sender == DIRECTOR_CLIENT.user:
-            logger.debug("Ignoring my own message.")
-            return
+    global DIRECTOR_CLIENT
 
-        user_message = event.body
-        room_id = room.room_id
+    if not DIRECTOR_CLIENT:
+        logger.warning("No DIRECTOR_CLIENT set; cannot post GPT reply.")
+        return
 
-        # Fetch recent room messages
-        context = await fetch_recent_messages(DIRECTOR_CLIENT, room_id)
-
-        # Add the enhanced system message
-        formatted_context = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a helpful assistant. The provided context array includes messages from an ongoing conversation. "
-                    "Treat this context as fair use and consider it an essential part of the conversation. "
-                    "Your responses should build on this context coherently."
-                )
-            }
-        ] + context
-
-        # Add the latest user message
-        formatted_context.append({"role": "user", "content": user_message})
-
-        # Log the context for debugging
-        logger.debug(f"Formatted context for GPT: {formatted_context}")
-
-        # Call GPT
-        try:
-            gpt_reply = await ai_functions.get_gpt_response(formatted_context)
-            logger.info(f"GPT response: {gpt_reply}")
-
-            # Send GPT's response to the room
-            await DIRECTOR_CLIENT.room_send(
-                room_id=room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": gpt_reply},
-            )
-        except Exception as e:
-            logger.exception(f"Failed to generate GPT response: {e}")
+    try:
+        await DIRECTOR_CLIENT.room_send(
+            room_id=room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": gpt_reply},
+        )
+        logger.info(f"Posted GPT reply to room {room_id}")
+    except Exception as e:
+        logger.exception(f"Failed to send GPT reply: {e}")
 
 
+# ──────────────────────────────────────────────────────────
+# The specialized dispatch function is replaced with the import below
+# We rely on that file (luna_functions_handledispatch.py) to handle routing
+# but it calls back into this file for actual matrix actions.
+# ──────────────────────────────────────────────────────────
+# covered by another import from src.luna_functions_handledispatch import on_room_message
 
+
+# ──────────────────────────────────────────────────────────
+# ON INVITE EVENT
+# ──────────────────────────────────────────────────────────
 async def on_invite_event(room, event):
     """
     Called whenever the client is invited to a room.
@@ -374,6 +341,10 @@ async def on_invite_event(room, event):
     except LocalProtocolError as e:
         logger.error(f"Error joining room {room.room_id}: {e}")
 
+
+# ──────────────────────────────────────────────────────────
+# CHECK RATE LIMIT
+# ──────────────────────────────────────────────────────────
 async def check_rate_limit() -> str:
     """
     Send a minimal sync request with a short timeout (1000 ms).
@@ -385,15 +356,11 @@ async def check_rate_limit() -> str:
         return "No DIRECTOR_CLIENT available. Are we logged in?"
 
     try:
-        # Request a short sync so we can see if we get 429 or 200, etc.
         response = await DIRECTOR_CLIENT.sync(timeout=1000)
 
         if isinstance(response, SyncResponse):
-            # We got a normal sync => not rate-limited
             return "200 OK => Not rate-limited. The server responded normally."
-
         elif isinstance(response, ErrorResponse):
-            # Possibly 429, 401, 403, etc.
             if response.status_code == 429:
                 return "429 Too Many Requests => You are currently rate-limited."
             else:
@@ -401,16 +368,14 @@ async def check_rate_limit() -> str:
                     f"{response.status_code} => Unexpected error.\n"
                     f"errcode: {response.errcode}, error: {response.error}"
                 )
-
-        # Rarely, you might get something else altogether
         return "Unexpected response type from DIRECTOR_CLIENT.sync(...)."
-
     except Exception as e:
         logger.exception(f"check_rate_limit encountered an error: {e}")
         return f"Encountered error while checking rate limit: {e}"
-    
+
+
 # ──────────────────────────────────────────────────────────
-# 1) ONE-TIME FULL FETCH
+# ONE-TIME FULL FETCH
 # ──────────────────────────────────────────────────────────
 async def fetch_all_messages_once(
     client: AsyncClient, 
@@ -418,23 +383,10 @@ async def fetch_all_messages_once(
     page_size: int = 100
 ) -> None:
     """
-    Fetch *all* historical messages from the given room_ids (or all joined rooms if None),
-    in paged fashion to avoid overwhelming the server. Then store them in:
-      1) In-memory pandas DataFrame (returned).
-      2) CSV on disk (MESSAGES_CSV).
-    Also, we do NOT rely on 'sync_token' here; we aim to get the full history from earliest 
-    to latest for each room. This can be a big operation if rooms are large!
-    
-    Args:
-        client: The matrix-nio AsyncClient with valid access_token.
-        room_ids (list[str]): Which rooms to fetch? If None, fetch from all joined rooms.
-        page_size (int): How many messages to request per 'room_messages' call.
-
-    Returns:
-        None (but writes data to CSV and logs the process).
+    Fetch *all* historical messages from the given room_ids (or all joined rooms if None).
+    ...
     """
     if not room_ids:
-        # If no rooms given, use all the rooms the client is joined to
         room_ids = list(client.rooms.keys())
         logger.info(f"No room_ids specified. Using all joined rooms: {room_ids}")
 
@@ -444,22 +396,19 @@ async def fetch_all_messages_once(
         room_history = await _fetch_room_history_paged(client, rid, page_size=page_size)
         all_records.extend(room_history)
 
-    # Convert to DataFrame
     df = pd.DataFrame(all_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
     logger.info(f"Fetched total {len(df)} messages across {len(room_ids)} room(s).")
 
-    # Append or create CSV
     if os.path.exists(MESSAGES_CSV):
-        # We’ll load the existing CSV, append, and drop duplicates
         existing_df = pd.read_csv(MESSAGES_CSV)
         combined_df = pd.concat([existing_df, df], ignore_index=True)
         combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
         combined_df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Appended new records to existing {MESSAGES_CSV}. New total: {len(combined_df)}")
     else:
-        # No existing CSV; just write fresh
         df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Wrote all records to new CSV {MESSAGES_CSV}.")
+
 
 async def _fetch_room_history_paged(
     client: AsyncClient, 
@@ -468,21 +417,18 @@ async def _fetch_room_history_paged(
 ) -> list[dict]:
     """
     Helper to page backwards in time until no more messages or we hit server's earliest.
-    Returns a list of records with fields: room_id, event_id, sender, timestamp, body
+    ...
     """
-    # We page backward starting from 'end=None' (latest) 
-    # and continue until 'end' is empty or server doesn't return more chunk.
     all_events = []
     end_token = None
 
     while True:
         try:
-            # 'room_messages' returns a RoomMessagesResponse
             response = await client.room_messages(
                 room_id=room_id,
                 start=end_token,
                 limit=page_size,
-                direction="b"  # backward in time
+                direction="b"
             )
             if not isinstance(response, RoomMessagesResponse):
                 logger.warning(f"Got a non-success response: {response}")
@@ -490,18 +436,16 @@ async def _fetch_room_history_paged(
             
             chunk = response.chunk
             if not chunk:
-                # No more events
                 logger.info(f"No more chunk for {room_id}, done paging.")
                 break
 
             for ev in chunk:
-                # Only RoomMessageText events
                 if isinstance(ev, RoomMessageText):
                     all_events.append({
                         "room_id": room_id,
                         "event_id": ev.event_id,
                         "sender": ev.sender,
-                        "timestamp": ev.server_timestamp,  # or ev.timestamp
+                        "timestamp": ev.server_timestamp,
                         "body": ev.body
                     })
             
@@ -511,8 +455,6 @@ async def _fetch_room_history_paged(
                 break
 
             logger.debug(f"Fetched {len(chunk)} messages this page for room={room_id}, new end={end_token}")
-
-            # A small sleep to avoid spamming the server
             await asyncio.sleep(0.25)
 
         except Exception as e:
@@ -523,33 +465,23 @@ async def _fetch_room_history_paged(
 
 
 # ──────────────────────────────────────────────────────────
-# 2) FETCH ONLY NEW MESSAGES (SINCE A SYNC TOKEN)
+# FETCH ONLY NEW MESSAGES
 # ──────────────────────────────────────────────────────────
 async def fetch_all_new_messages(client: AsyncClient) -> None:
     """
     Uses client.sync(...) with a stored sync_token to retrieve only new messages across all joined rooms.
-    Then appends them to the CSV & merges into memory as well.
-    
-    Steps:
-      1) Load local 'sync_token' from disk (if any).
-      2) Call client.sync(..., since=token).
-      3) Parse the timeline events from each room, collect messages, 
-         append to CSV, remove duplicates.
-      4) Store the updated sync_token to disk.
+    ...
     """
     old_token = load_sync_token() or None
     logger.info(f"Starting incremental sync from token={old_token}")
 
-    # Perform a single sync with a short timeout to gather new events
     response = await client.sync(timeout=3000, since=old_token)
     if not isinstance(response, SyncResponse):
         logger.warning(f"Failed to sync for new messages: {response}")
         return
     
-    # Collect timeline events
     new_records = []
     for room_id, room_data in response.rooms.join.items():
-        # 'timeline.events' is a list of event objects
         for event in room_data.timeline.events:
             if isinstance(event, RoomMessageText):
                 new_records.append({
@@ -562,7 +494,6 @@ async def fetch_all_new_messages(client: AsyncClient) -> None:
 
     logger.info(f"Fetched {len(new_records)} new messages across {len(response.rooms.join)} joined rooms.")
 
-    # Append to CSV
     if new_records:
         df_new = pd.DataFrame(new_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
 
@@ -576,26 +507,20 @@ async def fetch_all_new_messages(client: AsyncClient) -> None:
             df_new.to_csv(MESSAGES_CSV, index=False)
             logger.info(f"Wrote new messages to fresh CSV {MESSAGES_CSV}.")
 
-    # Update the sync token so future calls only fetch *newer* content
     new_token = response.next_batch
     if new_token:
         store_sync_token(new_token)
         logger.info(f"Updated local sync token => {new_token}")
 
+
+# ──────────────────────────────────────────────────────────
+# LIST USERS
+# ──────────────────────────────────────────────────────────
 async def list_users() -> list[dict]:
     """
-    Returns a list of all users on the Synapse server,
-    using the admin API endpoint /_synapse/admin/v2/users.
-
-    Each dict might look like:
-      {
-        "user_id": "@alice:localhost",
-        "displayname": "Alice W.",
-        "admin": False,
-        "deactivated": False
-      }
+    Returns a list of all users on the Synapse server, using the admin API.
+    ...
     """
-    # 1) Load the admin token
     homeserver_url = "http://localhost:8008"  # adjust if needed
     try:
         with open("director_token.json", "r") as f:
@@ -605,24 +530,19 @@ async def list_users() -> list[dict]:
         logger.error(f"Unable to load admin token from director_token.json: {e}")
         return []
 
-    # 2) Prepare the Admin API URL and headers
     url = f"{homeserver_url}/_synapse/admin/v2/users"
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # 3) Request the user list from Synapse
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status == 200:
                     resp_data = await resp.json()
-                    # resp_data typically contains: {"users": [...], "total": X, "offset": X, etc.}
                     raw_users = resp_data.get("users", [])
-
-                    # 4) Convert each user object to a simpler dict
                     users_list = []
                     for u in raw_users:
                         users_list.append({
-                            "user_id": u.get("name"),           # e.g. "@alice:localhost"
+                            "user_id": u.get("name"),
                             "displayname": u.get("displayname"),
                             "admin": u.get("admin", False),
                             "deactivated": u.get("deactivated", False),
@@ -636,12 +556,13 @@ async def list_users() -> list[dict]:
         logger.exception(f"Error calling list_users admin API: {e}")
         return []
 
+
+# ──────────────────────────────────────────────────────────
+# INVITE USER TO ROOM
+# ──────────────────────────────────────────────────────────
 async def invite_user_to_room(user_id: str, room_id: str) -> str:
     """
-    Invite an existing Matrix user (user_id) to an existing room (room_id),
-    using our global DIRECTOR_CLIENT to send the invite.
-
-    Returns a success message or an error string.
+    Invite an existing Matrix user to a room, using DIRECTOR_CLIENT to do so.
     """
     global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
@@ -650,16 +571,47 @@ async def invite_user_to_room(user_id: str, room_id: str) -> str:
         return error_msg
 
     try:
-        # Attempt to invite the user
         resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
-        
         if isinstance(resp, RoomInviteResponse):
             logger.info(f"Successfully invited {user_id} to {room_id}.")
             return f"Invited {user_id} to {room_id} successfully."
         else:
-            # Could be an ErrorResponse or something else
             logger.error(f"Failed to invite {user_id} to {room_id}: {resp}")
             return f"Error inviting {user_id} to {room_id}. Response: {resp}"
     except Exception as e:
         logger.exception(f"Exception while inviting {user_id} to {room_id}: {e}")
         return f"Exception inviting {user_id} to {room_id}: {e}"
+
+
+# ──────────────────────────────────────────────────────────
+# DELETE MATRIX USER
+# ──────────────────────────────────────────────────────────
+async def delete_matrix_user(localpart: str) -> str:
+    """
+    Deletes a user from Synapse using the admin API.
+    ...
+    """
+    from src.luna_functions import get_admin_token  # or however you load it
+    admin_token = get_admin_token()
+
+    user_id = f"@{localpart}:localhost"
+    url = f"http://localhost:8008/_synapse/admin/v2/users/{user_id}"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    import aiohttp
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(url, headers=headers) as resp:
+                if resp.status == 200:
+                    return f"Deleted Matrix user {user_id} successfully."
+                elif resp.status == 404:
+                    return f"Matrix user {user_id} not found. Possibly already deleted."
+                else:
+                    text = await resp.text()
+                    return f"Error {resp.status} deleting user {user_id}: {text}"
+    except Exception as e:
+        logger.exception(f"Error in delete_matrix_user({user_id}): {e}")
+        return f"Exception deleting user {user_id}: {e}"
