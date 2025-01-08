@@ -7,7 +7,7 @@ Contains:
 - Message & invite callbacks
 - Utility to load/save sync token
 """
-from . import ai_functions
+from src import ai_functions
 
 import asyncio
 import aiohttp
@@ -128,6 +128,58 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
 
     # 3) Return the result message
     return result
+
+# luna_functions.py
+
+from nio import RoomCreateResponse, ErrorResponse
+
+# luna_functions.py
+
+from nio import AsyncClient
+import logging
+
+logger = logging.getLogger(__name__)
+
+# The global client; must already be logged in/synced for accurate data
+DIRECTOR_CLIENT: AsyncClient = None  
+
+async def list_rooms() -> list[dict]:
+    """
+    Returns a list of rooms that DIRECTOR_CLIENT knows about, 
+    including participant names.
+
+    Each dict in the returned list includes:
+       {
+         "room_id": "<string>",
+         "name": "<string>",
+         "joined_members_count": <int>,
+         "participants": [<list of user IDs or display names>]
+       }
+    """
+    if not DIRECTOR_CLIENT:
+        logger.warning("list_rooms called, but DIRECTOR_CLIENT is None.")
+        return []
+
+    rooms_info = []
+    for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
+        # room_obj has a .display_name which can be None if unknown
+        room_name = room_obj.display_name or "(unnamed)"
+
+        # Gather participant names/IDs
+        # `room_obj.users` is a dict of user_id -> MatrixUser objects
+        # This example just uses user_id. Adjust if you prefer .display_name
+        participant_list = [user_id for user_id in room_obj.users.keys()]
+
+        rooms_info.append({
+            "room_id": room_id,
+            "name": room_name,
+            "joined_members_count": len(participant_list),
+            "participants": participant_list
+        })
+
+    return rooms_info
+
+
 
 async def add_user_via_admin_api(
     homeserver_url: str,
@@ -529,3 +581,85 @@ async def fetch_all_new_messages(client: AsyncClient) -> None:
     if new_token:
         store_sync_token(new_token)
         logger.info(f"Updated local sync token => {new_token}")
+
+async def list_users() -> list[dict]:
+    """
+    Returns a list of all users on the Synapse server,
+    using the admin API endpoint /_synapse/admin/v2/users.
+
+    Each dict might look like:
+      {
+        "user_id": "@alice:localhost",
+        "displayname": "Alice W.",
+        "admin": False,
+        "deactivated": False
+      }
+    """
+    # 1) Load the admin token
+    homeserver_url = "http://localhost:8008"  # adjust if needed
+    try:
+        with open("director_token.json", "r") as f:
+            data = json.load(f)
+        admin_token = data["access_token"]
+    except Exception as e:
+        logger.error(f"Unable to load admin token from director_token.json: {e}")
+        return []
+
+    # 2) Prepare the Admin API URL and headers
+    url = f"{homeserver_url}/_synapse/admin/v2/users"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # 3) Request the user list from Synapse
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers) as resp:
+                if resp.status == 200:
+                    resp_data = await resp.json()
+                    # resp_data typically contains: {"users": [...], "total": X, "offset": X, etc.}
+                    raw_users = resp_data.get("users", [])
+
+                    # 4) Convert each user object to a simpler dict
+                    users_list = []
+                    for u in raw_users:
+                        users_list.append({
+                            "user_id": u.get("name"),           # e.g. "@alice:localhost"
+                            "displayname": u.get("displayname"),
+                            "admin": u.get("admin", False),
+                            "deactivated": u.get("deactivated", False),
+                        })
+                    return users_list
+                else:
+                    text = await resp.text()
+                    logger.error(f"Failed to list users (HTTP {resp.status}): {text}")
+                    return []
+    except Exception as e:
+        logger.exception(f"Error calling list_users admin API: {e}")
+        return []
+
+async def invite_user_to_room(user_id: str, room_id: str) -> str:
+    """
+    Invite an existing Matrix user (user_id) to an existing room (room_id),
+    using our global DIRECTOR_CLIENT to send the invite.
+
+    Returns a success message or an error string.
+    """
+    global DIRECTOR_CLIENT
+    if not DIRECTOR_CLIENT:
+        error_msg = "Error: No DIRECTOR_CLIENT available."
+        logger.error(error_msg)
+        return error_msg
+
+    try:
+        # Attempt to invite the user
+        resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
+        
+        if isinstance(resp, RoomInviteResponse):
+            logger.info(f"Successfully invited {user_id} to {room_id}.")
+            return f"Invited {user_id} to {room_id} successfully."
+        else:
+            # Could be an ErrorResponse or something else
+            logger.error(f"Failed to invite {user_id} to {room_id}: {resp}")
+            return f"Error inviting {user_id} to {room_id}. Response: {resp}"
+    except Exception as e:
+        logger.exception(f"Exception while inviting {user_id} to {room_id}: {e}")
+        return f"Exception inviting {user_id} to {room_id}: {e}"

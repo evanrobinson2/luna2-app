@@ -6,6 +6,9 @@ from datetime import datetime
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 
+from src.cmd_shutdown import SHOULD_SHUT_DOWN
+
+
 # Assuming console_functions.py is in the same package directory.
 from . import console_functions
 
@@ -40,7 +43,7 @@ def console_loop(loop):
 
     command_count = 0
 
-    while True:
+    while not SHOULD_SHUT_DOWN:
         command_count += 1
 
         # Build a short date/time string

@@ -11,6 +11,8 @@ import asyncio
 import sys
 import logging
 import threading
+from src.console_apparatus import console_loop
+from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
 from src.luna_functions import (
@@ -18,11 +20,11 @@ from src.luna_functions import (
     on_invite_event,
     load_or_login_client,
 )
-from src.console_apparatus import console_loop
 
 # We'll store the main event loop globally so both the console thread
 # and the Director logic can access it.
 MAIN_LOOP = None
+
 
 def configure_logging():
     """
@@ -67,35 +69,33 @@ def start_console_thread(loop):
 
 
 async def main_logic():
-    """
-    Main async logic:
-    1. Acquire AsyncClient (preferring token-based login, else do password login)
-    2. Registers callbacks
-    3. Calls sync_forever to handle events
-    """
     logger = logging.getLogger(__name__)
     logger.debug("Entering main_logic function...")
 
-    # 1. Acquire a client (token-based if possible, otherwise password)
-    logger.debug("Attempting to load or log in the client.")
-    await asyncio.sleep(0.1)
+    # 1. Acquire client
     client: AsyncClient = await load_or_login_client(
         homeserver_url="http://localhost:8008",
-        username="lunabot",   # e.g., @luna:localhost
+        username="lunabot",
         password="12345"
     )
-    logger.debug("Client obtained. Storing reference to DIRECTOR_CLIENT in src.luna_functions.")
-    
-    # 2. Register callbacks for messages & invites
+
+    # 2. Register callbacks
     client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
-    logger.debug("Callbacks registered successfully.")
 
-    # 3. Start the sync loop
-    logger.debug("Starting sync_forever loop. Awaiting new events with timeout=30000.")
-    await client.sync_forever(timeout=30000)
-    logger.debug("sync_forever has exited (unexpected in normal operation).")
+    # 3. Repeatedly sync in short intervals, checking the shutdown flag
+    logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
+    while not SHOULD_SHUT_DOWN:
+        # A single sync that times out after (say) 5 seconds
+        try:
+            await client.sync(timeout=5000)
+        except Exception as e:
+            logger.exception(f"Error in client.sync: {e}")
 
+    # If we reach here, user triggered a shutdown or an error occurred
+    logger.info("main_logic loop exiting. Closing client connection...")
+    await client.close()
+    logger.debug("Client closed. main_logic() is returning.")
 
 def luna():
     """
@@ -118,6 +118,9 @@ def luna():
     asyncio.set_event_loop(loop)
     logger.debug("Set this new loop as the default event loop for the current thread.")
 
+    # 2) Initialize shutdown helper with this loop
+    init_shutdown(loop)
+
     global MAIN_LOOP
     MAIN_LOOP = loop  # Store in a global
     logger.debug("Stored reference to the new loop in MAIN_LOOP.")
@@ -138,7 +141,6 @@ def luna():
         logger.debug("Preparing to close the event loop.")
         loop.close()
         logger.info("Event loop closed. Exiting main function.")
-
 
 if __name__ == "__main__":
     luna()

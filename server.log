@@ -1105,3 +1105,1225 @@ task: <Task pending name='Task-589' coro=<AsyncClient.sync() running at /Users/e
 2025-01-05 21:44:18,962 [DEBUG] src.luna_functions: Ignoring my own message.
 2025-01-05 21:52:55,265 [INFO] src.console_functions: Console screen cleared.
 2025-01-05 21:52:55,266 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 16:36:29,224 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 16:36:29,224 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 16:36:29,225 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 16:36:29,225 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 16:36:29,225 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 16:36:29,225 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 16:36:29,225 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 16:36:29,225 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 16:36:29,227 [INFO] __main__: Console thread started successfully.
+2025-01-07 16:36:29,227 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 16:36:29,227 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 16:36:29,227 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 16:36:29,227 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 16:36:29,227 [DEBUG] __main__: Attempting to load or log in the client.
+2025-01-07 16:36:29,232 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 16:36:29,330 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 16:36:29,332 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 16:36:29,332 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 16:36:29,332 [DEBUG] __main__: Client obtained. Storing reference to DIRECTOR_CLIENT in src.luna_functions.
+2025-01-07 16:36:29,332 [DEBUG] __main__: Callbacks registered successfully.
+2025-01-07 16:36:29,332 [DEBUG] __main__: Starting sync_forever loop. Awaiting new events with timeout=30000.
+2025-01-07 16:36:35,849 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 16:36:35,851 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 16:36:49,869 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 16:36:50,647 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 16:36:50,647 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 16:36:50,647 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 16:36:50,711 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10db106e0>
+2025-01-07 16:36:50,712 [ERROR] asyncio: Task was destroyed but it is pending!
+task: <Task pending name='Task-15408' coro=<AsyncClient.sync() running at /Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/nio/client/base_client.py:116> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[_AsCompletedIterator._handle_completion()]>
+2025-01-07 17:29:48,869 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 17:29:48,869 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 17:29:48,869 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 17:29:48,869 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 17:29:48,869 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 17:29:48,870 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 17:29:48,870 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 17:29:48,870 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 17:29:48,872 [INFO] __main__: Console thread started successfully.
+2025-01-07 17:29:48,872 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 17:29:48,872 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 17:29:48,872 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 17:29:48,872 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 17:29:48,872 [DEBUG] __main__: Attempting to load or log in the client.
+2025-01-07 17:29:48,877 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 17:29:48,973 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 17:29:48,975 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 17:29:48,975 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 17:29:48,975 [DEBUG] __main__: Client obtained. Storing reference to DIRECTOR_CLIENT in src.luna_functions.
+2025-01-07 17:29:48,975 [DEBUG] __main__: Callbacks registered successfully.
+2025-01-07 17:29:48,975 [DEBUG] __main__: Starting sync_forever loop. Awaiting new events with timeout=30000.
+2025-01-07 17:29:56,999 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 17:29:57,002 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 17:30:01,344 [INFO] src.console_functions: Console received 'exit' command; calling sys.exit(0).
+2025-01-07 17:30:09,915 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 17:30:09,915 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 17:30:09,915 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 17:30:10,003 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10c6106e0>
+2025-01-07 17:30:10,004 [ERROR] asyncio: Task was destroyed but it is pending!
+task: <Task pending name='Task-12467' coro=<AsyncClient.sync() running at /Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/nio/client/base_client.py:116> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[_AsCompletedIterator._handle_completion()]>
+2025-01-07 18:13:16,187 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:13:16,187 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:13:16,187 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:13:16,187 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:13:16,187 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:13:16,187 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:13:16,187 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:13:16,187 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:13:16,189 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:13:16,189 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:13:16,189 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:13:16,189 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:13:16,191 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:13:16,191 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:13:16,192 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:13:16,192 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:13:16,192 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:13:16,195 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:13:18,894 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 18:13:18,897 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:13:20,159 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 18:13:21,121 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:13:21,121 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:13:21,121 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:13:21,209 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10c352f90>
+2025-01-07 18:13:40,974 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:13:40,974 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:13:40,974 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:13:40,974 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:13:40,974 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:13:40,974 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:13:40,974 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:13:40,974 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:13:40,976 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:13:40,976 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:13:40,976 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:13:40,976 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:13:40,978 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:13:40,978 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:13:40,979 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:13:40,979 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:13:40,980 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:13:40,981 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:13:42,007 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 18:13:44,159 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:13:44,159 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:13:44,160 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:13:44,239 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x114b530e0>
+2025-01-07 18:13:44,240 [ERROR] asyncio: Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x114bd8110>, 721525.015823833)])']
+connector: <aiohttp.connector.TCPConnector object at 0x114b53230>
+2025-01-07 18:14:01,469 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:14:01,469 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:14:01,469 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:14:01,469 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:14:01,469 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:01,470 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:14:01,470 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:14:01,470 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:14:01,472 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:14:01,472 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:14:01,472 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:14:01,472 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:14:01,474 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:14:01,474 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:14:01,474 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:14:01,474 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:14:01,474 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:14:01,477 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:04,077 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:06,033 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:14:06,033 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:11,673 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 18:14:12,335 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:14:12,335 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:14:12,335 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:14:12,335 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:14:12,335 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:12,336 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:14:12,336 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:14:12,336 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:14:12,338 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:14:12,338 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:14:12,338 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:14:12,338 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:14:12,340 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:14:12,340 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:14:12,340 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:14:12,341 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:14:12,341 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:14:12,343 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:15,097 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:14:15,097 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:14:21,262 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 18:14:21,460 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:14:21,461 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:14:21,462 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:14:21,529 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10c49b0e0>
+2025-01-07 18:14:21,529 [ERROR] asyncio: Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x10c520110>, 721562.317528208)])']
+connector: <aiohttp.connector.TCPConnector object at 0x10c49b230>
+2025-01-07 18:16:34,020 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:16:34,020 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:16:34,020 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:16:34,020 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:16:34,020 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:16:34,020 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:16:34,020 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:16:34,020 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:16:34,023 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:16:34,023 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:16:34,023 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:16:34,023 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:16:34,023 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:16:34,023 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:16:34,025 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:16:34,025 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:16:34,025 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:16:34,028 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:16:36,534 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:25:02,631 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:25:02,631 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:25:02,631 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:25:02,697 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10cd66ba0>
+2025-01-07 18:25:02,698 [ERROR] asyncio: Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x10cde09b0>, 722203.498279791)])']
+connector: <aiohttp.connector.TCPConnector object at 0x10cd66cf0>
+2025-01-07 18:25:05,293 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:25:05,293 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:25:05,293 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:25:05,293 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:25:05,293 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:25:05,293 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:25:05,293 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:25:05,293 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:25:05,295 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:25:05,295 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:25:05,295 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:25:05,295 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:25:05,295 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:25:05,295 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:25:05,297 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:25:05,298 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:25:05,298 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:25:05,301 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:25:07,117 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 18:25:07,119 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:25:08,760 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:25:08,760 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:25:11,661 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:25:11,662 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:25:13,754 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:25:13,754 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:27:19,161 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:27:19,162 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:27:19,366 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:27:19,771 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:27:20,574 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 18:27:22,188 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 18:27:24,678 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:27:24,679 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:27:25,392 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 18:27:29,943 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:27:29,943 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:27:31,797 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 18:27:44,601 [WARNING] nio.client.async_client: Timed out, sleeping for 25s
+2025-01-07 18:28:10,215 [WARNING] nio.client.async_client: Timed out, sleeping for 51s
+2025-01-07 18:29:01,421 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:30:01,428 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:31:01,434 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:32:01,441 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:32:28,984 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 18:32:29,200 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:32:29,200 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:32:29,200 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:32:29,277 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x13d866ba0>
+2025-01-07 18:32:31,512 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:32:31,512 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:32:31,512 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:32:31,512 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:32:31,512 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:32:31,512 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:32:31,512 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:32:31,512 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:32:31,514 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:32:31,514 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:32:31,514 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:32:31,514 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:32:31,515 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:32:31,515 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:32:31,516 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:32:31,516 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:32:31,517 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:32:31,520 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:32:31,522 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:32:31,523 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:32:31,726 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:32:32,130 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:32:32,935 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 18:32:34,539 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 18:32:35,020 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:32:35,020 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:32:37,743 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 18:32:44,149 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 18:32:56,955 [WARNING] nio.client.async_client: Timed out, sleeping for 25s
+2025-01-07 18:33:22,561 [WARNING] nio.client.async_client: Timed out, sleeping for 51s
+2025-01-07 18:34:13,765 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:34:30,685 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 18:34:30,838 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 18:34:30,839 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 18:34:30,839 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 18:34:30,941 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10be0eba0>
+2025-01-07 18:34:33,682 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 18:34:33,682 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 18:34:33,682 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 18:34:33,682 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 18:34:33,682 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:34:33,682 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 18:34:33,682 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 18:34:33,682 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 18:34:33,684 [INFO] __main__: Console thread started successfully.
+2025-01-07 18:34:33,684 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 18:34:33,684 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 18:34:33,684 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 18:34:33,685 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 18:34:33,685 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 18:34:33,686 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 18:34:33,686 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 18:34:33,687 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 18:34:33,690 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:34:33,692 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:34:33,693 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:34:33,896 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:34:34,299 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 18:34:35,103 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 18:34:35,545 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:34:36,706 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 18:34:39,575 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 18:34:39,575 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:34:39,911 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 18:34:41,687 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 18:34:46,314 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 18:34:59,118 [WARNING] nio.client.async_client: Timed out, sleeping for 25s
+2025-01-07 18:35:24,721 [WARNING] nio.client.async_client: Timed out, sleeping for 51s
+2025-01-07 18:36:15,925 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:37:15,933 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:38:15,940 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:39:15,946 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:40:15,953 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:41:15,962 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:42:15,971 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:43:15,979 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:44:15,986 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:45:15,991 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:46:15,999 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:47:16,007 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:48:16,014 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:49:16,024 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:50:16,031 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:51:16,041 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:52:16,047 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:53:16,056 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:54:16,064 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:55:16,079 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:56:16,192 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:57:16,206 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:58:16,212 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 18:59:16,226 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:00:16,233 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:01:16,248 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:02:16,259 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:03:16,270 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:04:16,273 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:05:16,280 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:06:16,291 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:07:16,299 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:08:16,313 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:09:16,321 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:10:16,329 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:11:16,335 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:12:16,341 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:12:24,787 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:25,730 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:12:25,730 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:26,607 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:12:26,608 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:27,329 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:12:27,329 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:27,980 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:12:27,980 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:28,663 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:12:28,663 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:12:30,392 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:13:16,348 [WARNING] nio.client.async_client: Timed out, sleeping for 60s
+2025-01-07 19:13:31,791 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 19:13:32,419 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:13:32,419 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:13:32,420 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:13:32,521 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10baeaba0>
+2025-01-07 19:13:35,102 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:13:35,102 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:13:35,102 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:13:35,102 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:13:35,102 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:13:35,102 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:13:35,102 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:13:35,102 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:13:35,105 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:13:35,105 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:13:35,105 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:13:35,105 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:13:35,106 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:13:35,106 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:13:35,108 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:13:35,109 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:13:35,109 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:13:35,114 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:13:35,117 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:13:35,117 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:13:35,319 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:13:35,721 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:13:36,526 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 19:13:37,460 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:13:38,128 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 19:13:39,845 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:13:39,846 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:13:39,846 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-07 19:13:39,848 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:13:39,848 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:13:39,912 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x128d6af90>
+2025-01-07 19:16:50,194 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:16:50,194 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:16:50,194 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:16:50,194 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:16:50,194 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:16:50,195 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:16:50,195 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:16:50,195 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:16:50,197 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:16:50,197 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:16:50,197 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:16:50,197 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:16:50,197 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:16:50,198 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:16:50,200 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:16:50,200 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:16:50,200 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:16:50,203 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:16:54,674 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:16:54,676 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:16:54,880 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:16:55,285 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:16:56,090 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 19:16:57,697 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 19:17:00,901 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 19:17:07,308 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 19:17:13,759 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:17:13,760 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:17:13,760 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-07 19:17:13,762 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:17:13,762 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:17:13,835 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10bdbaba0>
+2025-01-07 19:18:01,875 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:18:01,875 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:18:01,875 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:18:01,875 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:18:01,875 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:01,875 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:18:01,875 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:18:01,875 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:18:01,878 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:18:01,878 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:18:01,878 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:18:01,878 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:18:01,878 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:18:01,878 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:18:01,880 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:18:01,880 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:18:01,880 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:18:01,884 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:01,891 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:01,892 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:02,094 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:02,244 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:18:02,245 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:02,498 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:03,301 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 19:18:04,902 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 19:18:08,104 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 19:18:13,560 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 19:18:14,507 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 19:18:27,313 [WARNING] nio.client.async_client: Timed out, sleeping for 25s
+2025-01-07 19:18:54,687 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:18:54,687 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:18:54,687 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:18:54,687 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:18:54,687 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:54,688 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:18:54,688 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:18:54,688 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:18:54,690 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:18:54,690 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:18:54,690 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:18:54,690 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:18:54,690 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:18:54,690 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:18:54,692 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:18:54,692 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:18:54,692 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:18:54,696 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:54,698 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:54,698 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:54,901 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:55,306 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:18:56,113 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 19:18:57,081 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:18:57,083 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:18:57,717 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 19:19:00,923 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 19:19:06,486 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 19:19:07,329 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 19:19:26,278 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:19:26,279 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:19:26,279 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:19:26,279 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:19:26,279 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:19:26,279 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:19:26,279 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:19:26,279 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:19:26,281 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:19:26,281 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:19:26,281 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:19:26,281 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:19:26,281 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:19:26,281 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:19:26,283 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:19:26,283 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:19:26,283 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:19:26,287 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:19:26,289 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:19:26,290 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:19:26,493 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:19:26,896 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 19:19:27,701 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 19:19:29,303 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 19:19:30,808 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:19:30,811 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:19:32,506 [WARNING] nio.client.async_client: Timed out, sleeping for 6s
+2025-01-07 19:19:38,912 [WARNING] nio.client.async_client: Timed out, sleeping for 12s
+2025-01-07 19:19:47,525 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:19:47,528 [INFO] src.luna_functions: Creating user @lunabot:localhost, admin=True via http://localhost:8008/_synapse/admin/v2/users/@lunabot:localhost
+2025-01-07 19:19:47,531 [ERROR] src.luna_functions: Network error creating user @lunabot:localhost
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 61] Multiple exceptions: [Errno 61] Connect call failed ('::1', 8008, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8008)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/src/luna_functions.py", line 165, in add_user_via_admin_api
+    async with session.request("PUT", url, headers=headers, json=body) as resp:
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        req, traces=traces, timeout=real_timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/Users/evanrobinson/Documents/Luna2/luna/.venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:8008 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8008, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8008)]
+2025-01-07 19:19:51,720 [WARNING] nio.client.async_client: Timed out, sleeping for 25s
+2025-01-07 19:20:00,732 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:00,735 [INFO] src.luna_functions: Creating user @lunabot:localhost, admin=True via http://localhost:8008/_synapse/admin/v2/users/@lunabot:localhost
+2025-01-07 19:20:00,748 [ERROR] src.luna_functions: Error creating user @lunabot:localhost: 401 => {"errcode":"M_UNKNOWN_TOKEN","error":"Invalid access token passed.","soft_logout":false}
+2025-01-07 19:20:02,548 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:02,549 [INFO] src.luna_functions: Creating user @lunabot:localhost, admin=True via http://localhost:8008/_synapse/admin/v2/users/@lunabot:localhost
+2025-01-07 19:20:02,556 [ERROR] src.luna_functions: Error creating user @lunabot:localhost: 401 => {"errcode":"M_UNKNOWN_TOKEN","error":"Invalid access token passed.","soft_logout":false}
+2025-01-07 19:20:16,521 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:20:16,522 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:16,522 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-07 19:20:16,527 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:20:16,527 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:20:22,031 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:22,031 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:20:22,031 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:20:22,034 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:20:22,034 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:20:22,034 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:20:22,034 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:20:22,034 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:20:22,034 [DEBUG] src.luna_functions: No valid token found, attempting normal password login.
+2025-01-07 19:20:22,039 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:22,312 [INFO] src.luna_functions: Password login succeeded, storing token.
+2025-01-07 19:20:22,314 [DEBUG] src.luna_functions: Token info for @lunabot:localhost saved to director_token.json.
+2025-01-07 19:20:22,314 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:20:43,391 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:20:44,851 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:20:44,853 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:22:12,985 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:22:13,873 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:22:13,873 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:22:13,873 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:22:13,873 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:22:13,873 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:22:13,874 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:22:13,874 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:22:13,874 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:22:13,876 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:22:13,876 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:22:13,876 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:22:13,876 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:22:13,876 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:22:13,876 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:22:13,876 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:22:13,878 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:22:13,878 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:22:13,882 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:22:20,073 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:22:20,075 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:22:38,204 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 19:22:38,205 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:22:38,205 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-07 19:22:38,211 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:22:38,211 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:27:38,681 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:27:38,681 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:27:38,681 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:27:38,683 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:27:38,684 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:27:38,684 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:27:38,684 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:27:38,684 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:27:38,684 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:27:38,686 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:27:38,686 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:27:38,686 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:27:38,689 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:27:40,291 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:27:40,294 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:27:42,632 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:28:10,737 [INFO] src.console_functions: (Console) Scheduling creation of room 'test'
+2025-01-07 19:28:10,737 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:28:15,167 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:28:17,100 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:31:04,008 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 19:31:51,516 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:31:51,516 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:31:51,516 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:31:51,516 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:31:51,516 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:31:51,516 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:31:51,516 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:31:51,516 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:31:51,519 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:31:51,519 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:31:51,519 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:31:51,519 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:31:51,519 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:31:51,519 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:31:51,521 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:31:51,521 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:31:51,521 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:31:51,525 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:31:53,250 [INFO] src.console_functions: Console screen cleared.
+2025-01-07 19:31:53,250 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:17,940 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:32:17,940 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:32:17,940 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:32:18,037 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x11976eba0>
+2025-01-07 19:32:20,473 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:32:20,473 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:32:20,473 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:32:20,473 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:32:20,473 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:20,473 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:32:20,473 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:32:20,473 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:32:20,475 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:32:20,475 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:32:20,476 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:32:20,476 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:32:20,476 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:32:20,476 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:32:20,478 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:32:20,478 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:32:20,478 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:32:20,481 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:32,899 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:32:32,899 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:32:32,900 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:32:32,994 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10e222ba0>
+2025-01-07 19:32:34,706 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:32:34,706 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:32:34,706 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:32:34,706 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:32:34,706 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:34,706 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:32:34,706 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:32:34,706 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:32:34,709 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:32:34,709 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:32:34,709 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:32:34,709 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:32:34,711 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:32:34,711 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:32:34,711 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:32:34,711 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:32:34,711 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:32:34,714 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:43,048 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:32:43,049 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:32:43,049 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:32:43,146 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x11466af90>
+2025-01-07 19:32:48,672 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:32:48,672 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:32:48,672 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:32:48,672 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:32:48,672 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:48,672 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:32:48,672 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:32:48,672 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:32:48,674 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:32:48,674 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:32:48,674 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:32:48,675 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:32:48,676 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:32:48,676 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:32:48,677 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:32:48,677 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:32:48,677 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:32:48,679 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:32:49,419 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 19:32:49,421 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:13,038 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:33:13,039 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:33:13,039 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:33:13,119 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x11626af90>
+2025-01-07 19:33:14,813 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:33:14,813 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:33:14,813 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:33:14,813 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:33:14,813 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:14,813 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:33:14,813 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:33:14,813 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:33:14,815 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:33:14,815 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:33:14,815 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:33:14,815 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:33:14,817 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:33:14,817 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:33:14,817 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:33:14,818 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:33:14,818 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:33:14,820 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:37,138 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:33:37,138 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:33:37,138 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:33:37,218 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x12116af90>
+2025-01-07 19:33:40,612 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:33:40,612 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:33:40,612 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:33:40,612 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:33:40,612 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:40,612 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:33:40,612 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:33:40,612 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:33:40,615 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:33:40,615 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:33:40,615 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:33:40,615 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:33:40,616 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:33:40,617 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:33:40,617 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:33:40,617 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:33:40,617 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:33:40,620 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:42,017 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:49,763 [INFO] src.console_functions: (Console) Scheduling creation of room 'test'
+2025-01-07 19:33:49,764 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:33:59,260 [INFO] src.console_functions: (Console) Scheduling creation of room 'test2'
+2025-01-07 19:33:59,261 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:34:05,806 [INFO] src.console_functions: (Console) Scheduling creation of room 'test2'
+2025-01-07 19:34:05,806 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:35:41,166 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:35:42,125 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:35:42,125 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:35:42,125 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:35:42,128 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:35:42,128 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:35:42,128 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:35:42,128 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:35:42,128 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:35:42,128 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:35:42,130 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:35:42,130 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:35:42,130 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:35:42,133 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:35:45,956 [INFO] src.console_functions: (Console) Scheduling creation of room 'test'
+2025-01-07 19:35:45,957 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:36:05,617 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:36:06,451 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:36:06,451 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:36:06,451 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:36:06,453 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:36:06,454 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:36:06,454 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:36:06,454 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:36:06,454 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:36:06,454 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:36:06,456 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:36:06,456 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:36:06,456 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:36:06,459 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:36:08,854 [INFO] src.console_functions: (Console) Scheduling creation of room 'test'
+2025-01-07 19:36:08,855 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:36:08,934 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:36:08,934 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:36:08,940 [INFO] src.luna_functions: Successfully created room 'test' with ID: !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:36:08,946 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:36:12,684 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:38:36,216 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:38:37,063 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:38:37,063 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:38:37,063 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:38:37,066 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:38:37,066 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:38:37,066 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:38:37,066 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:38:37,066 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:38:37,066 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:38:37,068 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:38:37,068 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:38:37,068 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:38:37,071 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:38:37,093 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:38:37,093 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:42:39,071 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:42:39,073 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:42:39,074 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:42:39,161 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10c1f2e40>
+2025-01-07 19:42:41,145 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:42:41,145 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:42:41,145 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:42:41,145 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:42:41,145 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:42:41,145 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:42:41,145 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:42:41,145 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:42:41,147 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:42:41,148 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:42:41,148 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:42:41,148 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:42:41,148 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:42:41,148 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:42:41,150 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:42:41,150 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:42:41,150 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:42:41,153 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:42:41,178 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:42:41,178 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:42:58,333 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:42:58,333 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:42:58,333 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:42:58,409 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10d84eba0>
+2025-01-07 19:43:00,363 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:43:00,364 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:43:00,364 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:43:00,364 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:43:00,364 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:43:00,364 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:43:00,364 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:43:00,364 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:43:00,367 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:43:00,367 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:43:00,367 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:43:00,367 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:43:00,369 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:43:00,369 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:43:00,369 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:43:00,369 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:43:00,369 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:43:00,372 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:43:00,383 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:43:00,384 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:45:01,202 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:45:01,202 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:45:01,202 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:45:01,274 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10f8c2ba0>
+2025-01-07 19:45:03,091 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:45:03,091 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:45:03,091 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:45:03,091 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:45:03,091 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:45:03,091 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:45:03,091 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:45:03,091 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:45:03,094 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:45:03,094 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:45:03,094 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:45:03,094 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:45:03,094 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:45:03,094 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:45:03,096 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:45:03,096 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:45:03,096 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:45:03,100 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:45:03,120 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:45:03,120 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:45:06,467 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:23,129 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:46:24,171 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:24,171 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:46:24,171 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:46:24,174 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:46:24,174 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:46:24,174 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:46:24,174 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:46:24,175 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:46:24,175 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:46:24,177 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:46:24,177 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:46:24,177 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:46:24,181 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:24,190 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:46:24,193 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:46:24,193 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:46:24,193 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:46:24,194 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:46:24,194 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:46:24,194 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:46:24,194 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:46:25,283 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:47,608 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:46:48,475 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:48,475 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:46:48,475 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:46:48,478 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:46:48,478 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:46:48,478 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:46:48,478 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:46:48,478 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:46:48,478 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:46:48,480 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:46:48,480 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:46:48,481 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:46:48,484 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:46:48,497 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:46:48,497 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:46:49,628 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:47:04,546 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:47:05,465 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:47:05,465 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:47:05,465 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:47:05,468 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:47:05,468 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:47:05,468 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:47:05,468 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:47:05,468 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:47:05,468 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:47:05,470 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:47:05,470 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:47:05,470 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:47:05,474 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:47:05,498 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:47:05,498 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:47:06,212 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:48:47,848 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:28,795 [INFO] src.console_functions: Console received 'restart' command; restarting now.
+2025-01-07 19:51:29,713 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:51:29,714 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:51:29,714 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:51:29,714 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:51:29,714 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:29,714 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:51:29,714 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:51:29,714 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:51:29,716 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:51:29,716 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:51:29,716 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:51:29,716 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:51:29,716 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:51:29,716 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:51:29,718 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:51:29,718 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:51:29,718 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:51:29,722 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:29,740 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:51:29,740 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:51:44,359 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:51:44,359 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:51:44,359 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:51:44,455 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x11a66b0e0>
+2025-01-07 19:51:46,663 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:51:46,663 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:51:46,663 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:51:46,663 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:51:46,663 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:46,663 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:51:46,663 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:51:46,663 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:51:46,666 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:51:46,666 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:51:46,666 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:51:46,666 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:51:46,666 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:51:46,666 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:51:46,668 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:51:46,668 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:51:46,668 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:51:46,672 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:46,683 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:51:46,683 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:51:46,683 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:51:46,683 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:51:46,684 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:51:46,684 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:51:46,684 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:51:46,684 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:51:48,615 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:51:58,226 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:58:52,583 [INFO] src.console_apparatus: User exited the console (EOF or KeyboardInterrupt).
+2025-01-07 19:58:54,961 [WARNING] __main__: KeyboardInterrupt received. Shutting down Director.
+2025-01-07 19:58:54,962 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 19:58:54,962 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 19:58:55,040 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10dfcb0e0>
+2025-01-07 19:58:57,278 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-07 19:58:57,278 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-07 19:58:57,278 [DEBUG] __main__: Logging configuration complete.
+2025-01-07 19:58:57,278 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-07 19:58:57,278 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:58:57,278 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-07 19:58:57,278 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-07 19:58:57,278 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-07 19:58:57,280 [INFO] __main__: Console thread started successfully.
+2025-01-07 19:58:57,280 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-07 19:58:57,280 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-07 19:58:57,280 [INFO] __main__: Starting main_logic coroutine.
+2025-01-07 19:58:57,280 [DEBUG] __main__: Entering main_logic function...
+2025-01-07 19:58:57,280 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-07 19:58:57,282 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-07 19:58:57,282 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-07 19:58:57,282 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-07 19:58:57,286 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:58:57,305 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-07 19:58:57,305 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-07 19:59:00,348 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:59:04,373 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:59:07,120 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:59:10,039 [INFO] src.console_functions: Console screen cleared.
+2025-01-07 19:59:10,040 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:59:11,529 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 19:59:17,561 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:00:45,126 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:00:45,129 [INFO] src.luna_functions: Creating user @bob:localhost, admin=False via http://localhost:8008/_synapse/admin/v2/users/@bob:localhost
+2025-01-07 20:00:45,402 [INFO] src.luna_functions: Created user @bob:localhost (HTTP 201)
+2025-01-07 20:00:49,875 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:00:55,149 [INFO] src.console_functions: Console screen cleared.
+2025-01-07 20:00:55,149 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:01:02,072 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:01:04,411 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:01:17,867 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 20:01:17,916 [INFO] src.luna_functions: Successfully invited @bob:localhost to !HPrbJYfQkoGnlztkrS:localhost.
+2025-01-07 20:01:23,580 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 21:05:12,774 [DEBUG] src.console_functions: Showing help to user.
+2025-01-07 21:05:12,779 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 21:05:20,523 [INFO] src.console_functions: Console received 'fetch_all' command. Blocking until done...
+2025-01-07 21:05:20,524 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 21:05:20,524 [INFO] src.luna_functions: No room_ids specified. Using all joined rooms: ['!HPrbJYfQkoGnlztkrS:localhost']
+2025-01-07 21:05:20,524 [INFO] src.luna_functions: Fetching *all* messages for room: !HPrbJYfQkoGnlztkrS:localhost
+2025-01-07 21:05:20,563 [DEBUG] src.luna_functions: Fetched 8 messages this page for room=!HPrbJYfQkoGnlztkrS:localhost, new end=t1-25_0_0_0_0_0_0_0_0_0
+2025-01-07 21:05:20,831 [INFO] src.luna_functions: No more chunk for !HPrbJYfQkoGnlztkrS:localhost, done paging.
+2025-01-07 21:05:20,858 [INFO] src.luna_functions: Fetched total 0 messages across 1 room(s).
+2025-01-07 21:05:20,863 [INFO] src.luna_functions: Wrote all records to new CSV luna_messages.csv.
+2025-01-07 22:30:09,827 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 22:30:09,828 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 22:30:10,032 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 22:30:10,437 [WARNING] nio.client.async_client: Timed out, sleeping for 0s
+2025-01-07 22:30:11,248 [WARNING] nio.client.async_client: Timed out, sleeping for 1s
+2025-01-07 22:30:12,851 [WARNING] nio.client.async_client: Timed out, sleeping for 3s
+2025-01-07 22:30:14,501 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-07 22:30:14,501 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-07 22:30:14,501 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-07 22:30:14,505 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-07 22:30:14,505 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-07 22:30:14,597 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10c513230>

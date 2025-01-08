@@ -9,6 +9,7 @@ from . import luna_functions  # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
+from src.cmd_shutdown import request_shutdown
 
 logger = logging.getLogger(__name__)
 
@@ -60,55 +61,18 @@ def cmd_help(args, loop):
             print(f"  {description_wrapped}")
         print()  # blank line after each command
 
-def cmd_help_dep(args, loop):
-    """
-    Usage: help
-
-    Show usage for all known commands in a single-line, tab-separated format.
-    """
-    logger.debug("Showing help to user.")
-    print("SYSTEM: Available commands (condensed):\n")
-    for cmd_name, cmd_func in COMMAND_ROUTER.items():
-        doc = (cmd_func.__doc__ or "").strip()
-        if not doc:
-            # If no docstring, just note that usage is unknown
-            print(f"{cmd_name}\t(No usage info)\t(No description)")
-            continue
-
-        # Break the docstring into lines
-        lines = doc.splitlines()
-        usage_line = ""
-        description = ""
-
-        # We'll look for a line that starts with "Usage:"
-        # Then everything else is the short description
-        if lines:
-            usage_candidate = lines[0].strip()
-            if usage_candidate.startswith("Usage:"):
-                usage_line = usage_candidate
-                if len(lines) > 1:
-                    # Join all subsequent lines as description
-                    description = " ".join(l.strip() for l in lines[1:] if l.strip())
-            else:
-                # If the first line doesn't start with "Usage:", treat it as description
-                usage_line = "(No usage)"
-                description = " ".join(l.strip() for l in lines if l.strip())
-
-        # Print on one line, separated by tabs
-        # Example output:
-        # create_room       Usage: create_room <roomName>     Creates a new room named <roomName>.
-        print(f"{cmd_name}\t{usage_line}\t{description}")
-
-    print()  # A blank line after the listing
-
 def cmd_exit(args, loop):
     """
     Usage: exit
 
-    Exits the entire process.
+    Gracefully shuts down Luna by setting the shutdown flag
+    and stopping the main loop.
     """
-    logger.info("Console received 'exit' command; calling sys.exit(0).")
-    sys.exit(0)
+    logger.info("Console received 'exit' command; requesting shutdown.")
+    print("SYSTEM: Shutting down Luna gracefully...")    
+    request_shutdown()
+
+
 
 def cmd_restart(args, loop):
     """
@@ -152,7 +116,7 @@ def cmd_create_room(args, loop):
 
     # Here you'd call the actual async logic (e.g. from luna_functions)
     future = asyncio.run_coroutine_threadsafe(
-        mock_async_create_room(room_name),
+        luna_functions.create_room(room_name),
         loop
     )
 
@@ -290,38 +254,6 @@ def cmd_rotate_logs(args, loop):
 
     logger.info(f"Log rotation complete. Logging to {log_file} again.")
     print(f"SYSTEM: Logging has been reinitialized to {log_file}.")
-
-def cmd_rotate_logs_dep(args, loop):
-    """
-    Usage: rotate_logs
-
-    Renames 'server.log' to a timestamped file (e.g. server-20250105-193045.log),
-    then creates a new empty 'server.log'. This ensures old logs are preserved.
-    """
-    # Build a timestamp
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-
-    log_file = "server.log"
-    rotated_file = f"server-{timestamp}.log"
-
-    # Check if server.log exists
-    if os.path.exists(log_file):
-        try:
-            os.rename(log_file, rotated_file)
-            print(f"SYSTEM: Rotated {log_file} -> {rotated_file}")
-        except Exception as e:
-            print(f"SYSTEM: Error rotating logs: {e}")
-            return
-    else:
-        print("SYSTEM: No server.log found to rotate.")
-
-    # Create a fresh server.log
-    try:
-        with open(log_file, "w") as f:
-            pass  # just create an empty file
-        print("SYSTEM: New server.log created.")
-    except Exception as e:
-        print(f"SYSTEM: Error creating new server.log: {e}")
 
 def cmd_purge_and_seed(args, loop):
     """
@@ -582,6 +514,166 @@ def cmd_create_user(args, loop):
     print(f"SYSTEM: Asking Luna to create user '{username}' (admin={is_admin})...")
 
 
+def cmd_show_shutdown(args, loop):
+    """
+    Usage: show_shutdown
+
+    Prints the current value of SHOULD_SHUT_DOWN (a boolean).
+    """
+    from src.cmd_shutdown import SHOULD_SHUT_DOWN
+    print(f"SYSTEM: SHOULD_SHUT_DOWN is currently set to {SHOULD_SHUT_DOWN}.")
+
+
+def cmd_list_rooms(args, loop):
+    """
+    Usage: list_rooms [--json]
+
+    Fetches a list of rooms (name, ID, participant count, etc.) from the director client.
+    If you provide '--json', it will print the output as JSON instead of a table.
+    """
+    # 1) Check if the user wants JSON output
+    parts = args.strip().split()
+    json_flag = ("--json" in parts)
+
+    # 2) Schedule the async call to list_rooms
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.list_rooms(),
+        loop
+    )
+
+    # 3) Define a callback to handle results once the coroutine finishes
+    def on_done(fut):
+        try:
+            rooms_info = fut.result()
+            if not rooms_info:
+                print("SYSTEM: No rooms found or DIRECTOR_CLIENT is not ready.")
+                return
+
+            if json_flag:
+                # Print as JSON
+                print(json.dumps(rooms_info, indent=2))
+            else:
+                # Print a formatted table
+                _print_rooms_table(rooms_info)
+
+        except Exception as e:
+            logger.exception(f"Exception in cmd_list_rooms: {e}")
+            print(f"SYSTEM: Error listing rooms: {e}")
+
+    future.add_done_callback(on_done)
+    print("SYSTEM: Fetching rooms. Please wait...")
+
+def _print_rooms_table(rooms_info: list[dict]):
+    """
+    Helper function to print a nice table of rooms:
+      NAME (up to ~30 chars)  | ROOM ID (up to ~35 chars) | COUNT (5 chars) | PARTICIPANTS
+    """
+    # Build a header line with fixed-width columns
+    header = f"{'NAME':30} | {'ROOM ID':35} | {'COUNT':5} | PARTICIPANTS"
+    print(header)
+    print("-" * 105)  # or 90, depending on how wide you like
+
+    for room in rooms_info:
+        name = (room['name'] or "(unnamed)")[:30]
+        room_id = room['room_id']
+        count = room['joined_members_count']
+        participants_str = ", ".join(room['participants'])
+
+        # Format each row to match the header widths
+        row = f"{name:30} | {room_id:35} | {count:5} | {participants_str}"
+        print(row)
+
+def cmd_list_users(args, loop):
+    """
+    Usage: list_users [--json]
+
+    Fetches a list of users (user_id, displayname, admin flag, etc.) from the Synapse server.
+    If you provide '--json', it will print the output as JSON instead of a table.
+    """
+    # 1) Check if the user wants JSON output
+    parts = args.strip().split()
+    json_flag = ("--json" in parts)
+
+    # 2) Schedule the async call to list_users
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.list_users(),
+        loop
+    )
+
+    # 3) Define a callback
+    def on_done(fut):
+        try:
+            users_info = fut.result()
+            if not users_info:
+                print("SYSTEM: No users found or we failed to query the server.")
+                return
+
+            if json_flag:
+                # Print as JSON
+                print(json.dumps(users_info, indent=2))
+            else:
+                # Print a formatted table
+                _print_users_table(users_info)
+
+        except Exception as e:
+            logger.exception(f"Exception in cmd_list_users: {e}")
+            print(f"SYSTEM: Error listing users: {e}")
+
+    future.add_done_callback(on_done)
+    print("SYSTEM: Fetching users. Please wait...")
+
+def _print_users_table(users_info: list[dict]):
+    """
+    Helper function to print a table of user data:
+      USER ID (up to ~25 chars) | ADMIN | DEACTIVATED | DISPLAYNAME
+    """
+    header = f"{'USER ID':25} | {'ADMIN':5} | {'DEACT'} | DISPLAYNAME"
+    print(header)
+    print("-" * 70)
+
+    for user in users_info:
+        user_id = (user['user_id'] or "")[:25]
+        admin_str = "Yes" if user.get("admin") else "No"
+        deact_str = "Yes" if user.get("deactivated") else "No"
+        display = user.get("displayname") or ""
+
+        row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
+        print(row)
+
+def cmd_invite_user(args, loop):
+    """
+    Usage: invite_user <user_id> <room_id>
+
+    Example:
+      invite_user @bob:localhost !testRoom:localhost
+
+    Invites a user to the given room using the director client.
+    """
+    parts = args.strip().split()
+    if len(parts) < 2:
+        print("SYSTEM: Usage: invite_user <user_id> <room_id>")
+        return
+
+    user_id = parts[0]
+    room_id = parts[1]
+
+    # 1) Schedule the async call on the main loop
+    future = asyncio.run_coroutine_threadsafe(
+        luna_functions.invite_user_to_room(user_id, room_id),
+        loop
+    )
+
+    # 2) Provide a callback to handle the result
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            logger.exception(f"Exception in cmd_invite_user callback: {e}")
+            print(f"SYSTEM: Error inviting user: {e}")
+
+    future.add_done_callback(on_done)
+    print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
 
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
@@ -598,12 +690,15 @@ COMMAND_ROUTER = {
     "purge_and_seed": cmd_purge_and_seed,
     "check_matrix": cmd_check_limit,
     "create_user": cmd_create_user,
-
+    "show_shutdown":cmd_show_shutdown,
     # Business or “bot” commands
     "create_room": cmd_create_room,
     "who": cmd_who,
     "clear": cmd_clear,
     
     "fetch_all": cmd_fetch_all,
-    "fetch_new": cmd_fetch_new
+    "fetch_new": cmd_fetch_new,
+    "list_users": cmd_list_users,
+    "list_rooms": cmd_list_rooms,
+    "invite_user": cmd_invite_user
 }
