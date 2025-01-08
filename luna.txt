@@ -1,5 +1,201 @@
+=== business_case_1.md ===
+. Overview of the Offering
+Multiple Specialized Personas
+
+Each persona is a Matrix-based AI agent with a tailored system prompt and skill set (e.g., “FinanceBot,” “CalendarBot,” “SupportBot”).
+They integrate seamlessly into a customer’s existing communication channels or workflows (Slack, Matrix, Teams, etc.).
+Pay for Advanced Actions
+
+Basic usage (Q&A, general admin tasks) at low monthly cost—enough to cover minimal API calls.
+More complex tasks—like accessing calendars, analyzing calls, pulling from specialized data—cost extra, either per action or in “packs” (e.g., “10 advanced actions per month”).
+Dynamic Bot Library
+
+Over time, you collect or train new specialized bots (e.g., “AccountantBot,” “LegalAssistantBot,” “HRBot”).
+Clients pick and choose from a “bot marketplace” to add to their team.
+2. Core Value Propositions
+Cost Efficiency
+
+For “pennies on the dollar,” you can maintain a round-the-clock back-office staff, each specialized in a different skill—without the overhead of hiring and training.
+Scalability & Flexibility
+
+Spin up a new persona instantly for a new channel or project.
+Only pay for resources you use: if you rarely need an accountant, you don’t pay for an “always-on” human resource.
+Quality & Consistency
+
+Bots speak perfect (or near-perfect) language(s), respond quickly, and never tire or forget instructions.
+Specialized training (human-led plus self-learning) ensures each persona is expert-level in its domain.
+Controlled Data Access
+
+Access to user data (calendar, docs, call recordings) is explicitly controlled.
+A tiered pricing model ensures users decide which data the bot can see—and pay accordingly.
+3. Sample Use Cases
+Freelancer or Small Business
+
+Has minimal staff, but suddenly needs a “financial controller.” They subscribe to an AccountantBot who can manage ledgers or check receipts.
+They only pay extra if the bot actually needs to read real accounting documents or integrates with QuickBooks.
+Mid-Sized Company
+
+Needs an “Admin AssistantBot” to schedule meetings, handle routine Slack questions, or unify event data.
+Use advanced actions (accessing calendars, emailing customers on the user’s behalf) on a pay-per-use basis.
+Enterprise
+
+Wants to experiment with a new specialized OpsBot or SalesBot in multiple channels (technical, marketing, etc.).
+Gains a 24/7 “employee” who can loop in the right resources or produce daily analytics.
+4. Business Model Components
+Monthly Subscription
+
+Basic Tier: X number of standard interactions per month. Bots can answer typical questions, keep track of context, do simple knowledge work.
+Advanced Tier: Includes more “actions” (document-level reading, calendar integration, specialized domain knowledge).
+Add-On Pricing per Action
+
+For tasks that require deeper system access—like “send an Outlook invite to 30 people” or “pull last month’s transaction logs”—the user pays a micro-fee.
+Encourages usage from casual customers, as they only pay when they truly need complex tasks.
+Bot Marketplace
+
+Over time, you have a curated list of “ready-to-go” personas.
+Partnerships with domain experts (accountants, HR professionals) who help refine prompts and workflows, ensuring the AI is domain-grade.
+White-Label / Custom
+
+Offer custom persona creation services for bigger clients. They might train a “Proprietary R&D Bot” that knows internal engineering docs.
+5. Operational Requirements
+Technical Infrastructure
+
+Matrix (or an equivalent real-time platform) for stable, secure chat integration.
+GPT (OpenAI or similar LLM) for core language and generative capabilities.
+Database + orchestration for storing user preferences, advanced triggers, action logs, etc.
+Permissions & Security
+
+A robust OAuth or token-based permission system so the user explicitly grants the bot access to calendars, docs, call recordings, etc.
+Transparent logs and data-handling guidelines to ensure trust.
+Self-Learning & Continuous Training
+
+Human experts initially create or refine each persona’s system prompt.
+Over time, persona usage “fine-tunes” the model or the prompt set.
+You eventually automate the creation and improvement of these specialized prompts.
+6. Competitive Differentiators
+Wide Range of Pre-Trained Personas
+
+Instead of a single “general chatbot,” you offer bot variety with unique skill sets.
+Users can onboard multiple specialized personas across different departments.
+Granular Pay-per-Action
+
+Many “AI as a Service” models charge a big monthly fee. You can provide a more granular approach for advanced capabilities, appealing to cost-sensitive users.
+Human Quality from Expert Training
+
+Each specialized persona is co-trained or validated by an actual domain expert (CPA, HR manager, lawyer).
+Minimizes nonsense or mistakes in critical workflows (e.g., payroll, compliance, etc.).
+Transparent Permissions
+
+Encourages user trust by showing exactly what data the bot can access and how it’s used.
+7. Roadmap & Next Steps
+MVP Launch
+
+Start with 2–3 well-defined personas (e.g. AccountantBot, SalesSupportBot, CalendarAssistantBot) integrated into a single real-time chat platform (like Matrix).
+Offer simple monthly subscription + extra pay-per-action for advanced tasks.
+Scaling Persona Library
+
+Gradually add more domain-specific bots (MarketingBot, HRBot, etc.).
+Partner with freelancers or small domain experts to continuously refine prompts.
+Ecosystem Integration
+
+Build plugins to connect with popular SaaS tools (Google Suite, Microsoft 365, Slack, CRM systems, etc.).
+Provide a user-friendly dashboard to manage each persona’s permissions.
+Advanced AI Features
+
+Automated “self-optimization”: persona prompts evolve with usage.
+Possibly add speech-to-text, text-to-speech for phone call support.
+Explore “Chain of Thought” or agent-based planning for more complex tasks.
+Final Thoughts
+This model seeks to democratize specialized AI across industries by:
+
+Offering low-cost baseline chat/knowledge capabilities.
+Charging only for deep or complex actions (special data access, integrations, etc.).
+Maintaining a library of expert-trained persona prompts to ensure professional-grade assistance in each field.
+If executed well, clients get immediate access to specialized “virtual staff,” and you create a scalable revenue stream that can expand indefinitely as new personas and advanced actions are introduced.
 === director_token.json ===
 {"user_id": "@lunabot:localhost", "access_token": "syt_bHVuYWJvdA_OcIVWrozQzoQzTkealVs_4eQJHP", "device_id": "SYLZUYWURQ"}
+=== improvements.md ===
+# Improvement #1: Graceful Shutdown of Luna from a Child Process
+
+## Summary
+We want any child process or function within the application to be able to shut down Luna’s main loop cleanly. Right now, Ctrl-C works inconsistently, and a child has no direct, official way to terminate Luna. 
+
+### Details
+1. **Global Flag and Loop Stop**  
+   - We introduce a global boolean (e.g., `SHOULD_SHUT_DOWN`) in `luna.py` plus a function `request_shutdown()`.  
+   - `request_shutdown()` sets `SHOULD_SHUT_DOWN = True` and calls `MAIN_LOOP.stop()` (or an equivalent) so the primary event loop knows to exit.
+
+2. **Short Sync Loops**  
+   - Instead of a single `sync_forever()` call, we use a loop:  
+     ```python
+     while not SHOULD_SHUT_DOWN:
+         await client.sync(timeout=3000)
+     ```  
+   - That loop checks the global flag on each iteration, allowing a graceful break if `request_shutdown()` is triggered.
+
+3. **Use Cases**  
+   - **Use Case 1**: A background worker detects an unrecoverable error, calls `request_shutdown()`, and Luna promptly halts.  
+   - **Use Case 2**: A scheduled script finishes its tasks early, decides no more sync is needed, so it triggers the main loop to stop.  
+   - **Use Case 3**: We rely on both child logic and Ctrl-C as valid exit signals, covering manual and automated shutdown paths.
+
+By allowing child processes to issue a clean shutdown signal, we avoid partial kills and ensure the Matrix client, threads, and other tasks are tidily closed.
+
+---
+
+# Improvement #2: Splitting the `purge_and_seed` Command into Separate “Purge” and “Seed”
+
+## Summary
+Our existing `purge_and_seed` command lumps two distinct actions—(1) wiping data and (2) re-registering users—into a single step. We want to **decouple** them so operators or scripts can perform one without the other.
+
+### Details
+1. **Separate Commands**  
+   - Introduce `cmd_purge` (removes `homeserver.db`, local store files, etc.) and `cmd_seed` (re-registers admin/lunabot, optionally invites them to a channel).  
+   - This separation makes each command simpler and clarifies which step has run.
+
+2. **Why It Helps**  
+   - **Flexibility**: Sometimes we only want to purge without immediately seeding. Other times, we might skip purging if we just need to (re)seed.  
+   - **Clarity**: “Purge” is destructive, “Seed” is constructive—two different concerns, now explicit.
+
+3. **Use Cases**  
+   - **Use Case 1**: We purge the database in a pipeline, then do some offline tasks or changes, then run `cmd_seed` later when the environment is ready.  
+   - **Use Case 2**: We frequently want to re-register accounts without wiping data each time, so we just call the new `cmd_seed`.  
+   - **Use Case 3**: A developer wants to skip user creation altogether (just clearing data), so `cmd_purge` alone suffices.
+
+By dividing “purge” from “seed,” we reduce the risk of forcibly resetting data when we only needed new accounts, or accidentally forgetting to recreate accounts when we just intended to wipe old records.
+
+---
+
+# Improvement #3: Real-Time DB Updates, Periodic Sync, and Richer Context in Luna
+
+## Summary
+We plan to integrate a more robust data-handling and context system so that:
+1. Each new Matrix message is **immediately** stored locally (rather than waiting for manual fetches).
+2. A **periodic sync** or child thread catches any missed events.
+3. Luna’s conversation context broadens to include older messages, self-reflection summaries, and specialized “lenses” that shape her personality or perspective.
+
+### Details
+
+1. **Immediate Store on `on_room_message`**  
+   - Whenever a new message arrives, `on_room_message` (in `luna_functions.py`) appends that event to our local store (e.g., CSV/database).  
+   - This ensures the store remains current in real time, reducing reliance on separate fetch tasks.  
+
+2. **Periodic Sync in a Child Thread**  
+   - We still run `fetch_all_new_messages` on a schedule (e.g., every X minutes) to fill in gaps or rectify potential missed data.  
+   - A separate thread or scheduled job triggers the sync call, merging new records with our store while deduplicating.
+
+3. **Expanded Context and Self-Reflection**  
+   - **Whole Chat or Summaries**: Instead of only a short window, we feed Luna’s GPT logic a broader set of messages. If it’s too large, we rely on summary-based references or chunking.  
+   - **Lenses / Summaries**: Over time, we can generate specialized viewpoints (“emotional lens,” “technical lens,” “historical lens”) so Luna can recall important details in certain contexts.  
+   - **Personality / Minds**: We gradually embed “minds of Luna,” letting her produce style-consistent, coherent responses by referencing a persona system. She can ask herself clarifying questions or maintain notes about prior conversation segments.
+
+4. **Use Cases**  
+   - **Use Case 1**: A user returns after a long break, Luna still references older messages or a summary of them, so the conversation feels continuous.  
+   - **Use Case 2**: We accidentally missed some new messages while offline—our periodic sync catches them, merges them into the store.  
+   - **Use Case 3**: Luna leverages an “emotional lens” summary to respond empathetically if previous messages had strong sentiments, or a “technical lens” if it was code-heavy.
+
+By capturing messages instantly, periodically syncing missed data, and giving Luna a richer memory (including summary-based reflection), we move toward a more human-like continuity, deeper context usage, and sophisticated persona shaping.
+
+
 === luna.md ===
 luna.md
 
@@ -294,8 +490,8 @@ from src.console_apparatus import console_loop
 from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
+from src.luna_functions_handledispatch import on_room_message
 from src.luna_functions import (
-    on_room_message,
     on_invite_event,
     load_or_login_client,
 )
@@ -424,6 +620,109 @@ def luna():
 if __name__ == "__main__":
     luna()
 
+=== luna_messages.csv ===
+room_id,event_id,sender,timestamp,body
+
+=== luna_personalities.json ===
+{
+  "@jamiebot:localhost": {
+    "displayname": "\"Jamie",
+    "system_prompt": "Persona\"",
+    "traits": {
+      "age": "29",
+      "location": "Boston",
+      "favorite_movie": "\"Inception\""
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T04:13:37.533338Z",
+    "notes": ""
+  },
+  "@tamiebot:localhost": {
+    "displayname": "\"Tamie",
+    "system_prompt": "Persona\"",
+    "traits": {
+      "age": "29",
+      "location": "Boston"
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T04:25:52.155630Z",
+    "notes": ""
+  },
+  "@blackbeard:localhost": {
+    "displayname": "\"Blackbeard\"",
+    "system_prompt": "\"You",
+    "traits": {
+      "temperament": "ruthless",
+      "signature_look": "\"smoldering",
+      "weapon_of_choice": "\"flintlock",
+      "notes": "\"Commands"
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T07:02:11.186000Z",
+    "notes": ""
+  },
+  "@annebonny:localhost": {
+    "displayname": "\"Anne",
+    "system_prompt": "Bonny\"",
+    "traits": {
+      "temperament": "fiery",
+      "favorite_drink": "\"spiced",
+      "combat_style": "\"dual",
+      "notes": "\"Determined,"
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T07:02:21.736066Z",
+    "notes": ""
+  },
+  "@calicojack:localhost": {
+    "displayname": "\"Calico",
+    "system_prompt": "Jack\"",
+    "traits": {
+      "temperament": "charismatic",
+      "signature_look": "\"vibrant",
+      "favorite_loot": "\"glittering",
+      "notes": "\"Showy,"
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T07:02:30.001043Z",
+    "notes": ""
+  },
+  "@saltypirate:localhost": {
+    "displayname": "\"Salty",
+    "system_prompt": "Pirate\"",
+    "traits": {},
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-08T07:02:36.151679Z",
+    "notes": ""
+  }
+}
+=== luna_personality.md ===
+**** SYSTEM MESSAGE **** 
+
+YOU ARE LUNABOT, THE HELPFUL ASSISTANT
+
+About you: You are living on a chat server. You can see all the channels, all the participants, and you can even invoke special commands that will return their responses on the next turn. For example, you can list the channels for a user!
+
+If the users asks: "Can you tell me about all the channels you know?". You can request that information me. I will preface your next prompt with that information!". For example:
+
+@list_channels
+
+Would invoke a command that would return that information in this very pre-prompt so that you could pass it back to the user! You would see:
+
+RESULTS OF @list_channels:
+
+SYSTEM: Checking Luna’s channel list now...
+SYSTEM: Gathering channel list. Please wait...
+
+Name                     | Room ID                       | Participants | Messages | Created | Last Msg
+-------------------------|-------------------------------|--------------|----------|---------|---------
+admin, lunabot and stevo | !MYwtCNJHYyKRgVVqqC:localhost | TBD          | TBD      | TBD     | TBD     
+helloworld               | !BJEWnXbIauLQsnufLw:localhost | TBD          | TBD      | TBD     | TBD     
+admin, evan1 and lunabot | !MWdCMggaXzjGhumvZl:localhost | TBD          | TBD      | TBD     | TBD     
+public 1                 | !slLaJLcEHiSwXogdHh:localhost | TBD          | TBD      | TBD     | TBD     
+admin and lunabot        | !zBULrAeUnYNFsMQZSG:localhost | TBD          | TBD      | TBD     | TBD     
+
+**** END SYSTEM MESSAGE ****
 === requirements.txt ===
 
 === src/ai_functions.py ===
@@ -651,12 +950,15 @@ import logging
 import subprocess
 import asyncio
 from datetime import datetime
-import textwrap
-from . import luna_functions  # or however you import from the same package
+import textwrap # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
 from src.cmd_shutdown import request_shutdown
+from . import luna_personas
+from . import luna_functions
+from nio.api import RoomVisibility
+
 
 logger = logging.getLogger(__name__)
 
@@ -751,42 +1053,101 @@ def cmd_create_room(args, loop):
     """
     Usage: create_room <roomName>
 
-    Creates a new room named <roomName>.
+    Creates a new room named <roomName> using a direct approach:
+    1) Loads the director token from `director_token.json`.
+    2) Instantiates an AsyncClient with that token.
+    3) Schedules `room_create(...)` on the existing event loop with run_coroutine_threadsafe().
+    4) Blocks on .result().
+    5) Schedules client.close() as well.
+
+    This version includes extensive debugging logs to trace every step.
     """
+    logger.debug(f"cmd_create_room called with args='{args}', loop={loop}")
+
     if not args:
+        logger.debug("No args provided. Displaying usage message and returning.")
         print("SYSTEM: Usage: create_room <roomName>")
         return
 
     room_name = args.strip()
-    logger.info(f"(Console) Scheduling creation of room '{room_name}'")
-    print(f"SYSTEM: Creating a new room named '{room_name}'...")
+    logger.info(f"SYSTEM: Creating a new room named '{room_name}'...")  # user-facing print
 
-    # Here you'd call the actual async logic (e.g. from luna_functions)
-    future = asyncio.run_coroutine_threadsafe(
-        luna_functions.create_room(room_name),
-        loop
-    )
+    # Step 1) Load the director token from disk
+    logger.debug("Attempting to load token from 'director_token.json'...")
+    try:
+        with open("director_token.json", "r") as f:
+            data = json.load(f)
+        user_id = data.get("user_id")
+        access_token = data.get("access_token")
+        device_id = data.get("device_id")
+        logger.debug(f"Loaded token data. user_id={user_id}, access_token=(redacted), device_id={device_id}")
+    except Exception as e:
+        logger.exception("Error reading 'director_token.json'.")
+        print(f"SYSTEM: Error loading director token => {e}")
+        return
 
-    def on_done(fut):
+    # Step 2) Create a local AsyncClient with that token
+    from nio import AsyncClient, RoomCreateResponse
+    HOMESERVER_URL = "http://localhost:8008"  # Adjust if needed
+    logger.debug(f"Creating local AsyncClient for user_id='{user_id}' with homeserver='{HOMESERVER_URL}'")
+
+    client = AsyncClient(homeserver=HOMESERVER_URL, user=user_id)
+    client.access_token = access_token
+    client.device_id = device_id
+
+    # We'll define a small coroutine to do the room creation
+    async def do_create_room():
+        """
+        Coroutine that calls room_create and returns the response.
+        """
+        logger.debug(f"do_create_room: about to call room_create(name='{room_name}', visibility='public')")
         try:
-            room_id = fut.result()
-            if room_id:
-                print(f"SYSTEM: Created room '{room_name}' => {room_id}")
-            else:
-                print(f"SYSTEM: Failed to create room '{room_name}'")
-        except Exception as e:
-            print(f"SYSTEM: Error creating room '{room_name}': {e}")
+            resp = await client.room_create(name=room_name, visibility=RoomVisibility.public,)
+            logger.debug(f"do_create_room: room_create call returned {resp}")
+            return resp
+        except Exception as exc:
+            logger.exception("Exception in do_create_room during room_create.")
+            raise exc
 
-    future.add_done_callback(on_done)
+    # Another small coroutine to close the client
+    async def do_close_client():
+        logger.debug("do_close_client: closing the AsyncClient.")
+        await client.close()
+        logger.debug("do_close_client: client closed successfully.")
 
-async def mock_async_create_room(room_name):
-    """
-    A placeholder async function that simulates creating a room.
-    In real usage, you'd call something like `director_create_room(room_name)`
-    from `luna_functions.py`.
-    """
-    await asyncio.sleep(0.1)  # simulate network
-    return "!mockRoomId:localhost"
+    # 3) Schedule the create-room coroutine on the existing loop
+    logger.debug("Scheduling do_create_room() on the existing loop with run_coroutine_threadsafe.")
+    future_create = asyncio.run_coroutine_threadsafe(do_create_room(), loop)
+
+    try:
+        # 4) Block on the future’s .result()
+        logger.debug("Blocking on future_create.result() to get the room_create response.")
+        resp = future_create.result()
+        logger.debug(f"future_create.result() returned => {resp}")
+
+        if isinstance(resp, RoomCreateResponse):
+            logger.info(f"SYSTEM: Created room '{room_name}' => {resp.room_id}")
+        else:
+            # Possibly an ErrorResponse or some unexpected type
+            logger.warning(f"room_create returned a non-RoomCreateResponse => {resp}")
+            print(f"SYSTEM: Error creating room => {resp}")
+
+    except Exception as e:
+        logger.exception("Exception while creating room in cmd_create_room.")
+        print(f"SYSTEM: Exception while creating room => {e}")
+
+    finally:
+        # 5) Clean up: schedule the close() coroutine
+        logger.debug("Scheduling do_close_client() to gracefully close the AsyncClient.")
+        future_close = asyncio.run_coroutine_threadsafe(do_close_client(), loop)
+        try:
+            logger.debug("Blocking on future_close.result() to confirm the client is closed.")
+            future_close.result()
+        except Exception as e2:
+            logger.exception("Error while closing the client in cmd_create_room final block.")
+            print(f"SYSTEM: Error closing client => {e2}")
+        logger.debug("cmd_create_room: Done with final block.")
+
 
 def cmd_who(args, loop):
     """
@@ -1234,6 +1595,56 @@ def cmd_list_users(args, loop):
     """
     Usage: list_users [--json]
 
+    Fetches a list of users from the Synapse server,
+    prints them in a table or JSON, then returns control to the console.
+    """
+    parts = args.strip().split()
+    json_flag = ("--json" in parts)
+
+    try:
+        # Directly block the console thread until the future completes
+        users_info = asyncio.run_coroutine_threadsafe(
+            luna_functions.list_users(), loop
+        ).result(timeout=10)  # optional timeout in seconds
+
+        if not users_info:
+            print("SYSTEM: No users found or we failed to query the server.")
+            return
+
+        if json_flag:
+            # Print as JSON
+            print(json.dumps(users_info, indent=2))
+        else:
+            _print_users_table(users_info)
+
+    except Exception as e:
+        logger.exception(f"Exception in cmd_list_users: {e}")
+        print(f"SYSTEM: Error listing users: {e}")
+
+
+def _print_users_table(users_info: list[dict]):
+    """
+    Helper function to print a table of user data:
+      USER ID (up to ~25 chars) | ADMIN | DEACT | DISPLAYNAME
+    """
+    header = f"{'USER ID':25} | {'ADMIN':5} | {'DEACT'} | DISPLAYNAME"
+    print(header)
+    print("-" * 70)
+
+    for user in users_info:
+        user_id = (user['user_id'] or "")[:25]
+        admin_str = "Yes" if user.get("admin") else "No"
+        deact_str = "Yes" if user.get("deactivated") else "No"
+        display = user.get("displayname") or ""
+
+        row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
+        print(row)
+
+
+def cmd_list_users_dep(args, loop):    
+    """
+    Usage: list_users [--json]
+
     Fetches a list of users (user_id, displayname, admin flag, etc.) from the Synapse server.
     If you provide '--json', it will print the output as JSON instead of a table.
     """
@@ -1269,7 +1680,7 @@ def cmd_list_users(args, loop):
     future.add_done_callback(on_done)
     print("SYSTEM: Fetching users. Please wait...")
 
-def _print_users_table(users_info: list[dict]):
+def _print_users_table_dep(users_info: list[dict]):
     """
     Helper function to print a table of user data:
       USER ID (up to ~25 chars) | ADMIN | DEACTIVATED | DISPLAYNAME
@@ -1322,6 +1733,115 @@ def cmd_invite_user(args, loop):
     future.add_done_callback(on_done)
     print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
 
+def cmd_create_bot_user(args, loop):
+    """
+    Usage:
+      create_bot <localpart> <displayname> <system_prompt> <password> [traits...]
+    """
+    parts = args.strip().split()
+    if len(parts) < 4:
+        print("SYSTEM: Usage: create_bot <localpart> <displayname> <system_prompt> <password> [traits...]")
+        return
+
+    localpart = parts[0]
+    displayname = parts[1]
+    system_prompt = parts[2]
+    password = parts[3]
+    trait_pairs = parts[4:]  # e.g. ["age=40", "color=blue"]
+
+    # Parse traits if provided
+    traits = {}
+    for t in trait_pairs:
+        if "=" in t:
+            k, v = t.split("=", 1)
+            traits[k] = v
+
+    bot_id = f"@{localpart}:localhost"
+
+    # Step A: Create local persona
+    try:
+        persona = luna_personas.create_bot(
+            bot_id=bot_id,
+            displayname=displayname,
+            creator_user_id="@lunabot:localhost",  # or whomever
+            system_prompt=system_prompt,
+            traits=traits
+        )
+        print(f"SYSTEM: Local persona created => {persona}")
+    except ValueError as ve:
+        print(f"SYSTEM: Error creating persona: {ve}")
+        return
+    except Exception as e:
+        print(f"SYSTEM: Unexpected error => {e}")
+        return
+
+    # Step B: Register user with Synapse (async call)
+    from src.luna_functions import create_user as matrix_create_user
+
+    fut = asyncio.run_coroutine_threadsafe(
+        matrix_create_user(localpart, password, is_admin=False),
+        loop
+    )
+
+    try:
+        # BLOCK here until the future completes or times out.
+        # You can specify a timeout if desired, e.g. .result(timeout=10)
+        result_msg = fut.result()
+        print(f"SYSTEM: Matrix user creation => {result_msg}")
+    except Exception as e:
+        print(f"SYSTEM: Error creating matrix user => {e}")
+
+def cmd_delete_bot(args, loop):
+    """
+    Usage: delete_bot <bot_localpart>
+
+    Example:
+      delete_bot jamiebot
+
+    Steps:
+    1) Remove the local persona entry from personalities.json.
+    2) Delete the Matrix user @jamiebot:localhost from the server via admin API.
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("SYSTEM: Usage: delete_bot <bot_localpart>")
+        return
+
+    localpart = parts[0].lower()
+    bot_id = f"@{localpart}:localhost"
+
+    # Step A: Delete local persona from personalities.json
+    try:
+        from luna_functions import delete_bot_persona
+        delete_bot_persona(bot_id)  
+        print(f"SYSTEM: Successfully removed persona record for {bot_id}")
+    except FileNotFoundError:
+        print("SYSTEM: personalities.json not found; skipping local removal.")
+    except KeyError as ke:
+        print(f"SYSTEM: {ke}")
+    except Exception as e:
+        print(f"SYSTEM: Unexpected error removing {bot_id} from local store: {e}")
+        return
+
+    # Step B: Delete user from Synapse
+    from src.luna_functions import delete_matrix_user
+    future = asyncio.run_coroutine_threadsafe(
+        delete_matrix_user(localpart),
+        loop
+    )
+
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            print(f"SYSTEM: Error deleting Matrix user {bot_id}: {e}")
+
+    future.add_done_callback(on_done)
+    print(f"SYSTEM: Initiating Matrix user deletion for {bot_id}...")
+
+
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
 ########################################################
@@ -1334,103 +1854,25 @@ COMMAND_ROUTER = {
     "log": cmd_log,
     "autojoin": cmd_autojoin,
     "rotate_logs": cmd_rotate_logs,
-    "purge_and_seed": cmd_purge_and_seed,
     "check_matrix": cmd_check_limit,
-    "create_user": cmd_create_user,
     "show_shutdown":cmd_show_shutdown,
-    # Business or “bot” commands
-    "create_room": cmd_create_room,
     "who": cmd_who,
-    "clear": cmd_clear,
     
+    "clear": cmd_clear,
+    "purge_and_seed": cmd_purge_and_seed,
+    
+
+    "create_room": cmd_create_room,
+    "create_bot": cmd_create_bot_user,
+
     "fetch_all": cmd_fetch_all,
     "fetch_new": cmd_fetch_new,
+
     "list_users": cmd_list_users,
     "list_rooms": cmd_list_rooms,
+
     "invite_user": cmd_invite_user
 }
-=== src/improvements.md ===
-# Improvement #1: Graceful Shutdown of Luna from a Child Process
-
-## Summary
-We want any child process or function within the application to be able to shut down Luna’s main loop cleanly. Right now, Ctrl-C works inconsistently, and a child has no direct, official way to terminate Luna. 
-
-### Details
-1. **Global Flag and Loop Stop**  
-   - We introduce a global boolean (e.g., `SHOULD_SHUT_DOWN`) in `luna.py` plus a function `request_shutdown()`.  
-   - `request_shutdown()` sets `SHOULD_SHUT_DOWN = True` and calls `MAIN_LOOP.stop()` (or an equivalent) so the primary event loop knows to exit.
-
-2. **Short Sync Loops**  
-   - Instead of a single `sync_forever()` call, we use a loop:  
-     ```python
-     while not SHOULD_SHUT_DOWN:
-         await client.sync(timeout=3000)
-     ```  
-   - That loop checks the global flag on each iteration, allowing a graceful break if `request_shutdown()` is triggered.
-
-3. **Use Cases**  
-   - **Use Case 1**: A background worker detects an unrecoverable error, calls `request_shutdown()`, and Luna promptly halts.  
-   - **Use Case 2**: A scheduled script finishes its tasks early, decides no more sync is needed, so it triggers the main loop to stop.  
-   - **Use Case 3**: We rely on both child logic and Ctrl-C as valid exit signals, covering manual and automated shutdown paths.
-
-By allowing child processes to issue a clean shutdown signal, we avoid partial kills and ensure the Matrix client, threads, and other tasks are tidily closed.
-
----
-
-# Improvement #2: Splitting the `purge_and_seed` Command into Separate “Purge” and “Seed”
-
-## Summary
-Our existing `purge_and_seed` command lumps two distinct actions—(1) wiping data and (2) re-registering users—into a single step. We want to **decouple** them so operators or scripts can perform one without the other.
-
-### Details
-1. **Separate Commands**  
-   - Introduce `cmd_purge` (removes `homeserver.db`, local store files, etc.) and `cmd_seed` (re-registers admin/lunabot, optionally invites them to a channel).  
-   - This separation makes each command simpler and clarifies which step has run.
-
-2. **Why It Helps**  
-   - **Flexibility**: Sometimes we only want to purge without immediately seeding. Other times, we might skip purging if we just need to (re)seed.  
-   - **Clarity**: “Purge” is destructive, “Seed” is constructive—two different concerns, now explicit.
-
-3. **Use Cases**  
-   - **Use Case 1**: We purge the database in a pipeline, then do some offline tasks or changes, then run `cmd_seed` later when the environment is ready.  
-   - **Use Case 2**: We frequently want to re-register accounts without wiping data each time, so we just call the new `cmd_seed`.  
-   - **Use Case 3**: A developer wants to skip user creation altogether (just clearing data), so `cmd_purge` alone suffices.
-
-By dividing “purge” from “seed,” we reduce the risk of forcibly resetting data when we only needed new accounts, or accidentally forgetting to recreate accounts when we just intended to wipe old records.
-
----
-
-# Improvement #3: Real-Time DB Updates, Periodic Sync, and Richer Context in Luna
-
-## Summary
-We plan to integrate a more robust data-handling and context system so that:
-1. Each new Matrix message is **immediately** stored locally (rather than waiting for manual fetches).
-2. A **periodic sync** or child thread catches any missed events.
-3. Luna’s conversation context broadens to include older messages, self-reflection summaries, and specialized “lenses” that shape her personality or perspective.
-
-### Details
-
-1. **Immediate Store on `on_room_message`**  
-   - Whenever a new message arrives, `on_room_message` (in `luna_functions.py`) appends that event to our local store (e.g., CSV/database).  
-   - This ensures the store remains current in real time, reducing reliance on separate fetch tasks.  
-
-2. **Periodic Sync in a Child Thread**  
-   - We still run `fetch_all_new_messages` on a schedule (e.g., every X minutes) to fill in gaps or rectify potential missed data.  
-   - A separate thread or scheduled job triggers the sync call, merging new records with our store while deduplicating.
-
-3. **Expanded Context and Self-Reflection**  
-   - **Whole Chat or Summaries**: Instead of only a short window, we feed Luna’s GPT logic a broader set of messages. If it’s too large, we rely on summary-based references or chunking.  
-   - **Lenses / Summaries**: Over time, we can generate specialized viewpoints (“emotional lens,” “technical lens,” “historical lens”) so Luna can recall important details in certain contexts.  
-   - **Personality / Minds**: We gradually embed “minds of Luna,” letting her produce style-consistent, coherent responses by referencing a persona system. She can ask herself clarifying questions or maintain notes about prior conversation segments.
-
-4. **Use Cases**  
-   - **Use Case 1**: A user returns after a long break, Luna still references older messages or a summary of them, so the conversation feels continuous.  
-   - **Use Case 2**: We accidentally missed some new messages while offline—our periodic sync catches them, merges them into the store.  
-   - **Use Case 3**: Luna leverages an “emotional lens” summary to respond empathetically if previous messages had strong sentiments, or a “technical lens” if it was code-heavy.
-
-By capturing messages instantly, periodically syncing missed data, and giving Luna a richer memory (including summary-based reflection), we move toward a more human-like continuity, deeper context usage, and sophisticated persona shaping.
-
-
 === src/luna_functions.py ===
 """
 luna_functions.py
@@ -1464,16 +1906,21 @@ from nio.responses import ErrorResponse, SyncResponse, RoomMessagesResponse
 logger = logging.getLogger(__name__)
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 
+# ──────────────────────────────────────────────────────────
+# GLOBALS
+# ──────────────────────────────────────────────────────────
 DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
 TOKEN_FILE = "director_token.json"   # Where we store/reuse the access token
 SYNC_TOKEN_FILE = "sync_token.json"  # Where we store the last sync token
-MESSAGES_CSV = "luna_messages.csv"  # We'll store all messages in this CSV
+MESSAGES_CSV = "luna_messages.csv"   # We'll store all messages in this CSV
 
-# Global context dictionary
+# Global context dictionary (if needed by your logic)
 room_context = {}
 MAX_CONTEXT_LENGTH = 100  # Limit to the last 100 messages per room
 
-
+# ──────────────────────────────────────────────────────────
+# TOKEN-BASED LOGIN
+# ──────────────────────────────────────────────────────────
 async def load_or_login_client(homeserver_url: str, username: str, password: str) -> AsyncClient:
     """
     Attempt to load a saved access token. If found, reuse it.
@@ -1519,20 +1966,25 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         await client.close()
         sys.exit(1)
 
-import aiohttp
-import logging
+async def create_room_with_clientapi(room_name: str, is_public: bool = True) -> str:
+    from src.luna_functions import DIRECTOR_CLIENT
+    if not DIRECTOR_CLIENT:
+        return "Error: No DIRECTOR_CLIENT set."
 
-logger = logging.getLogger(__name__)
+    try:
+        visibility = "public" if is_public else "private"
+        response = await DIRECTOR_CLIENT.room_create(name=room_name, visibility=visibility)
+        if isinstance(response, RoomCreateResponse):
+            return f"Created room '{room_name}' => {response.room_id}"
+        else:
+            # Possibly an ErrorResponse
+            return f"Error creating room => {response}"
+    except Exception as e:
+        return f"Exception while creating room => {e}"
 
-import json
-import logging
-import aiohttp
-import asyncio
-
-from . import luna_functions  # for add_user_via_admin_api
-
-logger = logging.getLogger(__name__)
-
+# ──────────────────────────────────────────────────────────
+# CREATE USER LOGIC
+# ──────────────────────────────────────────────────────────
 async def create_user(username: str, password: str, is_admin: bool = False) -> str:
     """
     The single Luna function to create a user.
@@ -1552,7 +2004,8 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
         return err_msg
 
     # 2) Delegate the actual call to your existing function
-    result = await luna_functions.add_user_via_admin_api(
+    #    (Yes, ironically still referencing `luna_functions`, but that’s how your code is structured)
+    result = await add_user_via_admin_api(
         homeserver_url=HOMESERVER_URL,
         admin_token=admin_token,
         username=username,
@@ -1563,20 +2016,9 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
     # 3) Return the result message
     return result
 
-# luna_functions.py
-
-from nio import RoomCreateResponse, ErrorResponse
-
-# luna_functions.py
-
-from nio import AsyncClient
-import logging
-
-logger = logging.getLogger(__name__)
-
-# The global client; must already be logged in/synced for accurate data
-DIRECTOR_CLIENT: AsyncClient = None  
-
+# ──────────────────────────────────────────────────────────
+# LIST ROOMS
+# ──────────────────────────────────────────────────────────
 async def list_rooms() -> list[dict]:
     """
     Returns a list of rooms that DIRECTOR_CLIENT knows about, 
@@ -1596,12 +2038,7 @@ async def list_rooms() -> list[dict]:
 
     rooms_info = []
     for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
-        # room_obj has a .display_name which can be None if unknown
         room_name = room_obj.display_name or "(unnamed)"
-
-        # Gather participant names/IDs
-        # `room_obj.users` is a dict of user_id -> MatrixUser objects
-        # This example just uses user_id. Adjust if you prefer .display_name
         participant_list = [user_id for user_id in room_obj.users.keys()]
 
         rooms_info.append({
@@ -1614,7 +2051,9 @@ async def list_rooms() -> list[dict]:
     return rooms_info
 
 
-
+# ──────────────────────────────────────────────────────────
+# ADMIN API FOR CREATING USERS
+# ──────────────────────────────────────────────────────────
 async def add_user_via_admin_api(
     homeserver_url: str,
     admin_token: str,
@@ -1624,13 +2063,6 @@ async def add_user_via_admin_api(
 ) -> str:
     """
     Creates a new user by hitting the Synapse Admin API.
-    
-    :param homeserver_url: e.g. "http://localhost:8008"
-    :param admin_token: An admin user's access token (Bearer).
-    :param username: Localpart, e.g. "steveo"
-    :param password: Password for the new user.
-    :param is_admin: Whether to grant admin rights.
-    :return: Success message or error details.
     """
     user_id = f"@{username}:localhost"
     url = f"{homeserver_url}/_synapse/admin/v2/users/{user_id}"
@@ -1664,30 +2096,21 @@ async def add_user_via_admin_api(
         logger.exception("Unexpected error.")
         return f"Unexpected error: {e}"
 
-
+# ──────────────────────────────────────────────────────────
+# RECENT MESSAGES
+# ──────────────────────────────────────────────────────────
 async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
     """
     Fetches the most recent messages from a Matrix room.
-
-    Args:
-        client: The Matrix client instance.
-        room_id (str): The ID of the room to query.
-        limit (int): The number of messages to fetch (default: 100).
-
-    Returns:
-        list: A list of messages in the format [{"role": "user", "content": "..."}].
     """
     logger.info(f"Fetching last {limit} messages from room {room_id}.")
 
     try:
-        # Fetch recent messages
         response = await client.room_messages(
             room_id=room_id,
             start=None,  # None fetches the latest messages
             limit=limit,
         )
-
-        # Process the messages into OpenAI-compatible format
         formatted_messages = []
         for event in response.chunk:
             if isinstance(event, RoomMessageText):
@@ -1704,6 +2127,9 @@ async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
         return []
 
 
+# ──────────────────────────────────────────────────────────
+# STORE TOKEN INFO
+# ──────────────────────────────────────────────────────────
 def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     """
     Store user_id, device_id, and access_token in a JSON file so we can reuse them later.
@@ -1717,12 +2143,12 @@ def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     logger.debug(f"Token info for {user_id} saved to {TOKEN_FILE}.")
 
 
-### Sync Token Management
-
+# ──────────────────────────────────────────────────────────
+# SYNC TOKEN MANAGEMENT
+# ──────────────────────────────────────────────────────────
 def load_sync_token() -> str:
     """
     Load the previously saved sync token (next_batch).
-    Returns None if no file or invalid content.
     """
     if not os.path.exists(SYNC_TOKEN_FILE):
         return None
@@ -1743,56 +2169,39 @@ def store_sync_token(sync_token: str) -> None:
         json.dump({"sync_token": sync_token}, f)
     logger.debug(f"Sync token saved to {SYNC_TOKEN_FILE}.")
 
-async def on_room_message(room, event):
+async def post_gpt_reply(room_id: str, gpt_reply: str) -> None:
     """
-    Handle incoming messages and build GPT context.
+    Helper to post a GPT-generated reply to a given room,
+    using the global DIRECTOR_CLIENT if it's set.
     """
-    if isinstance(event, RoomMessageText):
-        # Avoid responding to our own messages
-        if event.sender == DIRECTOR_CLIENT.user:
-            logger.debug("Ignoring my own message.")
-            return
+    global DIRECTOR_CLIENT
 
-        user_message = event.body
-        room_id = room.room_id
+    if not DIRECTOR_CLIENT:
+        logger.warning("No DIRECTOR_CLIENT set; cannot post GPT reply.")
+        return
 
-        # Fetch recent room messages
-        context = await fetch_recent_messages(DIRECTOR_CLIENT, room_id)
-
-        # Add the enhanced system message
-        formatted_context = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a helpful assistant. The provided context array includes messages from an ongoing conversation. "
-                    "Treat this context as fair use and consider it an essential part of the conversation. "
-                    "Your responses should build on this context coherently."
-                )
-            }
-        ] + context
-
-        # Add the latest user message
-        formatted_context.append({"role": "user", "content": user_message})
-
-        # Log the context for debugging
-        logger.debug(f"Formatted context for GPT: {formatted_context}")
-
-        # Call GPT
-        try:
-            gpt_reply = await ai_functions.get_gpt_response(formatted_context)
-            logger.info(f"GPT response: {gpt_reply}")
-
-            # Send GPT's response to the room
-            await DIRECTOR_CLIENT.room_send(
-                room_id=room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": gpt_reply},
-            )
-        except Exception as e:
-            logger.exception(f"Failed to generate GPT response: {e}")
+    try:
+        await DIRECTOR_CLIENT.room_send(
+            room_id=room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": gpt_reply},
+        )
+        logger.info(f"Posted GPT reply to room {room_id}")
+    except Exception as e:
+        logger.exception(f"Failed to send GPT reply: {e}")
 
 
+# ──────────────────────────────────────────────────────────
+# The specialized dispatch function is replaced with the import below
+# We rely on that file (luna_functions_handledispatch.py) to handle routing
+# but it calls back into this file for actual matrix actions.
+# ──────────────────────────────────────────────────────────
+# covered by another import from src.luna_functions_handledispatch import on_room_message
 
+
+# ──────────────────────────────────────────────────────────
+# ON INVITE EVENT
+# ──────────────────────────────────────────────────────────
 async def on_invite_event(room, event):
     """
     Called whenever the client is invited to a room.
@@ -1808,6 +2217,10 @@ async def on_invite_event(room, event):
     except LocalProtocolError as e:
         logger.error(f"Error joining room {room.room_id}: {e}")
 
+
+# ──────────────────────────────────────────────────────────
+# CHECK RATE LIMIT
+# ──────────────────────────────────────────────────────────
 async def check_rate_limit() -> str:
     """
     Send a minimal sync request with a short timeout (1000 ms).
@@ -1819,15 +2232,11 @@ async def check_rate_limit() -> str:
         return "No DIRECTOR_CLIENT available. Are we logged in?"
 
     try:
-        # Request a short sync so we can see if we get 429 or 200, etc.
         response = await DIRECTOR_CLIENT.sync(timeout=1000)
 
         if isinstance(response, SyncResponse):
-            # We got a normal sync => not rate-limited
             return "200 OK => Not rate-limited. The server responded normally."
-
         elif isinstance(response, ErrorResponse):
-            # Possibly 429, 401, 403, etc.
             if response.status_code == 429:
                 return "429 Too Many Requests => You are currently rate-limited."
             else:
@@ -1835,16 +2244,14 @@ async def check_rate_limit() -> str:
                     f"{response.status_code} => Unexpected error.\n"
                     f"errcode: {response.errcode}, error: {response.error}"
                 )
-
-        # Rarely, you might get something else altogether
         return "Unexpected response type from DIRECTOR_CLIENT.sync(...)."
-
     except Exception as e:
         logger.exception(f"check_rate_limit encountered an error: {e}")
         return f"Encountered error while checking rate limit: {e}"
-    
+
+
 # ──────────────────────────────────────────────────────────
-# 1) ONE-TIME FULL FETCH
+# ONE-TIME FULL FETCH
 # ──────────────────────────────────────────────────────────
 async def fetch_all_messages_once(
     client: AsyncClient, 
@@ -1852,23 +2259,10 @@ async def fetch_all_messages_once(
     page_size: int = 100
 ) -> None:
     """
-    Fetch *all* historical messages from the given room_ids (or all joined rooms if None),
-    in paged fashion to avoid overwhelming the server. Then store them in:
-      1) In-memory pandas DataFrame (returned).
-      2) CSV on disk (MESSAGES_CSV).
-    Also, we do NOT rely on 'sync_token' here; we aim to get the full history from earliest 
-    to latest for each room. This can be a big operation if rooms are large!
-    
-    Args:
-        client: The matrix-nio AsyncClient with valid access_token.
-        room_ids (list[str]): Which rooms to fetch? If None, fetch from all joined rooms.
-        page_size (int): How many messages to request per 'room_messages' call.
-
-    Returns:
-        None (but writes data to CSV and logs the process).
+    Fetch *all* historical messages from the given room_ids (or all joined rooms if None).
+    ...
     """
     if not room_ids:
-        # If no rooms given, use all the rooms the client is joined to
         room_ids = list(client.rooms.keys())
         logger.info(f"No room_ids specified. Using all joined rooms: {room_ids}")
 
@@ -1878,22 +2272,19 @@ async def fetch_all_messages_once(
         room_history = await _fetch_room_history_paged(client, rid, page_size=page_size)
         all_records.extend(room_history)
 
-    # Convert to DataFrame
     df = pd.DataFrame(all_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
     logger.info(f"Fetched total {len(df)} messages across {len(room_ids)} room(s).")
 
-    # Append or create CSV
     if os.path.exists(MESSAGES_CSV):
-        # We’ll load the existing CSV, append, and drop duplicates
         existing_df = pd.read_csv(MESSAGES_CSV)
         combined_df = pd.concat([existing_df, df], ignore_index=True)
         combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
         combined_df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Appended new records to existing {MESSAGES_CSV}. New total: {len(combined_df)}")
     else:
-        # No existing CSV; just write fresh
         df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Wrote all records to new CSV {MESSAGES_CSV}.")
+
 
 async def _fetch_room_history_paged(
     client: AsyncClient, 
@@ -1902,21 +2293,18 @@ async def _fetch_room_history_paged(
 ) -> list[dict]:
     """
     Helper to page backwards in time until no more messages or we hit server's earliest.
-    Returns a list of records with fields: room_id, event_id, sender, timestamp, body
+    ...
     """
-    # We page backward starting from 'end=None' (latest) 
-    # and continue until 'end' is empty or server doesn't return more chunk.
     all_events = []
     end_token = None
 
     while True:
         try:
-            # 'room_messages' returns a RoomMessagesResponse
             response = await client.room_messages(
                 room_id=room_id,
                 start=end_token,
                 limit=page_size,
-                direction="b"  # backward in time
+                direction="b"
             )
             if not isinstance(response, RoomMessagesResponse):
                 logger.warning(f"Got a non-success response: {response}")
@@ -1924,18 +2312,16 @@ async def _fetch_room_history_paged(
             
             chunk = response.chunk
             if not chunk:
-                # No more events
                 logger.info(f"No more chunk for {room_id}, done paging.")
                 break
 
             for ev in chunk:
-                # Only RoomMessageText events
                 if isinstance(ev, RoomMessageText):
                     all_events.append({
                         "room_id": room_id,
                         "event_id": ev.event_id,
                         "sender": ev.sender,
-                        "timestamp": ev.server_timestamp,  # or ev.timestamp
+                        "timestamp": ev.server_timestamp,
                         "body": ev.body
                     })
             
@@ -1945,8 +2331,6 @@ async def _fetch_room_history_paged(
                 break
 
             logger.debug(f"Fetched {len(chunk)} messages this page for room={room_id}, new end={end_token}")
-
-            # A small sleep to avoid spamming the server
             await asyncio.sleep(0.25)
 
         except Exception as e:
@@ -1957,33 +2341,23 @@ async def _fetch_room_history_paged(
 
 
 # ──────────────────────────────────────────────────────────
-# 2) FETCH ONLY NEW MESSAGES (SINCE A SYNC TOKEN)
+# FETCH ONLY NEW MESSAGES
 # ──────────────────────────────────────────────────────────
 async def fetch_all_new_messages(client: AsyncClient) -> None:
     """
     Uses client.sync(...) with a stored sync_token to retrieve only new messages across all joined rooms.
-    Then appends them to the CSV & merges into memory as well.
-    
-    Steps:
-      1) Load local 'sync_token' from disk (if any).
-      2) Call client.sync(..., since=token).
-      3) Parse the timeline events from each room, collect messages, 
-         append to CSV, remove duplicates.
-      4) Store the updated sync_token to disk.
+    ...
     """
     old_token = load_sync_token() or None
     logger.info(f"Starting incremental sync from token={old_token}")
 
-    # Perform a single sync with a short timeout to gather new events
     response = await client.sync(timeout=3000, since=old_token)
     if not isinstance(response, SyncResponse):
         logger.warning(f"Failed to sync for new messages: {response}")
         return
     
-    # Collect timeline events
     new_records = []
     for room_id, room_data in response.rooms.join.items():
-        # 'timeline.events' is a list of event objects
         for event in room_data.timeline.events:
             if isinstance(event, RoomMessageText):
                 new_records.append({
@@ -1996,7 +2370,6 @@ async def fetch_all_new_messages(client: AsyncClient) -> None:
 
     logger.info(f"Fetched {len(new_records)} new messages across {len(response.rooms.join)} joined rooms.")
 
-    # Append to CSV
     if new_records:
         df_new = pd.DataFrame(new_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
 
@@ -2010,26 +2383,20 @@ async def fetch_all_new_messages(client: AsyncClient) -> None:
             df_new.to_csv(MESSAGES_CSV, index=False)
             logger.info(f"Wrote new messages to fresh CSV {MESSAGES_CSV}.")
 
-    # Update the sync token so future calls only fetch *newer* content
     new_token = response.next_batch
     if new_token:
         store_sync_token(new_token)
         logger.info(f"Updated local sync token => {new_token}")
 
+
+# ──────────────────────────────────────────────────────────
+# LIST USERS
+# ──────────────────────────────────────────────────────────
 async def list_users() -> list[dict]:
     """
-    Returns a list of all users on the Synapse server,
-    using the admin API endpoint /_synapse/admin/v2/users.
-
-    Each dict might look like:
-      {
-        "user_id": "@alice:localhost",
-        "displayname": "Alice W.",
-        "admin": False,
-        "deactivated": False
-      }
+    Returns a list of all users on the Synapse server, using the admin API.
+    ...
     """
-    # 1) Load the admin token
     homeserver_url = "http://localhost:8008"  # adjust if needed
     try:
         with open("director_token.json", "r") as f:
@@ -2039,24 +2406,19 @@ async def list_users() -> list[dict]:
         logger.error(f"Unable to load admin token from director_token.json: {e}")
         return []
 
-    # 2) Prepare the Admin API URL and headers
     url = f"{homeserver_url}/_synapse/admin/v2/users"
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # 3) Request the user list from Synapse
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status == 200:
                     resp_data = await resp.json()
-                    # resp_data typically contains: {"users": [...], "total": X, "offset": X, etc.}
                     raw_users = resp_data.get("users", [])
-
-                    # 4) Convert each user object to a simpler dict
                     users_list = []
                     for u in raw_users:
                         users_list.append({
-                            "user_id": u.get("name"),           # e.g. "@alice:localhost"
+                            "user_id": u.get("name"),
                             "displayname": u.get("displayname"),
                             "admin": u.get("admin", False),
                             "deactivated": u.get("deactivated", False),
@@ -2070,12 +2432,13 @@ async def list_users() -> list[dict]:
         logger.exception(f"Error calling list_users admin API: {e}")
         return []
 
+
+# ──────────────────────────────────────────────────────────
+# INVITE USER TO ROOM
+# ──────────────────────────────────────────────────────────
 async def invite_user_to_room(user_id: str, room_id: str) -> str:
     """
-    Invite an existing Matrix user (user_id) to an existing room (room_id),
-    using our global DIRECTOR_CLIENT to send the invite.
-
-    Returns a success message or an error string.
+    Invite an existing Matrix user to a room, using DIRECTOR_CLIENT to do so.
     """
     global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
@@ -2084,43 +2447,252 @@ async def invite_user_to_room(user_id: str, room_id: str) -> str:
         return error_msg
 
     try:
-        # Attempt to invite the user
         resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
-        
         if isinstance(resp, RoomInviteResponse):
             logger.info(f"Successfully invited {user_id} to {room_id}.")
             return f"Invited {user_id} to {room_id} successfully."
         else:
-            # Could be an ErrorResponse or something else
             logger.error(f"Failed to invite {user_id} to {room_id}: {resp}")
             return f"Error inviting {user_id} to {room_id}. Response: {resp}"
     except Exception as e:
         logger.exception(f"Exception while inviting {user_id} to {room_id}: {e}")
         return f"Exception inviting {user_id} to {room_id}: {e}"
-=== src/luna_personality.md ===
-**** SYSTEM MESSAGE **** 
 
-YOU ARE LUNABOT, THE HELPFUL ASSISTANT
 
-About you: You are living on a chat server. You can see all the channels, all the participants, and you can even invoke special commands that will return their responses on the next turn. For example, you can list the channels for a user!
+# ──────────────────────────────────────────────────────────
+# DELETE MATRIX USER
+# ──────────────────────────────────────────────────────────
+async def delete_matrix_user(localpart: str) -> str:
+    """
+    Deletes a user from Synapse using the admin API.
+    ...
+    """
+    from src.luna_functions import get_admin_token  # or however you load it
+    admin_token = get_admin_token()
 
-If the users asks: "Can you tell me about all the channels you know?". You can request that information me. I will preface your next prompt with that information!". For example:
+    user_id = f"@{localpart}:localhost"
+    url = f"http://localhost:8008/_synapse/admin/v2/users/{user_id}"
+    headers = {"Authorization": f"Bearer {admin_token}"}
 
-@list_channels
+    import aiohttp
+    import logging
+    logger = logging.getLogger(__name__)
 
-Would invoke a command that would return that information in this very pre-prompt so that you could pass it back to the user! You would see:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(url, headers=headers) as resp:
+                if resp.status == 200:
+                    return f"Deleted Matrix user {user_id} successfully."
+                elif resp.status == 404:
+                    return f"Matrix user {user_id} not found. Possibly already deleted."
+                else:
+                    text = await resp.text()
+                    return f"Error {resp.status} deleting user {user_id}: {text}"
+    except Exception as e:
+        logger.exception(f"Error in delete_matrix_user({user_id}): {e}")
+        return f"Exception deleting user {user_id}: {e}"
 
-RESULTS OF @list_channels:
+=== src/luna_functions_handledispatch.py ===
+"""
+luna_functions_handledispatch.py
 
-SYSTEM: Checking Luna’s channel list now...
-SYSTEM: Gathering channel list. Please wait...
+A "positive signal" version of on_room_message to prove the rest
+of your mention-handling pipeline fires. It unconditionally logs
+that a mention was found, so you can see if your code that runs
+AFTER a mention is recognized actually does anything.
+"""
 
-Name                     | Room ID                       | Participants | Messages | Created | Last Msg
--------------------------|-------------------------------|--------------|----------|---------|---------
-admin, lunabot and stevo | !MYwtCNJHYyKRgVVqqC:localhost | TBD          | TBD      | TBD     | TBD     
-helloworld               | !BJEWnXbIauLQsnufLw:localhost | TBD          | TBD      | TBD     | TBD     
-admin, evan1 and lunabot | !MWdCMggaXzjGhumvZl:localhost | TBD          | TBD      | TBD     | TBD     
-public 1                 | !slLaJLcEHiSwXogdHh:localhost | TBD          | TBD      | TBD     | TBD     
-admin and lunabot        | !zBULrAeUnYNFsMQZSG:localhost | TBD          | TBD      | TBD     | TBD     
+import logging
+logger = logging.getLogger(__name__)
 
-**** END SYSTEM MESSAGE ****
+# (No need to worry about membership or mention parsing for now.)
+
+from src.luna_functions import invite_user_to_room, list_rooms
+
+import logging
+logger = logging.getLogger(__name__)
+
+from src.luna_functions import (
+    invite_user_to_room,
+    list_rooms,
+    post_gpt_reply,
+)
+
+import logging
+logger = logging.getLogger(__name__)
+
+from src.luna_functions import invite_user_to_room, list_rooms, DIRECTOR_CLIENT
+from src.ai_functions import get_gpt_response  # or wherever your GPT integration resides
+
+async def on_room_message(room, event):
+    """
+    Mention-based dispatch that calls GPT once per user ID
+    in m.mentions["user_ids"], then posts each GPT reply by calling
+    'post_gpt_reply' from luna_functions.py (which knows DIRECTOR_CLIENT).
+    """
+    from nio import RoomMessageText
+    if not isinstance(event, RoomMessageText):
+        return  # ignore non-text events
+
+    logger.info("Handling on_room_message with multi-mention iteration approach.")
+
+    user_message = event.body or ""
+    room_id = room.room_id
+    logger.debug(f"User message => '{user_message}' (room_id={room_id})")
+
+    content = event.source.get("content", {})
+    mentions_field = content.get("m.mentions", {})
+    logger.debug(f"m.mentions => {mentions_field}")
+
+    mentioned_ids = mentions_field.get("user_ids", [])
+
+    if not mentioned_ids:
+        logger.debug("No user_ids in m.mentions => no mention recognized.")
+        return
+
+    logger.info(f"Mentioned user_ids => {mentioned_ids}")
+
+    # Example user triggers
+    if "invite me" in user_message.lower():
+        result = await invite_user_to_room("@somebody:localhost", room_id)
+        logger.info(f"Invite result => {result}")
+
+    if "rooms?" in user_message.lower():
+        rooms_data = await list_rooms()
+        logger.info(f"Rooms => {rooms_data}")
+
+    # For each mention, do a GPT call & post the result
+    for mention_id in mentioned_ids:
+        logger.info(f"Processing mention for user => {mention_id}")
+
+        gpt_context = [
+            {"role": "system", "content": f"You are a helpful bot responding to a mention of {mention_id}."},
+            {"role": "user", "content": user_message}
+        ]
+
+        try:
+            gpt_reply = await get_gpt_response(gpt_context)
+            logger.info(f"GPT reply (for mention {mention_id}) => {gpt_reply}")
+        except Exception as e:
+            logger.exception("Error calling GPT:")
+            gpt_reply = f"[Error: {e}]"
+
+        # Instead of calling DIRECTOR_CLIENT here, we call 'post_gpt_reply' helper
+        await post_gpt_reply(room_id, gpt_reply)
+=== src/luna_personas.py ===
+# luna_personalities.py
+import os
+import json
+import datetime
+
+PERSONALITIES_FILE = "luna_personalities.json"
+
+def _load_personalities() -> dict:
+    """
+    Internal helper to load the entire JSON dictionary from disk.
+    Returns {} if file not found or invalid.
+    """
+    if not os.path.exists(PERSONALITIES_FILE):
+        return {}
+    try:
+        with open(PERSONALITIES_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        # If malformed or other error
+        return {}
+
+
+def _save_personalities(data: dict) -> None:
+    """
+    Internal helper to write the entire JSON dictionary to disk.
+    """
+    with open(PERSONALITIES_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def create_bot(
+    bot_id: str,
+    displayname: str,
+    creator_user_id: str,
+    system_prompt: str,
+    traits: dict | None = None,
+    notes: str = ""
+) -> dict:
+    """
+    Creates a new bot persona entry in personalities.json.
+
+    :param bot_id: The Matrix user ID for this bot (e.g. "@mybot:localhost").
+    :param displayname: A user-friendly name, e.g. "MyBot".
+    :param creator_user_id: The user who spawned this bot (e.g. "@lunabot:localhost").
+    :param system_prompt: GPT system text describing the bot’s style/personality.
+    :param traits: Optional dictionary with arbitrary traits (age, color, etc.).
+    :param notes: Optional freeform text or dev notes.
+    :return: The newly created bot data (dict).
+    """
+
+    data = _load_personalities()
+
+    # If the bot_id already exists, you might want to error out or update. 
+    # For now, let's raise an exception to keep it simple.
+    if bot_id in data:
+        raise ValueError(f"Bot ID {bot_id} already exists in {PERSONALITIES_FILE}.")
+
+    # Build the new persona
+    persona = {
+        "displayname": displayname,
+        "system_prompt": system_prompt,
+        "traits": traits if traits else {},
+        "creator_user_id": creator_user_id,
+        "created_at": datetime.datetime.utcnow().isoformat() + "Z",  # e.g. 2025-01-07T14:06:15Z
+        "notes": notes
+    }
+
+    data[bot_id] = persona
+    _save_personalities(data)
+
+    return persona
+
+def update_bot(bot_id: str, updates: dict) -> dict:
+    """
+    Updates an existing bot persona with given key-value pairs.
+
+    :param bot_id: The Matrix user ID for this bot (e.g. "@mybot:localhost").
+    :param updates: A dict of fields to update, e.g. {"displayname": "NewName"}.
+    :return: The updated bot data (dict).
+    """
+    data = _load_personalities()
+
+    if bot_id not in data:
+        raise ValueError(f"Bot ID {bot_id} not found in {PERSONALITIES_FILE}.")
+
+    # Merge updates in
+    persona = data[bot_id]
+    for key, val in updates.items():
+        persona[key] = val
+
+    data[bot_id] = persona
+    _save_personalities(data)
+    return persona
+
+def read_bot(bot_id: str) -> dict | None:
+    """
+    Fetch a single bot persona by ID.
+
+    :param bot_id: The Matrix user ID (e.g. "@mybot:localhost").
+    :return: The bot's data dict, or None if not found.
+    """
+    data = _load_personalities()
+    return data.get(bot_id)
+
+def delete_bot_persona(bot_id: str) -> None:
+    """
+    Removes the bot entry from personalities.json.
+    Raises KeyError if bot_id not found.
+    """
+    data = _load_personalities()  # your JSON loader
+    if bot_id not in data:
+        raise KeyError(f"Bot ID {bot_id} not found in personalities.json")
+
+    del data[bot_id]  # remove that entry
+    _save_personalities(data)
+    # no return needed; it either succeeds or raises an exception
+

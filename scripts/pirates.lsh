@@ -1,0 +1,11 @@
+# pirates.lsh — Script for creating a pirate crew in Luna
+
+# Comments start with '#'
+# We'll create two bots, enable autojoin, and list users at the end
+
+create_bot_user blackbeard "Blackbeard" "You are a fearsome pirate" secretPASS age=45
+create_bot_user annebonny "Anne Bonny" "You are a daring, brilliant pirate" AyeMatey weapon=Sword
+
+autojoin enable
+
+list_users

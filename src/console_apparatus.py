@@ -44,6 +44,14 @@ def console_loop(loop):
     command_count = 0
 
     while not SHOULD_SHUT_DOWN:
+
+        if command_count == 0:
+            console_functions.cmd_clear(None,loop)
+            from src.ascii_art import show_ascii_banner
+            print("Welcome to LunaBot - where the magic of your imagination can come to life.")
+            print(show_ascii_banner("LUNA BOT"))            
+            print("What should we create today?")
+
         command_count += 1
 
         # Build a short date/time string

@@ -12,13 +12,18 @@ from src.cmd_shutdown import request_shutdown
 from . import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
+from src.ascii_art import show_ascii_banner
 
+from src.console_functions_cmd_summarize_room import cmd_summarize_room
 
 logger = logging.getLogger(__name__)
 
 ########################################################
 # 1) COMMAND HANDLER FUNCTIONS
 ########################################################
+def cmd_banner(args, loop):
+    print ("\n" + show_ascii_banner("Luna Bot"))
+
 def cmd_help(args, loop):
     """
     Usage: help
@@ -203,33 +208,6 @@ def cmd_create_room(args, loop):
         logger.debug("cmd_create_room: Done with final block.")
 
 
-
-def cmd_create_room_dep(args, loop):
-    """
-    Usage: create_room <roomName>
-    Creates a new room named <roomName> via the normal client API (room_create).
-    """
-    if not args:
-        print("SYSTEM: Usage: create_room <roomName>")
-        return
-
-    room_name = args.strip()
-    print(f"SYSTEM: Creating a new room named '{room_name}'...")
-
-    # fut = asyncio.run_coroutine_threadsafe(
-    #     luna_functions.create_room_with_clientapi(room_name, is_public=True),
-    #     loop
-    # )
-
-    def on_done(f):
-        try:
-            msg = f.result()
-            print(f"SYSTEM: {msg}")
-        except Exception as e:
-            print(f"SYSTEM: Error creating room => {e}")
-
-    fut.add_done_callback(on_done)
-
 def cmd_who(args, loop):
     """
     Usage: who
@@ -259,7 +237,6 @@ def cmd_clear(args, loop):
     else:
         os.system('clear')
     logger.info("Console screen cleared.")
-    print("SYSTEM: Console screen cleared.")
 
 def cmd_autojoin(args, loop):
     """
@@ -942,6 +919,7 @@ COMMAND_ROUTER = {
     "clear": cmd_clear,
     "purge_and_seed": cmd_purge_and_seed,
     
+    "banner": cmd_banner,
 
     "create_room": cmd_create_room,
     "create_bot": cmd_create_bot_user,
@@ -952,5 +930,6 @@ COMMAND_ROUTER = {
     "list_users": cmd_list_users,
     "list_rooms": cmd_list_rooms,
 
-    "invite_user": cmd_invite_user
+    "invite_user": cmd_invite_user,
+    "summarize_room": cmd_summarize_room
 }

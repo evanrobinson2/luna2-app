@@ -9,7 +9,7 @@
 #   - Appends file contents to combined.out with a header.
 #   - Includes print statements at key steps for debugging.
 
-OUTPUT_FILE="luna.txt"
+OUTPUT_FILE="project-luna.md"
 
 echo "[INFO] Starting script: $0"
 echo "[INFO] Checking Git-tracked files..."
