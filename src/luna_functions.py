@@ -225,7 +225,7 @@ async def add_user_via_admin_api(
 # ──────────────────────────────────────────────────────────
 async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
     """
-    Fetches the most recent messages from a Matrix room.
+    Fetches the most recent messages from a Matrix room. Used to build context for interaction.
     """
     logger.info(f"Fetching last {limit} messages from room {room_id}.")
 

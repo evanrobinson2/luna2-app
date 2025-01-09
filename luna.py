@@ -14,17 +14,18 @@ import threading
 from src.console_apparatus import console_loop
 from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 from src.luna_functions_handledispatch import on_room_message
+from src.luna_functions import fetch_all_new_messages
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
-from src.luna_functions_handledispatch import on_room_message
 from src.luna_functions import (
     on_invite_event,
     load_or_login_client,
+    DIRECTOR_CLIENT
 )
 
 # We'll store the main event loop globally so both the console thread
 # and the Director logic can access it.
 MAIN_LOOP = None
-
+REFRESH_INTERVAL_SECONDS = 10
 
 def configure_logging():
     """
@@ -83,6 +84,8 @@ async def main_logic():
     client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
+    asyncio.create_task(periodic_refresh_loop())
+    
     # 3. Repeatedly sync in short intervals, checking the shutdown flag
     logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
     while not SHOULD_SHUT_DOWN:
@@ -141,6 +144,29 @@ def luna():
         logger.debug("Preparing to close the event loop.")
         loop.close()
         logger.info("Event loop closed. Exiting main function.")
+
+async def periodic_refresh_loop():
+    """
+    Runs indefinitely (until shutdown),
+    performing a 'refresh' task every N seconds (default 10s).
+    """
+    logger = logging.getLogger(__name__)
+
+    while not SHOULD_SHUT_DOWN:
+        try:
+            if DIRECTOR_CLIENT is not None:
+                logger.debug("Periodic refresh: fetching new messages...")
+                await fetch_all_new_messages(DIRECTOR_CLIENT)
+                logger.debug("Periodic refresh: fetch complete.")
+            else:
+                logger.warning("DIRECTOR_CLIENT is None; cannot fetch new messages.")
+        except Exception as e:
+            logger.exception(f"Error in periodic_refresh_loop: {e}")
+
+        # Sleep for the configured interval, then repeat
+        await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
+
+    logger.info("periodic_refresh_loop exiting gracefully.")
 
 if __name__ == "__main__":
     luna()

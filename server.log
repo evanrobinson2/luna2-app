@@ -7931,3 +7931,753 @@ Traceback (most recent call last):
 RuntimeError: Event loop stopped before Future completed.
 2025-01-08 17:06:58,059 [DEBUG] __main__: Preparing to close the event loop.
 2025-01-08 17:06:58,060 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Logging configuration complete.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-08 22:20:46,174 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:20:46,174 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-08 22:20:46,174 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-08 22:20:46,178 [INFO] __main__: Console thread started successfully.
+2025-01-08 22:20:46,178 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-08 22:20:46,178 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-08 22:20:46,178 [INFO] __main__: Starting main_logic coroutine.
+2025-01-08 22:20:46,180 [DEBUG] __main__: Entering main_logic function...
+2025-01-08 22:20:46,180 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-08 22:20:46,181 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-08 22:20:46,181 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-08 22:20:46,181 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-08 22:20:46,211 [INFO] src.console_functions: Console screen cleared.
+2025-01-08 22:20:46,230 [INFO] nio.client.base_client: New joined room !VsYgleTlXoQacelwTz:localhost
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomCreateEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomNameEvent
+2025-01-08 22:20:46,231 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,231 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,231 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,231 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,231 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! Yes, I'm here. How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,232 [INFO] nio.client.base_client: New joined room !FkbKmoFPWsWYTwKnwg:localhost
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomCreateEvent
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:20:46,232 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Changing power level for user @admin:localhost from 0 to 100
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm online and ready to assist you. How can I help you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,233 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,233 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,233 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,234 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,234 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,234 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,234 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:20:46,234 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:20:46,234 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:20:46,341 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:20:51,003 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:20:54,131 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:20:58,056 [DEBUG] src.console_functions_cmd_summarize_room: cmd_summarize_room -> room_id=skdjna, summary_type=content, audience=general, granularity=3, include_personalities=False, exclude_participants=None, output_format=text, chunk_size=25
+2025-01-08 22:20:58,057 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:21:54,102 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-08 22:21:54,104 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:21:54,104 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-08 22:21:54,110 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-08 22:21:54,111 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-08 22:36:01,216 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-08 22:36:01,217 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-08 22:36:01,217 [DEBUG] __main__: Logging configuration complete.
+2025-01-08 22:36:01,217 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-08 22:36:01,217 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:01,217 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-08 22:36:01,217 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-08 22:36:01,217 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-08 22:36:01,220 [INFO] __main__: Console thread started successfully.
+2025-01-08 22:36:01,220 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-08 22:36:01,220 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-08 22:36:01,220 [INFO] __main__: Starting main_logic coroutine.
+2025-01-08 22:36:01,220 [DEBUG] __main__: Entering main_logic function...
+2025-01-08 22:36:01,220 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-08 22:36:01,222 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-08 22:36:01,223 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-08 22:36:01,223 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-08 22:36:01,251 [INFO] src.console_functions: Console screen cleared.
+2025-01-08 22:36:01,269 [INFO] nio.client.base_client: New joined room !FkbKmoFPWsWYTwKnwg:localhost
+2025-01-08 22:36:01,269 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:01,269 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Changing power level for user @admin:localhost from 0 to 100
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:36:01,270 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,281 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 1
+2025-01-08 22:36:01,281 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,281 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,281 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,281 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,282 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,283 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 2
+2025-01-08 22:36:01,283 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,283 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,283 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,283 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,283 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,285 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 3
+2025-01-08 22:36:01,285 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,285 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm online and ready to assist you. How can I help you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,285 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,285 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,285 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,287 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 4
+2025-01-08 22:36:01,287 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,287 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,287 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,287 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,287 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,289 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 5
+2025-01-08 22:36:01,289 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,289 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,289 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,289 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,289 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,290 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 6
+2025-01-08 22:36:01,290 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,290 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,290 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,290 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,290 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,291 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 7
+2025-01-08 22:36:01,291 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,291 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,291 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,291 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,291 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,295 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 8
+2025-01-08 22:36:01,295 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,295 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,295 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,295 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,295 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,297 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 9
+2025-01-08 22:36:01,297 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,297 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,297 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,297 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,297 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,298 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 10
+2025-01-08 22:36:01,298 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,298 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:01,298 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,298 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,298 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:36:01,299 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,300 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 11
+2025-01-08 22:36:01,300 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,300 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,300 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,300 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,300 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,302 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 12
+2025-01-08 22:36:01,302 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,302 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,302 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,302 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,302 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,304 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 13
+2025-01-08 22:36:01,304 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,304 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,304 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,304 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,304 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,306 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 14
+2025-01-08 22:36:01,306 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,306 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,306 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,306 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,306 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,308 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 15
+2025-01-08 22:36:01,308 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,308 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! Yes, I'm here. How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,308 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,308 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,308 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,309 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 16
+2025-01-08 22:36:01,309 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,309 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,309 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,309 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,310 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,311 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 17
+2025-01-08 22:36:01,311 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,311 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,311 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,311 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,311 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,313 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 18
+2025-01-08 22:36:01,313 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,313 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,313 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,313 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,313 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,315 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 19
+2025-01-08 22:36:01,315 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,315 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,315 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,315 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,315 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:01,316 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 20
+2025-01-08 22:36:01,316 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:01,316 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:01,316 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:01,316 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:01,316 [INFO] nio.client.base_client: New joined room !VsYgleTlXoQacelwTz:localhost
+2025-01-08 22:36:01,316 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:01,316 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:01,316 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:36:01,316 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:01,316 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:01,317 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomNameEvent
+2025-01-08 22:36:01,432 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:08,260 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:09,988 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:12,415 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-08 22:36:12,415 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 135, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-08 22:36:12,416 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:12,418 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-08 22:36:12,419 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-08 22:36:19,179 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-08 22:36:19,179 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-08 22:36:19,179 [DEBUG] __main__: Logging configuration complete.
+2025-01-08 22:36:19,180 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-08 22:36:19,180 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:19,180 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-08 22:36:19,180 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-08 22:36:19,180 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-08 22:36:19,182 [INFO] __main__: Console thread started successfully.
+2025-01-08 22:36:19,183 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-08 22:36:19,183 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-08 22:36:19,183 [INFO] __main__: Starting main_logic coroutine.
+2025-01-08 22:36:19,183 [DEBUG] __main__: Entering main_logic function...
+2025-01-08 22:36:19,183 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-08 22:36:19,185 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-08 22:36:19,185 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-08 22:36:19,185 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-08 22:36:19,200 [INFO] nio.client.base_client: New joined room !FkbKmoFPWsWYTwKnwg:localhost
+2025-01-08 22:36:19,200 [INFO] src.console_functions: Console screen cleared.
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Changing power level for user @admin:localhost from 0 to 100
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:36:19,200 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,206 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$S0jTnDPpB-wkukaC2FcxV0ztwJvpUMJxss-JstSDytg), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,206 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,206 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,206 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,206 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,206 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,208 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$IhbZQboSqLaI_r1JJfPEDkR19FZ6c28NZ7Xj9CczYn4), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,208 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,208 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,208 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,208 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,208 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,210 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$kW5tln_64J-BZwgXBz7Hw8BNB68dkBtD2YifkX7jppw), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,210 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,210 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm online and ready to assist you. How can I help you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,210 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,210 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,210 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,212 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$8KlBDI5xNwgeHszF1_puLnYHVRS8pfK1kd_wQH6OmQs), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,212 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,212 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,212 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,212 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,212 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,213 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$3bIrWDY7_BnvCR6GEF7eRe0dfV80h9WhOc6bzB19B7c), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,213 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,213 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,213 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,213 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,213 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,215 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$IHKoV4KRr5sKfPolwca5YX_FOxHS0AdZxZH-U59vhjQ), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,215 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,215 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,215 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,215 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,215 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,216 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$kKhi9QC9h3ZIjZ37sL7rQTDRWEAEdnGNFekuHE0ccbo), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,216 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,216 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,216 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,216 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,216 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,218 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$HdCploTKimWNTpi6RVh98LbIysCh6CASHQWrI2pI050), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,218 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,218 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,218 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,218 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,218 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,219 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$-HHb6JJcgkCjmJw6idbi3pMcFIIWHp7clGKi5KoXqY4), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,219 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,219 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,219 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,219 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,219 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,221 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$06qCi0FOVLw7RhjxwAocRHCec_pkvPtx7ukHRu2oW_o), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,221 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,221 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:36:19,221 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,221 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,221 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:36:19,221 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,222 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$n5uobnoOhvmXApAg0iRPhURGgNGljGSwbSMICIIBHF0), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,222 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,222 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,222 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,222 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,222 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,224 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$MvCowRiYrhbEPuddp80nRqkbs5qTNtk_rh0igS-IpZw), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,224 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,224 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,224 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,224 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,224 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,225 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$2oOqKw_-cQa-WMzIkDPHMx7CLDhRCZUcWYLr06TmX1Y), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,225 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,225 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,225 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,225 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,225 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,227 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$QkADFDeTV-WaKRE3F1iqXSJzXaHDEYDo-dhcjL38fEI), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,227 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,227 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,227 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,227 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,227 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,228 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$XTcMgFZldtIjRjc_y6N6EMljM9A2Y2iWmhfIcZb8wyI), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,228 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,228 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! Yes, I'm here. How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,228 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,228 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,228 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,230 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$R0ZbqKq07V-3mnLJleJo6Tl8WFVfeNQqi_k3lZt4bqE), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,230 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,230 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,230 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,230 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,230 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,231 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$cQaaA5jgb1I3FN3NDBTZTwBnAS5b3quYVJZ84ZVndSY), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,231 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,231 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,231 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,231 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,231 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,232 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$legDKlXdSjdfeqIiBzpVzOfixo7L4K-uUdhF9TUOcTU), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,232 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,232 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,232 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,232 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,232 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,234 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$HrN9wiQYqniESIYDagW7fsodYg8ZNQbffRLirk-qB5c), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,234 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,234 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,234 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,234 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,234 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:19,235 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$8Rfn5q5Etl74B90DeXv68kATzBN4UU0QEH3YOSf0Bn8), no new row appended to luna_messages.csv.
+2025-01-08 22:36:19,235 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:19,235 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:19,235 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:19,235 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:36:19,235 [INFO] nio.client.base_client: New joined room !VsYgleTlXoQacelwTz:localhost
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomCreateEvent
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:36:19,235 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomNameEvent
+2025-01-08 22:36:19,287 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:25,289 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:36:48,654 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:36:48,660 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 21
+2025-01-08 22:36:48,660 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:36:48,660 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:36:48,661 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:36:48,661 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:37:43,992 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:37:43,995 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 22
+2025-01-08 22:37:43,995 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:37:43,995 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening :lunabot ' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:37:43,995 [DEBUG] src.luna_functions_handledispatch: m.mentions => {'user_ids': ['@lunabot:localhost']}
+2025-01-08 22:37:43,995 [INFO] src.luna_functions_handledispatch: Mentioned user_ids => ['@lunabot:localhost']
+2025-01-08 22:37:43,995 [INFO] src.luna_functions_handledispatch: Processing mention for user => @lunabot:localhost
+2025-01-08 22:37:44,073 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'json_data': {'messages': [{'role': 'system', 'content': 'You are a helpful bot responding to a mention of @lunabot:localhost.'}, {'role': 'user', 'content': 'Good evening :lunabot '}], 'model': 'gpt-4', 'max_tokens': 300, 'temperature': 0.7}}
+2025-01-08 22:37:44,078 [DEBUG] httpcore.connection: connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-01-08 22:37:44,174 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x10f6fa3c0>
+2025-01-08 22:37:44,175 [DEBUG] httpcore.connection: start_tls.started ssl_context=<ssl.SSLContext object at 0x10b5b3800> server_hostname='api.openai.com' timeout=5.0
+2025-01-08 22:37:44,227 [DEBUG] httpcore.connection: start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x10f6d9810>
+2025-01-08 22:37:44,227 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2025-01-08 22:37:44,228 [DEBUG] httpcore.http11: send_request_headers.complete
+2025-01-08 22:37:44,228 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2025-01-08 22:37:44,228 [DEBUG] httpcore.http11: send_request_body.complete
+2025-01-08 22:37:44,228 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2025-01-08 22:37:45,106 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 09 Jan 2025 03:37:45 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-yzbp3micnvwwjimbcblinra3'), (b'openai-processing-ms', b'748'), (b'openai-version', b'2020-10-01'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-limit-tokens', b'80000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-remaining-tokens', b'79675'), (b'x-ratelimit-reset-requests', b'12ms'), (b'x-ratelimit-reset-tokens', b'243ms'), (b'x-request-id', b'req_6405b57c9f6143e12fb5ff9455160c91'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=7KqBKFi8rIXP9_ZZfUXi.adp0O0_3H1D23Y.As819zA-1736393865-1.0.1.1-SqwoyWmGfn826tvhG6eGIqK05pJ5BSd5GBfFh2XKS.qrSr6YOtjM2uEcr0VbEKagkuDShrPfYkPxnCahs7vsDQ; path=/; expires=Thu, 09-Jan-25 04:07:45 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=w2apfWksdTtQM16FZEasCzClGOpLg0rat46MfWfvubs-1736393865075-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8ff163f3ce392f24-IAD'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-01-08 22:37:45,107 [INFO] httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-01-08 22:37:45,107 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2025-01-08 22:37:45,108 [DEBUG] httpcore.http11: receive_response_body.complete
+2025-01-08 22:37:45,108 [DEBUG] httpcore.http11: response_closed.started
+2025-01-08 22:37:45,108 [DEBUG] httpcore.http11: response_closed.complete
+2025-01-08 22:37:45,108 [DEBUG] openai._base_client: HTTP Request: POST https://api.openai.com/v1/chat/completions "200 OK"
+2025-01-08 22:37:45,112 [INFO] src.luna_functions_handledispatch: GPT reply (for mention @lunabot:localhost) => Good evening! How can I assist you today?
+2025-01-08 22:37:45,148 [INFO] src.luna_functions: Posted GPT reply to room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:37:45,155 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:37:45,160 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 23
+2025-01-08 22:37:45,161 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:37:45,161 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:37:45,161 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:37:45,161 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:52:17,709 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-08 22:52:17,709 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-08 22:52:17,709 [DEBUG] __main__: Logging configuration complete.
+2025-01-08 22:52:17,709 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-08 22:52:17,709 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:52:17,709 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-08 22:52:17,709 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Added file handler to root logger. Logging to 'server.log' at DEBUG level.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Exiting configure_logging function.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Logging configuration complete.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Creating a new asyncio event loop.
+2025-01-08 22:56:22,826 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:56:22,826 [DEBUG] __main__: Set this new loop as the default event loop for the current thread.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Stored reference to the new loop in MAIN_LOOP.
+2025-01-08 22:56:22,826 [DEBUG] __main__: Entering start_console_thread function.
+2025-01-08 22:56:22,829 [INFO] __main__: Console thread started successfully.
+2025-01-08 22:56:22,829 [DEBUG] __main__: Exiting start_console_thread function.
+2025-01-08 22:56:22,829 [DEBUG] __main__: Console thread has been initiated. Returning to main thread.
+2025-01-08 22:56:22,829 [INFO] __main__: Starting main_logic coroutine.
+2025-01-08 22:56:22,829 [DEBUG] __main__: Entering main_logic function...
+2025-01-08 22:56:22,829 [DEBUG] src.luna_functions: Found director_token.json, attempting token-based login.
+2025-01-08 22:56:22,831 [DEBUG] src.luna_functions: Loading client with saved token credentials.
+2025-01-08 22:56:22,831 [INFO] src.luna_functions: Using saved token for user @lunabot:localhost.
+2025-01-08 22:56:22,831 [DEBUG] __main__: Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.
+2025-01-08 22:56:22,832 [WARNING] __main__: DIRECTOR_CLIENT is None; cannot fetch new messages.
+2025-01-08 22:56:22,844 [INFO] src.console_functions: Console screen cleared.
+2025-01-08 22:56:22,874 [INFO] nio.client.base_client: New joined room !FkbKmoFPWsWYTwKnwg:localhost
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomCreateEvent
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Changing power level for user @admin:localhost from 0 to 100
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:56:22,874 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,884 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$S0jTnDPpB-wkukaC2FcxV0ztwJvpUMJxss-JstSDytg), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,884 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,884 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,884 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,884 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,885 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,886 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$IhbZQboSqLaI_r1JJfPEDkR19FZ6c28NZ7Xj9CczYn4), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,886 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,886 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,886 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,886 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,886 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,888 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$kW5tln_64J-BZwgXBz7Hw8BNB68dkBtD2YifkX7jppw), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,888 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,888 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm online and ready to assist you. How can I help you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,888 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,888 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,888 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,889 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$8KlBDI5xNwgeHszF1_puLnYHVRS8pfK1kd_wQH6OmQs), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,889 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,889 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,889 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,889 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,889 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,890 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$3bIrWDY7_BnvCR6GEF7eRe0dfV80h9WhOc6bzB19B7c), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,890 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,890 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,890 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,890 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,890 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,892 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$IHKoV4KRr5sKfPolwca5YX_FOxHS0AdZxZH-U59vhjQ), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,892 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,892 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,892 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,892 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,892 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,893 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$kKhi9QC9h3ZIjZ37sL7rQTDRWEAEdnGNFekuHE0ccbo), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,893 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,893 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,893 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,893 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,893 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,894 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$HdCploTKimWNTpi6RVh98LbIysCh6CASHQWrI2pI050), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,894 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,894 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,894 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,894 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,894 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,896 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$-HHb6JJcgkCjmJw6idbi3pMcFIIWHp7clGKi5KoXqY4), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,896 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,896 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,896 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,896 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,896 [INFO] nio.rooms: Room !FkbKmoFPWsWYTwKnwg:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,897 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$06qCi0FOVLw7RhjxwAocRHCec_pkvPtx7ukHRu2oW_o), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,897 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,897 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! How can I assist you today?' (room_id=!FkbKmoFPWsWYTwKnwg:localhost)
+2025-01-08 22:56:22,897 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,897 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,897 [INFO] nio.client.base_client: New joined room !VsYgleTlXoQacelwTz:localhost
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomCreateEvent
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Changing power level for user @lunabot:localhost from 0 to 100
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:56:22,897 [INFO] nio.rooms: Room !VsYgleTlXoQacelwTz:localhost handling event of type RoomNameEvent
+2025-01-08 22:56:22,898 [INFO] nio.client.base_client: New joined room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomJoinRulesEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomCreateEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomNameEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type PowerLevelsEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomHistoryVisibilityEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomGuestAccessEvent
+2025-01-08 22:56:22,898 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,899 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$QkADFDeTV-WaKRE3F1iqXSJzXaHDEYDo-dhcjL38fEI), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,899 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,899 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,899 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,899 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,899 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,900 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$XTcMgFZldtIjRjc_y6N6EMljM9A2Y2iWmhfIcZb8wyI), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,900 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,900 [DEBUG] src.luna_functions_handledispatch: User message => 'Hello! Yes, I'm here. How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,900 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,900 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,900 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,902 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$R0ZbqKq07V-3mnLJleJo6Tl8WFVfeNQqi_k3lZt4bqE), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,902 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,902 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,902 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,902 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,902 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,904 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$cQaaA5jgb1I3FN3NDBTZTwBnAS5b3quYVJZ84ZVndSY), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,904 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,904 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,904 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,904 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,904 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,906 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$legDKlXdSjdfeqIiBzpVzOfixo7L4K-uUdhF9TUOcTU), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,906 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,906 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,906 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,906 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,906 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,908 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$HrN9wiQYqniESIYDagW7fsodYg8ZNQbffRLirk-qB5c), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,908 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,908 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,908 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,908 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,908 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,910 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$8Rfn5q5Etl74B90DeXv68kATzBN4UU0QEH3YOSf0Bn8), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,910 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,910 [DEBUG] src.luna_functions_handledispatch: User message => 'Yes, I'm here! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,910 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,910 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,910 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,912 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$h640nN-6PM_o-BsnLNJGWwkEKeKFIccRCv1MI55a4rU), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,912 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,912 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,912 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:22,912 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:22,913 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:22,915 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$bukuVSqrXjasxqhp-f4upFFY5DK3kJMn8PkMnLLHCNs), no new row appended to luna_messages.csv.
+2025-01-08 22:56:22,915 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:22,915 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening :lunabot ' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:22,915 [DEBUG] src.luna_functions_handledispatch: m.mentions => {'user_ids': ['@lunabot:localhost']}
+2025-01-08 22:56:22,915 [INFO] src.luna_functions_handledispatch: Mentioned user_ids => ['@lunabot:localhost']
+2025-01-08 22:56:22,915 [INFO] src.luna_functions_handledispatch: Processing mention for user => @lunabot:localhost
+2025-01-08 22:56:22,938 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'json_data': {'messages': [{'role': 'system', 'content': 'You are a helpful bot responding to a mention of @lunabot:localhost.'}, {'role': 'user', 'content': 'Good evening :lunabot '}], 'model': 'gpt-4', 'max_tokens': 300, 'temperature': 0.7}}
+2025-01-08 22:56:22,942 [DEBUG] httpcore.connection: connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-01-08 22:56:23,011 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:56:23,270 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x10c3a46e0>
+2025-01-08 22:56:23,271 [DEBUG] httpcore.connection: start_tls.started ssl_context=<ssl.SSLContext object at 0x1047076e0> server_hostname='api.openai.com' timeout=5.0
+2025-01-08 22:56:23,312 [DEBUG] httpcore.connection: start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x10c35ead0>
+2025-01-08 22:56:23,313 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2025-01-08 22:56:23,313 [DEBUG] httpcore.http11: send_request_headers.complete
+2025-01-08 22:56:23,313 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2025-01-08 22:56:23,314 [DEBUG] httpcore.http11: send_request_body.complete
+2025-01-08 22:56:23,314 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2025-01-08 22:56:24,555 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 09 Jan 2025 03:56:24 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-yzbp3micnvwwjimbcblinra3'), (b'openai-processing-ms', b'1060'), (b'openai-version', b'2020-10-01'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-limit-tokens', b'80000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-remaining-tokens', b'79675'), (b'x-ratelimit-reset-requests', b'12ms'), (b'x-ratelimit-reset-tokens', b'243ms'), (b'x-request-id', b'req_9898b307e5b7932d4e0222c7f3073d7f'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=7M.wenXZcRKGrxaWL1qRnxu.WK0bnbXZuLzwAjp1c4c-1736394984-1.0.1.1-Ub.TSn_KRgSksjp02e7xD2w9W0D_gaekXEPkGdL0YQu1ZtopElyk0gFOGUXl7l.pfXURYKxNk0JL0MLI0ro3FA; path=/; expires=Thu, 09-Jan-25 04:26:24 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=_TJ4Jo5IyBbhgjta6MDlXQPIkqFGllfXu0zTRAm9xLc-1736394984476-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8ff17f460e7b8260-IAD'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-01-08 22:56:24,560 [INFO] httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-01-08 22:56:24,561 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2025-01-08 22:56:24,562 [DEBUG] httpcore.http11: receive_response_body.complete
+2025-01-08 22:56:24,562 [DEBUG] httpcore.http11: response_closed.started
+2025-01-08 22:56:24,562 [DEBUG] httpcore.http11: response_closed.complete
+2025-01-08 22:56:24,563 [DEBUG] openai._base_client: HTTP Request: POST https://api.openai.com/v1/chat/completions "200 OK"
+2025-01-08 22:56:24,570 [INFO] src.luna_functions_handledispatch: GPT reply (for mention @lunabot:localhost) => Good evening! How can I assist you today?
+2025-01-08 22:56:24,610 [INFO] src.luna_functions: Posted GPT reply to room !HPrbJYfQkoGnlztkrS:localhost
+2025-01-08 22:56:24,611 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:24,616 [INFO] src.luna_functions_handledispatch: Duplicate message detected (event_id=$6k6-IbEELn_SRk7UlBwKNRBA3m9uRoW8t8UM8Gpz7k0), no new row appended to luna_messages.csv.
+2025-01-08 22:56:24,617 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:24,617 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:24,617 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:24,617 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:24,617 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:24,620 [INFO] nio.rooms: Room !HPrbJYfQkoGnlztkrS:localhost handling event of type RoomMessageText
+2025-01-08 22:56:24,623 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 24
+2025-01-08 22:56:24,623 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:24,623 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:24,623 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:24,623 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:24,627 [DEBUG] src.luna_functions_handledispatch: Added 1 new message(s) to luna_messages.csv. New total: 24
+2025-01-08 22:56:24,627 [INFO] src.luna_functions_handledispatch: Handling on_room_message with multi-mention iteration approach.
+2025-01-08 22:56:24,628 [DEBUG] src.luna_functions_handledispatch: User message => 'Good evening! How can I assist you today?' (room_id=!HPrbJYfQkoGnlztkrS:localhost)
+2025-01-08 22:56:24,628 [DEBUG] src.luna_functions_handledispatch: m.mentions => {}
+2025-01-08 22:56:24,628 [DEBUG] src.luna_functions_handledispatch: No user_ids in m.mentions => no mention recognized.
+2025-01-08 22:56:32,833 [WARNING] __main__: DIRECTOR_CLIENT is None; cannot fetch new messages.
+2025-01-08 22:56:42,835 [WARNING] __main__: DIRECTOR_CLIENT is None; cannot fetch new messages.
+2025-01-08 22:56:52,839 [WARNING] __main__: DIRECTOR_CLIENT is None; cannot fetch new messages.
+2025-01-08 22:56:58,168 [INFO] src.console_functions: Console received 'exit' command; requesting shutdown.
+2025-01-08 22:56:58,170 [DEBUG] asyncio: Using selector: KqueueSelector
+2025-01-08 22:56:58,170 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 138, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-08 22:56:58,176 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-08 22:56:58,176 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-08 22:56:58,239 [ERROR] asyncio: Task was destroyed but it is pending!
+task: <Task pending name='Task-2' coro=<periodic_refresh_loop() running at /Users/evanrobinson/Documents/Luna2/luna/luna.py:167> wait_for=<Future pending cb=[Task.task_wakeup()]>>

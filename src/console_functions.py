@@ -14,6 +14,7 @@ from . import luna_functions
 from nio.api import RoomVisibility
 from src.ascii_art import show_ascii_banner
 
+from src.luna_functions import DIRECTOR_CLIENT
 from src.console_functions_cmd_summarize_room import cmd_summarize_room
 
 logger = logging.getLogger(__name__)
