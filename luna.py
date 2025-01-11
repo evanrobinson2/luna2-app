@@ -18,8 +18,7 @@ from src.luna_functions import fetch_all_new_messages
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
 from src.luna_functions import (
     on_invite_event,
-    load_or_login_client,
-    DIRECTOR_CLIENT
+    load_or_login_client
 )
 
 # We'll store the main event loop globally so both the console thread
@@ -84,7 +83,9 @@ async def main_logic():
     client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
-    asyncio.create_task(periodic_refresh_loop())
+    # removing here for now - this may not at all be necessary, since the server will send notifications
+    # for any 
+    # asyncio.create_task(periodic_refresh_loop())
     
     # 3. Repeatedly sync in short intervals, checking the shutdown flag
     logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
@@ -154,12 +155,8 @@ async def periodic_refresh_loop():
 
     while not SHOULD_SHUT_DOWN:
         try:
-            if DIRECTOR_CLIENT is not None:
-                logger.debug("Periodic refresh: fetching new messages...")
-                await fetch_all_new_messages(DIRECTOR_CLIENT)
-                logger.debug("Periodic refresh: fetch complete.")
-            else:
-                logger.warning("DIRECTOR_CLIENT is None; cannot fetch new messages.")
+            await fetch_all_new_messages()
+            logger.debug("periodic_refresh_loop(): Periodic refresh: fetch complete.")
         except Exception as e:
             logger.exception(f"Error in periodic_refresh_loop: {e}")
 
@@ -167,6 +164,7 @@ async def periodic_refresh_loop():
         await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
 
     logger.info("periodic_refresh_loop exiting gracefully.")
+    
 
 if __name__ == "__main__":
     luna()

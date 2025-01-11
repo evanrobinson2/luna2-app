@@ -12,7 +12,7 @@ from src import ai_functions
 import asyncio
 import aiohttp
 import logging
-import sys
+import time
 import json
 import pandas as pd
 import os
@@ -47,64 +47,66 @@ MAX_CONTEXT_LENGTH = 100  # Limit to the last 100 messages per room
 # ──────────────────────────────────────────────────────────
 async def load_or_login_client(homeserver_url: str, username: str, password: str) -> AsyncClient:
     """
-    Attempt to load a saved access token. If found, reuse it.
-    Otherwise do a password login, store the new token, and return a client.
+    Attempt to load a saved access token. If found, verify it by calling whoami().
+    If valid, reuse it. If invalid (or absent), do a normal password login and store
+    the resulting token. Returns an AsyncClient ready to use.
     """
     global DIRECTOR_CLIENT
 
-    full_user_id = f"@{username}:localhost"  # adapt if needed
+    full_user_id = f"@{username}:localhost"  # Adjust the domain if needed
     client = None
 
-    # 1) Check for existing token file
+    # 1. Check for an existing token file
     if os.path.exists(TOKEN_FILE):
-        logger.debug(f"Found {TOKEN_FILE}, attempting token-based login.")
+        logger.debug(f"Found {TOKEN_FILE}; attempting token-based login.")
         with open(TOKEN_FILE, "r") as f:
             data = json.load(f)
             saved_user_id = data.get("user_id")
             saved_access_token = data.get("access_token")
             saved_device_id = data.get("device_id")
 
+        # 2. If the file contains valid fields, construct a client
         if saved_user_id and saved_access_token:
             logger.debug("Loading client with saved token credentials.")
             client = AsyncClient(homeserver=homeserver_url, user=saved_user_id)
             client.access_token = saved_access_token
             client.device_id = saved_device_id
 
-            DIRECTOR_CLIENT = client
-            logger.info(f"Using saved token for user {saved_user_id}.")
-            return client
+            # 3. Verify the token with whoami()
+            try:
+                whoami_resp = await client.whoami()
+                if whoami_resp and whoami_resp.user_id == saved_user_id:
+                    # If it matches, we're good to go
+                    logger.info(f"Token-based login verified for user {saved_user_id}.")
+                    DIRECTOR_CLIENT = client
+                    return client
+                else:
+                    # Otherwise, token is invalid or stale
+                    logger.warning("Token-based login invalid. Deleting token file.")
+                    os.remove(TOKEN_FILE)
+            except Exception as e:
+                # whoami() call itself failed; treat as invalid
+                logger.warning(f"Token-based verification failed: {e}. Deleting token file.")
+                os.remove(TOKEN_FILE)
 
-    # 2) If no valid token file, do a normal login
-    logger.debug("No valid token found, attempting normal password login.")
+    # 4. If we reach here, either there was no token file or token verification failed
+    logger.debug("No valid token (or it was invalid). Attempting normal password login.")
     client = AsyncClient(homeserver=homeserver_url, user=full_user_id)
     resp = await client.login(password=password, device_name="LunaDirector")
     if isinstance(resp, LoginResponse):
-        logger.info("Password login succeeded, storing token.")
+        # 5. Password login succeeded; store a fresh token
+        logger.info(f"Password login succeeded for user {client.user_id}. Storing token...")
         store_token_info(client.user_id, client.access_token, client.device_id)
-
         DIRECTOR_CLIENT = client
         return client
     else:
-        logger.error(f"Failed to log in: {resp}")
-        logger.debug("Closing client due to login failure.")
-        await client.close()
-        sys.exit(1)
+        # 6. Password login failed: raise an exception or handle it as desired
+        logger.error(f"Password login failed: {resp}")
+        raise Exception("Password login failed. Check credentials or homeserver settings.")
 
-async def create_room_with_clientapi(room_name: str, is_public: bool = True) -> str:
-    from src.luna_functions import DIRECTOR_CLIENT
-    if not DIRECTOR_CLIENT:
-        return "Error: No DIRECTOR_CLIENT set."
+import logging
 
-    try:
-        visibility = "public" if is_public else "private"
-        response = await DIRECTOR_CLIENT.room_create(name=room_name, visibility=visibility)
-        if isinstance(response, RoomCreateResponse):
-            return f"Created room '{room_name}' => {response.room_id}"
-        else:
-            # Possibly an ErrorResponse
-            return f"Error creating room => {response}"
-    except Exception as e:
-        return f"Exception while creating room => {e}"
+logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────
 # CREATE USER LOGIC
@@ -223,12 +225,12 @@ async def add_user_via_admin_api(
 # ──────────────────────────────────────────────────────────
 # RECENT MESSAGES
 # ──────────────────────────────────────────────────────────
-async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
+async def fetch_recent_messages(room_id: str, limit: int = 100) -> list:
     """
-    Fetches the most recent messages from a Matrix room. Used to build context for interaction.
+    Fetches the most recent messages from a Matrix room. Used to build context for
     """
     logger.info(f"Fetching last {limit} messages from room {room_id}.")
-
+    client = DIRECTOR_CLIENT
     try:
         response = await client.room_messages(
             room_id=room_id,
@@ -251,20 +253,18 @@ async def fetch_recent_messages(client, room_id: str, limit: int = 100) -> list:
         return []
 
 
-# ──────────────────────────────────────────────────────────
-# STORE TOKEN INFO
-# ──────────────────────────────────────────────────────────
 def store_token_info(user_id: str, access_token: str, device_id: str) -> None:
     """
-    Store user_id, device_id, and access_token in a JSON file so we can reuse them later.
+    Write the token file to disk, so we can reuse it in later runs.
     """
+    data = {
+        "user_id": user_id,
+        "access_token": access_token,
+        "device_id": device_id
+    }
     with open(TOKEN_FILE, "w") as f:
-        json.dump({
-            "user_id": user_id,
-            "access_token": access_token,
-            "device_id": device_id,
-        }, f)
-    logger.debug(f"Token info for {user_id} saved to {TOKEN_FILE}.")
+        json.dump(data, f)
+    logger.debug(f"Stored token data for {user_id} into {TOKEN_FILE}.")
 
 
 # ──────────────────────────────────────────────────────────
@@ -373,10 +373,16 @@ async def check_rate_limit() -> str:
         logger.exception(f"check_rate_limit encountered an error: {e}")
         return f"Encountered error while checking rate limit: {e}"
 
+MESSAGES_CSV = "luna_messages.csv"
 
-# ──────────────────────────────────────────────────────────
-# ONE-TIME FULL FETCH
-# ──────────────────────────────────────────────────────────
+def _print_progress(stop_event):
+    """
+    Prints '...' every second until stop_event is set.
+    """
+    while not stop_event.is_set():
+        print("...", end='', flush=True)
+        time.sleep(1)
+
 async def fetch_all_messages_once(
     client: AsyncClient, 
     room_ids: list[str] = None, 
@@ -384,7 +390,7 @@ async def fetch_all_messages_once(
 ) -> None:
     """
     Fetch *all* historical messages from the given room_ids (or all joined rooms if None).
-    ...
+    Populates the MESSAGES_CSV file, creating it if it doesn't exist or is empty.
     """
     if not room_ids:
         room_ids = list(client.rooms.keys())
@@ -396,19 +402,34 @@ async def fetch_all_messages_once(
         room_history = await _fetch_room_history_paged(client, rid, page_size=page_size)
         all_records.extend(room_history)
 
+    if not all_records:
+        logger.warning("No messages fetched. CSV file will not be updated.")
+        return
+
     df = pd.DataFrame(all_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
     logger.info(f"Fetched total {len(df)} messages across {len(room_ids)} room(s).")
 
     if os.path.exists(MESSAGES_CSV):
-        existing_df = pd.read_csv(MESSAGES_CSV)
+        try:
+            # Attempt to read existing CSV
+            existing_df = pd.read_csv(MESSAGES_CSV)
+            logger.debug(f"Existing CSV loaded with {len(existing_df)} records.")
+        except pd.errors.EmptyDataError:
+            # Handle empty CSV by creating an empty DataFrame with the correct columns
+            existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
+            logger.warning(f"{MESSAGES_CSV} is empty. Creating a new DataFrame with columns.")
+
+        # Combine existing and new records
         combined_df = pd.concat([existing_df, df], ignore_index=True)
+        # Drop duplicates based on 'room_id' and 'event_id'
         combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
+        # Save back to CSV
         combined_df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Appended new records to existing {MESSAGES_CSV}. New total: {len(combined_df)}")
     else:
+        # If CSV doesn't exist, create it with the new records
         df.to_csv(MESSAGES_CSV, index=False)
         logger.info(f"Wrote all records to new CSV {MESSAGES_CSV}.")
-
 
 async def _fetch_room_history_paged(
     client: AsyncClient, 
@@ -467,14 +488,14 @@ async def _fetch_room_history_paged(
 # ──────────────────────────────────────────────────────────
 # FETCH ONLY NEW MESSAGES
 # ──────────────────────────────────────────────────────────
-async def fetch_all_new_messages(client: AsyncClient) -> None:
+async def fetch_all_new_messages() -> None:
     """
     Uses client.sync(...) with a stored sync_token to retrieve only new messages across all joined rooms.
     ...
     """
     old_token = load_sync_token() or None
     logger.info(f"Starting incremental sync from token={old_token}")
-
+    client = DIRECTOR_CLIENT
     response = await client.sync(timeout=3000, since=old_token)
     if not isinstance(response, SyncResponse):
         logger.warning(f"Failed to sync for new messages: {response}")
@@ -615,3 +636,6 @@ async def delete_matrix_user(localpart: str) -> str:
     except Exception as e:
         logger.exception(f"Error in delete_matrix_user({user_id}): {e}")
         return f"Exception deleting user {user_id}: {e}"
+
+def getClient():
+    return DIRECTOR_CLIENT

@@ -1,25 +1,59 @@
 room_id,event_id,sender,timestamp,body
-!HPrbJYfQkoGnlztkrS:localhost,$n5uobnoOhvmXApAg0iRPhURGgNGljGSwbSMICIIBHF0,@lunabot:localhost,1736323252541,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$MvCowRiYrhbEPuddp80nRqkbs5qTNtk_rh0igS-IpZw,@lunabot:localhost,1736353789426,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$2oOqKw_-cQa-WMzIkDPHMx7CLDhRCZUcWYLr06TmX1Y,@lunabot:localhost,1736354900562,"Yes, I'm here! How can I assist you today?"
-!FkbKmoFPWsWYTwKnwg:localhost,$S0jTnDPpB-wkukaC2FcxV0ztwJvpUMJxss-JstSDytg,@lunabot:localhost,1736318743263,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$IhbZQboSqLaI_r1JJfPEDkR19FZ6c28NZ7Xj9CczYn4,@lunabot:localhost,1736319520361,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$kW5tln_64J-BZwgXBz7Hw8BNB68dkBtD2YifkX7jppw,@lunabot:localhost,1736319521082,"Yes, I'm online and ready to assist you. How can I help you today?"
-!FkbKmoFPWsWYTwKnwg:localhost,$8KlBDI5xNwgeHszF1_puLnYHVRS8pfK1kd_wQH6OmQs,@lunabot:localhost,1736319521698,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$3bIrWDY7_BnvCR6GEF7eRe0dfV80h9WhOc6bzB19B7c,@lunabot:localhost,1736319691546,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$IHKoV4KRr5sKfPolwca5YX_FOxHS0AdZxZH-U59vhjQ,@lunabot:localhost,1736319813101,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$kKhi9QC9h3ZIjZ37sL7rQTDRWEAEdnGNFekuHE0ccbo,@lunabot:localhost,1736319960395,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$HdCploTKimWNTpi6RVh98LbIysCh6CASHQWrI2pI050,@lunabot:localhost,1736320116521,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$-HHb6JJcgkCjmJw6idbi3pMcFIIWHp7clGKi5KoXqY4,@lunabot:localhost,1736320247252,Hello! How can I assist you today?
-!FkbKmoFPWsWYTwKnwg:localhost,$06qCi0FOVLw7RhjxwAocRHCec_pkvPtx7ukHRu2oW_o,@lunabot:localhost,1736320281854,Hello! How can I assist you today?
-!HPrbJYfQkoGnlztkrS:localhost,$QkADFDeTV-WaKRE3F1iqXSJzXaHDEYDo-dhcjL38fEI,@lunabot:localhost,1736355229503,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$XTcMgFZldtIjRjc_y6N6EMljM9A2Y2iWmhfIcZb8wyI,@lunabot:localhost,1736355262896,"Hello! Yes, I'm here. How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$R0ZbqKq07V-3mnLJleJo6Tl8WFVfeNQqi_k3lZt4bqE,@lunabot:localhost,1736357260963,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$cQaaA5jgb1I3FN3NDBTZTwBnAS5b3quYVJZ84ZVndSY,@lunabot:localhost,1736357279651,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$legDKlXdSjdfeqIiBzpVzOfixo7L4K-uUdhF9TUOcTU,@lunabot:localhost,1736357307576,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$HrN9wiQYqniESIYDagW7fsodYg8ZNQbffRLirk-qB5c,@lunabot:localhost,1736357343803,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$8Rfn5q5Etl74B90DeXv68kATzBN4UU0QEH3YOSf0Bn8,@lunabot:localhost,1736357370650,"Yes, I'm here! How can I assist you today?"
-!HPrbJYfQkoGnlztkrS:localhost,$h640nN-6PM_o-BsnLNJGWwkEKeKFIccRCv1MI55a4rU,@admin:localhost,1736393808625,Good evening
-!HPrbJYfQkoGnlztkrS:localhost,$bukuVSqrXjasxqhp-f4upFFY5DK3kJMn8PkMnLLHCNs,@admin:localhost,1736393863956,Good evening :lunabot 
-!HPrbJYfQkoGnlztkrS:localhost,$6k6-IbEELn_SRk7UlBwKNRBA3m9uRoW8t8UM8Gpz7k0,@lunabot:localhost,1736393865120,Good evening! How can I assist you today?
-!HPrbJYfQkoGnlztkrS:localhost,$ff5Ce9zrWasT6lT9-LtOLYA1khzyv6j8dk5K1UYqZsc,@lunabot:localhost,1736394984584,Good evening! How can I assist you today?
+!wksSOEXmjceGUTMkdv:localhost,$yLdlqQlvJRDFHqNWENgE52Gn6xAe01FfjB9KuZIuAkk,@lunabot:localhost,1736430059633,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$ekEex5aE0TJL8UEe9jfRSR3UJ9bwnucsVOoI6ssKOGg,@lunabot:localhost,1736430047855,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$z18Rz0OiJyKqQXeSFpr0OS1_OJ8bFBsGwlgylUYpAmc,@lunabot:localhost,1736430035924,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$p-I9SGwrIIzim4AIrdkKXanrZljCgelOcIbxEUrnlEA,@lunabot:localhost,1736430025107,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$Ppx1ZDpCG2Wrd5hIthbCcpJtxEv9l99Ct5Z2yHsmv0k,@lunabot:localhost,1736430012521,"Yes, I am here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$4EGQtPe7EEejPIQJ1NpSyWwi2iZNtCKEPjDzw927_PM,@lunabot:localhost,1736430001382,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$bRmC9-BIuYA2PaFJAo1QMlliLnmee43ZUvJnPNUmqsE,@lunabot:localhost,1736429990322,"Yes, I'm here. How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$YEEE6Eu4D4oq94dRx0-eR5_XkGp-FLUrfJuhz3iNNxM,@lunabot:localhost,1736429979229,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$R0ppC-0Z1kHmZs52jx6pVgFvP3-zMv5rzMnc_-uxRYE,@lunabot:localhost,1736429966204,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$Y38zgWCxf0cesaTY0OvbAjaAFyRvHr_0zJTl2MBhchI,@lunabot:localhost,1736429940818,"Yes, I'm here! How can I assist you today?"
+!aaaaaaaaaaaaaaaaaa:localhost,$4g-8W7EPqYQ9qH6KvvLlaBuW7CESwzFOdpkHtpS33BI,@evan:localhost,1736429938588,lunabot: are you there?
+!wksSOEXmjceGUTMkdv:localhost,$c_MbmkjPqtyy8oKBRehD9VMqfP6MVetBFuJVDB5DU5k,@evan:localhost,1736470386946,lunabot: are you there?
+!wksSOEXmjceGUTMkdv:localhost,$kM_TlgcCb7bvfWL-3ri4cRls6sM4xy8_hpPEgeCKv9U,@evan:localhost,1736470406939,lunabot: hello?
+!wksSOEXmjceGUTMkdv:localhost,$WzbY0besmEOcu_IPhpEzzaNaTBvFnrnMN1YRF8h5so0,@lunabot:localhost,1736470915133,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$DLaEihTuxKbkpVZeHhzWaqNlA0SAdAuE06SPz3abmN4,@lunabot:localhost,1736470916453,Hello! How can I assist you today?
+!wksSOEXmjceGUTMkdv:localhost,$0GTDnUCZgOFxCHFZ838XlfBypMzbS6CGF7JK_Sxl-38,@lunabot:localhost,1736471002328,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$XIstA_vCtyn7yCMOAUUDpnkoQ0pMcc6E7Qfgu3Jo78c,@lunabot:localhost,1736471003392,Hello! How can I assist you today?
+!wksSOEXmjceGUTMkdv:localhost,$dFAEZlA6R4k0X9-WFW4vEGYnCQ5r7aSeDKdeSsKkc8E,@lunabot:localhost,1736471025824,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$gAiUL6DnU2XEg2GVauPry9k2UYMol1ck5LyZIgVZUSk,@lunabot:localhost,1736471026835,Hello! How can I assist you today?
+!wksSOEXmjceGUTMkdv:localhost,$DqR9eRsxjIq0_vJXECg2JSkYkSvqTLKTShb1vpeugXI,@evan:localhost,1736471334885,:lunabot: are you there
+!wksSOEXmjceGUTMkdv:localhost,$LJUbEqEgr9ScgkTJdHi7pW5LlmdHWI2S-6a1Y7OU_no,@lunabot:localhost,1736471336298,"Yes, I'm here! How can I assist you today?"
+!wksSOEXmjceGUTMkdv:localhost,$2Iwy2hOFhD03_kmE-iwr_bxWwZ34SijFURb-qxZGEkc,@evan:localhost,1736471346296,Wonderful! It looks like we're online!
+!wksSOEXmjceGUTMkdv:localhost,$bhWZqJ1QXku-FKWiIprDUZYSSjn0M2RE6P-1Rlth3ZQ,@evan:localhost,1736471372376,testing!
+!wksSOEXmjceGUTMkdv:localhost,$Oz5cDyHfVKUqknTtrSmnIneC1sgaJb1PDW03xTm84-8,@evan:localhost,1736471690208,lunabot: tell me something interesting about metametals.
+!wksSOEXmjceGUTMkdv:localhost,$NExD3oo5h1O7wPm3XMY0ZpgVQVgydB0yf_81a4sA_O8,@lunabot:localhost,1736471693979,"@lunabot:localhost
+
+Metamaterials are artificially structured materials used to control and manipulate light, sound, and many other physical phenomena. The properties of metamaterials are derived not from their base material, but from their specifically designed structures. Their precise shape, geometry, size, orientation and arrangement give them their smart properties capable of manipulating electromagnetic waves, by blocking, absorbing, enhancing, or bending waves, to achieve benefits that go beyond what is possible with conventional materials. Interestingly, ""metametals"" is often used to refer to metamaterials that interact with light in the metal spectrum. They are a hot topic in the field of material science and photonics."
+!wksSOEXmjceGUTMkdv:localhost,$PKZ4IU0AMDOCsSfcqJm6j0BBNyRURLuE3XnxTcnKldM,@lunabot:localhost,1736471698485,"Absolutely correct! Metamaterials indeed offer a wide range of exciting possibilities due to their unique properties. These materials are engineered to have characteristics that are not found in naturally occurring materials. 
+
+For instance, metamaterials can be designed to affect waves of electromagnetic radiation or sound in a manner that is impossible with conventional materials. This opens up a world of potential applications, ranging from cloaking devices that could render objects invisible to sensors that can detect tiny amounts of substances.
+
+""Metametals"" is a term often used to refer to a specific type of metamaterials that interact with light in the metal spectrum. These metametals can be engineered to have properties such as a negative index of refraction or the ability to enhance the resolution of optical systems.
+
+The study of metamaterials is a rapidly evolving field and it's exciting to think about what future developments might bring."
+!wksSOEXmjceGUTMkdv:localhost,$x0qIlzB5PBqRT0SrtVKc1HQtpWeX3IzIuKtVXvnFmFQ,@lunabot:localhost,1736471712632,"Absolutely, the future of metamaterials is indeed very exciting and holds limitless potential. To add on, some other potential applications of metamaterials may include superlenses which could improve microscopes, making them powerful enough to see viruses directly. They could also be used to improve wireless internet, making it faster and more reliable.
+
+Moreover, they could potentially be used in the medical field for improving imaging and treatments. For example, with metamaterials, it might be possible to create a ""perfect lens"" that could focus light to a point smaller than its wavelength, which could revolutionize the field of optics and microscopy.
+
+Furthermore, they could also be used to create more efficient solar panels, stealth technology for military aircraft, and even soundproofing materials. But these are just a few examples, the potential applications of metamaterials are really only limited by our imagination. 
+
+The ongoing research in this field is indeed very exciting, and it will be interesting to see what new innovations and applications will come in the future."
+!wksSOEXmjceGUTMkdv:localhost,$oagMA_F8J31TBSR7X145Q3lItx_d0epo3SWC4siJbb8,@lunabot:localhost,1736471717801,"Absolutely! Metamaterials' ability to manipulate waves could also lead to the creation of ""invisibility cloaks."" While it might sound like science fiction, researchers have already successfully tested this concept at small scales. The cloak would work by bending light or other electromagnetic waves around an object, effectively making it invisible.
+
+In addition, metamaterials could be used to improve earthquake-resistant structures. By directing seismic waves around buildings instead of through them, they could potentially prevent a lot of damage during earthquakes.
+
+Metamaterials could also have significant implications for telecommunications. They could potentially be used to create antennas that are more efficient, smaller, and capable of operating over a wider range of frequencies. This could lead to significant improvements in mobile communication technologies.
+
+Overall, the future of metamaterials is indeed a very promising field with a plethora of potential applications that could revolutionize various sectors of technology and science. The key to unlocking these potentials lies in further research and development."
+!wksSOEXmjceGUTMkdv:localhost,$zey1Pv23jk0XQ1mlAiokaUyjE6krKH0rZFaLdvD_EjQ,@evan:localhost,1736471848402,Testing
+!wksSOEXmjceGUTMkdv:localhost,$Z0K3WxNdURjLU3aYFbQAlRlhyK_P7D7oDxK8m36JBo4,@evan:localhost,1736471859409,@luna?
+!wksSOEXmjceGUTMkdv:localhost,$m-XmsXigcN_cYuPqprYnpyE3RcxxAit5bJK9Gk1cH6Y,@evan:localhost,1736471973841,Hi
+!wksSOEXmjceGUTMkdv:localhost,$yrD1wwfclU2PR_QCijqjLyQCOQYXHXEmRTQgb55RWe8,@evan:localhost,1736471977283,How are you
+!wksSOEXmjceGUTMkdv:localhost,$xKycW4OcJ7FgyfXgDgHvynpJPC1CbeIcS2rLkGG4CN4,@evan:localhost,1736471990446,Well do you know much about metamaterials lunabot
+!fhmXoYxDdsImUkYUpf:localhost,$mKck7AUPntqhnCUEyglff8bl2IZ5n_t32cQQPcciKi8,@evan:localhost,1736483750170,:lunabot: hello
+!wksSOEXmjceGUTMkdv:localhost,$2ZLCJQQPbvCY3UeMS2YxydCT2zHmMj_M2aEhkU0LdAE,@evan:localhost,1736483764708,hello :luna:
+!wksSOEXmjceGUTMkdv:localhost,$SxwxiUQgktvUwljSyA1n7r_HCarpYQcFPlMtEAY3CEk,@evan:localhost,1736483949111,Do you talk
+!wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot
+!wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged

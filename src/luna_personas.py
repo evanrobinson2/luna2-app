@@ -52,6 +52,7 @@ def _sanitize_field(value: str) -> str:
 def create_bot(
     bot_id: str,
     displayname: str,
+    password:str,
     creator_user_id: str,
     system_prompt: str,
     traits: dict | None = None,
@@ -85,6 +86,7 @@ def create_bot(
     persona = {
         "displayname": displayname_clean,
         "system_prompt": system_prompt_clean,
+        "password": password,
         "traits": traits if traits else {},
         "creator_user_id": creator_user_id,
         "created_at": datetime.datetime.utcnow().isoformat() + "Z",  # e.g. 2025-01-07T14:06:15Z
