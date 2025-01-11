@@ -34,9 +34,9 @@ logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 # GLOBALS
 # ──────────────────────────────────────────────────────────
 DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
-TOKEN_FILE = "director_token.json"   # Where we store/reuse the access token
-SYNC_TOKEN_FILE = "sync_token.json"  # Where we store the last sync token
-MESSAGES_CSV = "luna_messages.csv"   # We'll store all messages in this CSV
+TOKEN_FILE = "data/director_token.json"   # Where we store/reuse the access token
+SYNC_TOKEN_FILE = "data/sync_token.json"  # Where we store the last sync token
+MESSAGES_CSV = "data/luna_messages.csv"   # We'll store all messages in this CSV
 
 # Global context dictionary (if needed by your logic)
 room_context = {}
@@ -341,7 +341,7 @@ async def on_invite_event(room, event):
         await DIRECTOR_CLIENT.join(room.room_id)
     except LocalProtocolError as e:
         logger.error(f"Error joining room {room.room_id}: {e}")
-        
+
 # ──────────────────────────────────────────────────────────
 # CHECK RATE LIMIT
 # ──────────────────────────────────────────────────────────
@@ -372,8 +372,6 @@ async def check_rate_limit() -> str:
     except Exception as e:
         logger.exception(f"check_rate_limit encountered an error: {e}")
         return f"Encountered error while checking rate limit: {e}"
-
-MESSAGES_CSV = "luna_messages.csv"
 
 def _print_progress(stop_event):
     """
@@ -581,28 +579,57 @@ async def list_users() -> list[dict]:
 # ──────────────────────────────────────────────────────────
 # INVITE USER TO ROOM
 # ──────────────────────────────────────────────────────────
-async def invite_user_to_room(user_id: str, room_id: str) -> str:
+async def invite_user_to_room(user_id: str, room_id_or_alias: str) -> str:
     """
-    Invite an existing Matrix user to a room, using DIRECTOR_CLIENT to do so.
+    Force-join (invite) an existing Matrix user to a room/alias by calling
+    the Synapse Admin API (POST /_synapse/admin/v1/join/<room_id_or_alias>)
+    with a JSON body: {"user_id": "<user_id>"}
+
+    Unlike a normal Matrix invite, this bypasses user consent. The user is
+    automatically joined if they're local to this homeserver.
+
+    Requirements:
+      - The user running this code (DIRECTOR_CLIENT) must be a homeserver admin.
+      - The user_id must be local to this server.
+      - The admin must already be in the room with permission to invite.
     """
-    global DIRECTOR_CLIENT
-    if not DIRECTOR_CLIENT:
+    from src.luna_functions import DIRECTOR_CLIENT, getClient  # or your actual import path
+
+    # Ensure we have a valid client with admin credentials
+    client = getClient()  # or use DIRECTOR_CLIENT directly
+    if not client:
         error_msg = "Error: No DIRECTOR_CLIENT available."
         logger.error(error_msg)
         return error_msg
 
-    try:
-        resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
-        if isinstance(resp, RoomInviteResponse):
-            logger.info(f"Successfully invited {user_id} to {room_id}.")
-            return f"Invited {user_id} to {room_id} successfully."
-        else:
-            logger.error(f"Failed to invite {user_id} to {room_id}: {resp}")
-            return f"Error inviting {user_id} to {room_id}. Response: {resp}"
-    except Exception as e:
-        logger.exception(f"Exception while inviting {user_id} to {room_id}: {e}")
-        return f"Exception inviting {user_id} to {room_id}: {e}"
+    admin_token = client.access_token
+    if not admin_token:
+        error_msg = "Error: No admin token is present in DIRECTOR_CLIENT."
+        logger.error(error_msg)
+        return error_msg
 
+    homeserver_url = client.homeserver
+    # Endpoint for forced join
+    endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room_id_or_alias}"
+
+    payload = {"user_id": user_id}
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    logger.debug("Force-joining user %s to room %s via %s", user_id, room_id_or_alias, endpoint)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers, json=payload) as resp:
+                if resp.status in (200, 201):
+                    logger.info(f"Successfully forced {user_id} into {room_id_or_alias}.")
+                    return f"Forcibly joined {user_id} to {room_id_or_alias}."
+                else:
+                    text = await resp.text()
+                    logger.error(f"Failed to force-join {user_id} to {room_id_or_alias}: {text}")
+                    return f"Error {resp.status} forcibly joining {user_id} => {text}"
+    except Exception as e:
+        logger.exception(f"Exception while forcing {user_id} into {room_id_or_alias}: {e}")
+        return f"Exception forcibly joining {user_id} => {e}"
 
 # ──────────────────────────────────────────────────────────
 # DELETE MATRIX USER

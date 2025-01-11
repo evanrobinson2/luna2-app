@@ -5,13 +5,23 @@ from datetime import datetime
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.formatted_text import ANSI  # <-- IMPORTANT for colored prompt
 
 from src.cmd_shutdown import SHOULD_SHUT_DOWN
+from src.luna_command_extensions.check_synapse_status import checkSynapseStatus
 
 # Assuming console_functions.py is in the same package directory.
 from . import console_functions
 
 logger = logging.getLogger(__name__)
+
+# ─── ANSI COLOR CODES ───────────────────────────────────────────────────────────
+GREEN = "\x1b[32m"
+RED = "\x1b[31m"
+YELLOW = "\x1b[33m"
+MAGENTA = "\x1b[35m"
+CYAN = "\x1b[36m"
+RESET = "\x1b[0m"
 
 
 def console_loop(loop):
@@ -20,7 +30,8 @@ def console_loop(loop):
     We'll schedule any async actions on 'loop' via run_coroutine_threadsafe().
 
     Prompt format:
-      [luna] 2025-01-05 14:56 (#1) %
+      [ONLINE] [luna-app] YYYY-MM-DD HH:MM (#X) %
+      with color-coded segments.
 
     If the user presses Enter on an empty line, we nudge them
     to type 'help' or 'exit'.
@@ -30,14 +41,8 @@ def console_loop(loop):
       - Tab completion
     """
 
-    # 1) Build a list of known commands for tab-completion
     commands = list(console_functions.COMMAND_ROUTER.keys())
-
-    # 2) Create a WordCompleter from prompt_toolkit
-    #    This will do simple prefix matching against our known commands
     commands_completer = WordCompleter(commands, ignore_case=True)
-
-    # 3) Create a PromptSession with that completer
     session = PromptSession(completer=commands_completer)
 
     command_count = 0
@@ -45,45 +50,60 @@ def console_loop(loop):
     while not SHOULD_SHUT_DOWN:
 
         if command_count == 0:
-            console_functions.cmd_clear(None,loop)
+            console_functions.cmd_clear(None, loop)
             from src.ascii_art import show_ascii_banner
-            print("Welcome to LunaBot - where the magic of your imagination can come to life.")
-            print("\n")
-            print(show_ascii_banner("LUNA BOT"))            
+            print("Welcome to LunaBot - where the magic of your imagination can come to life.\n")
+            print(show_ascii_banner("LUNA BOT"))
             print("What should we create today?")
 
         command_count += 1
-
-        # Build a short date/time string
         now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-        # Our custom prompt: e.g. [luna] 2025-01-05 14:56 (#3) %
-        prompt_text = f"\n[luna-app] {now_str} (#{command_count}) % "
+        # ─── GET SYNAPSE STATUS ─────────────────────────────────────────────────
+        try:
+            future = asyncio.run_coroutine_threadsafe(
+                checkSynapseStatus("http://localhost:8008"),
+                loop
+            )
+            # checkSynapseStatus returns an ANSI-colored "[ONLINE]" / "[OFFLINE]" / "[UNKNOWN]"
+            synapse_status_str = future.result(timeout=3)
+        except Exception as e:
+            logger.warning(f"Failed to check Synapse status => {e}")
+            # fallback if something goes wrong
+            synapse_status_str = f"{YELLOW}[UNKNOWN]{RESET}"
+
+        # ─── BUILD THE PROMPT WITH COLORS ───────────────────────────────────────
+        # E.g.   [ONLINE] [luna-app] 2025-01-11 17:25 (#7) %
+        #        ^^^^^^^   ^^^^^^^^   ^^^^^        ^^^^^
+        #        Green     Magenta    Cyan
+        raw_prompt_text = (
+            f"{synapse_status_str} "
+            f"{MAGENTA}[luna-app]{RESET} "
+            f"{CYAN}{now_str}{RESET} "
+            f"(#{command_count}) % "
+        )
+
+        # Wrap in ANSI(...) so prompt_toolkit interprets the escape codes properly
+        prompt_ansi_text = ANSI(raw_prompt_text)
 
         try:
-            # 4) Read user input using PromptSession
-            cmd_line = session.prompt(prompt_text)
+            cmd_line = session.prompt(prompt_ansi_text)
         except (EOFError, KeyboardInterrupt):
-            # EOFError => user pressed Ctrl+D
-            # KeyboardInterrupt => user pressed Ctrl+C
-            logger.info("User exited the console (EOF or KeyboardInterrupt).")
+            logger.info("User exited the console.")
             print("\nSYSTEM: Console session ended.")
             break
 
-        # If the user pressed Enter on an empty line
         if not cmd_line.strip():
             print("SYSTEM: No command entered. Type 'help' or 'exit'.")
             continue
 
-        # Split into command + argument_string
         parts = cmd_line.strip().split(maxsplit=1)
         if not parts:
-            continue  # extremely rare if cmd_line was just whitespace
+            continue
 
         command_name = parts[0].lower()
         argument_string = parts[1] if len(parts) > 1 else ""
 
-        # Check if the command exists in our router
         if command_name in console_functions.COMMAND_ROUTER:
             handler_func = console_functions.COMMAND_ROUTER[command_name]
             handler_func(argument_string, loop)

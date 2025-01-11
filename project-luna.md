@@ -488,7 +488,11 @@ import logging
 import threading
 from src.console_apparatus import console_loop
 from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
-from src.luna_functions_handledispatch import on_room_message
+#
+# Trying to replace this with a new one
+# from src.luna_functions_handledispatch import on_room_message
+from src.luna_command_extensions.handle_dispatch2 import on_room_message_stub_logonly
+
 from src.luna_functions import fetch_all_new_messages
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
 from src.luna_functions import (
@@ -555,7 +559,9 @@ async def main_logic():
     )
 
     # 2. Register callbacks
-    client.add_event_callback(on_room_message, RoomMessageText)
+    # client.add_event_callback(on_room_message, RoomMessageText)
+    client.add_event_callback(on_room_message_stub_logonly, RoomMessageText)
+    
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
     # removing here for now - this may not at all be necessary, since the server will send notifications
@@ -704,6 +710,7 @@ Overall, the future of metamaterials is indeed a very promising field with a ple
 !wksSOEXmjceGUTMkdv:localhost,$SxwxiUQgktvUwljSyA1n7r_HCarpYQcFPlMtEAY3CEk,@evan:localhost,1736483949111,Do you talk
 !wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot
 !wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged
+!wksSOEXmjceGUTMkdv:localhost,$lBU7IQLaAxhN3yO3DXc4Q06kqmEMmZEH1CrrhxuFR0A,@evan:localhost,1736563340404,hello luna
 
 === luna_personalities.json ===
 {
@@ -1433,6 +1440,7 @@ import sys
 import logging
 import subprocess
 import asyncio
+import aiohttp
 from datetime import datetime
 import textwrap # or however you import from the same package
 from nio import AsyncClient
@@ -1445,7 +1453,8 @@ from nio.api import RoomVisibility
 from src.ascii_art import show_ascii_banner
 from src.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
-
+import asyncio
+from src.luna_functions_create_room import create_room
 from src.console_functions_cmd_summarize_room import cmd_summarize_room
 
 logger = logging.getLogger(__name__)
@@ -1539,106 +1548,6 @@ def cmd_log(args, loop):
     LOGFILE_PATH = "server.log"  # or read from a config
     print(f"SYSTEM: Log file is located at: {LOGFILE_PATH}\n"
           "SYSTEM: Check that file for all logs, since console output is minimized or disabled.")
-
-def cmd_create_room(args, loop):
-    """
-    Usage: create_room <roomName>
-
-    Creates a new room named <roomName> using a direct approach:
-    1) Loads the director token from `director_token.json`.
-    2) Instantiates an AsyncClient with that token.
-    3) Schedules `room_create(...)` on the existing event loop with run_coroutine_threadsafe().
-    4) Blocks on .result().
-    5) Schedules client.close() as well.
-
-    This version includes extensive debugging logs to trace every step.
-    """
-    logger.debug(f"cmd_create_room called with args='{args}', loop={loop}")
-
-    if not args:
-        logger.debug("No args provided. Displaying usage message and returning.")
-        print("SYSTEM: Usage: create_room <roomName>")
-        return
-
-    room_name = args.strip()
-    logger.info(f"SYSTEM: Creating a new room named '{room_name}'...")  # user-facing print
-
-    # Step 1) Load the director token from disk
-    logger.debug("Attempting to load token from 'director_token.json'...")
-    try:
-        with open("director_token.json", "r") as f:
-            data = json.load(f)
-        user_id = data.get("user_id")
-        access_token = data.get("access_token")
-        device_id = data.get("device_id")
-        logger.debug(f"Loaded token data. user_id={user_id}, access_token=(redacted), device_id={device_id}")
-    except Exception as e:
-        logger.exception("Error reading 'director_token.json'.")
-        print(f"SYSTEM: Error loading director token => {e}")
-        return
-
-    # Step 2) Create a local AsyncClient with that token
-    from nio import AsyncClient, RoomCreateResponse
-    HOMESERVER_URL = "http://localhost:8008"  # Adjust if needed
-    logger.debug(f"Creating local AsyncClient for user_id='{user_id}' with homeserver='{HOMESERVER_URL}'")
-
-    client = AsyncClient(homeserver=HOMESERVER_URL, user=user_id)
-    client.access_token = access_token
-    client.device_id = device_id
-
-    # We'll define a small coroutine to do the room creation
-    async def do_create_room():
-        """
-        Coroutine that calls room_create and returns the response.
-        """
-        logger.debug(f"do_create_room: about to call room_create(name='{room_name}', visibility='public')")
-        try:
-            resp = await client.room_create(name=room_name, visibility=RoomVisibility.public,)
-            logger.debug(f"do_create_room: room_create call returned {resp}")
-            return resp
-        except Exception as exc:
-            logger.exception("Exception in do_create_room during room_create.")
-            raise exc
-
-    # Another small coroutine to close the client
-    async def do_close_client():
-        logger.debug("do_close_client: closing the AsyncClient.")
-        await client.close()
-        logger.debug("do_close_client: client closed successfully.")
-
-    # 3) Schedule the create-room coroutine on the existing loop
-    logger.debug("Scheduling do_create_room() on the existing loop with run_coroutine_threadsafe.")
-    future_create = asyncio.run_coroutine_threadsafe(do_create_room(), loop)
-
-    try:
-        # 4) Block on the future’s .result()
-        logger.debug("Blocking on future_create.result() to get the room_create response.")
-        resp = future_create.result()
-        logger.debug(f"future_create.result() returned => {resp}")
-
-        if isinstance(resp, RoomCreateResponse):
-            logger.info(f"SYSTEM: Created room '{room_name}' => {resp.room_id}")
-        else:
-            # Possibly an ErrorResponse or some unexpected type
-            logger.warning(f"room_create returned a non-RoomCreateResponse => {resp}")
-            print(f"SYSTEM: Error creating room => {resp}")
-
-    except Exception as e:
-        logger.exception("Exception while creating room in cmd_create_room.")
-        print(f"SYSTEM: Exception while creating room => {e}")
-
-    finally:
-        # 5) Clean up: schedule the close() coroutine
-        logger.debug("Scheduling do_close_client() to gracefully close the AsyncClient.")
-        future_close = asyncio.run_coroutine_threadsafe(do_close_client(), loop)
-        try:
-            logger.debug("Blocking on future_close.result() to confirm the client is closed.")
-            future_close.result()
-        except Exception as e2:
-            logger.exception("Error while closing the client in cmd_create_room final block.")
-            print(f"SYSTEM: Error closing client => {e2}")
-        logger.debug("cmd_create_room: Done with final block.")
-
 
 def cmd_who(args, loop):
     """
@@ -2030,7 +1939,7 @@ def _print_users_table(users_info: list[dict]):
 
         row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
         print(row)
-        
+
 def cmd_invite_user(args, loop):
     """
     Usage: invite_user <user_id> <room_id>
@@ -2038,7 +1947,9 @@ def cmd_invite_user(args, loop):
     Example:
       invite_user @bob:localhost !testRoom:localhost
 
-    Invites a user to the given room using the director client.
+    Invites (actually forces) a user to join the given room using the director client.
+    Unlike normal invites, this bypasses user consent by calling the Synapse Admin API.
+    Requires that the user running Luna has admin privileges on the homeserver.
     """
     parts = args.strip().split()
     if len(parts) < 2:
@@ -2048,23 +1959,134 @@ def cmd_invite_user(args, loop):
     user_id = parts[0]
     room_id = parts[1]
 
-    # 1) Schedule the async call on the main loop
-    future = asyncio.run_coroutine_threadsafe(
-        luna_functions.invite_user_to_room(user_id, room_id),
-        loop
-    )
+    # We'll define the forced-join logic inside this command function, so there's no helper function.
+    async def do_force_join(user: str, room: str) -> str:
+        """
+        Asynchronous subroutine to forcibly join 'user' to 'room'
+        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
+        """
+        client = luna_functions.getClient()
+        if not client:
+            return "Error: No DIRECTOR_CLIENT set."
 
-    # 2) Provide a callback to handle the result
+        admin_token = client.access_token
+        if not admin_token:
+            return "Error: No admin token is present in DIRECTOR_CLIENT."
+
+        # The base homeserver URL (e.g. "http://localhost:8008"); adjust if needed.
+        homeserver_url = client.homeserver
+
+        # Synapse Admin endpoint for forcing a user into a room:
+        # PUT /_synapse/admin/v1/rooms/{roomIdOrAlias}/join?user_id=@someone:domain
+        endpoint = f"{homeserver_url}/_synapse/admin/v1/rooms/{room}/join"
+        params = {"user_id": user}
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.put(endpoint, headers=headers, params=params) as resp:
+                    if resp.status in (200, 201):
+                        return f"Forcibly joined {user} to {room}."
+                    else:
+                        text = await resp.text()
+                        return f"Error {resp.status} forcibly joining {user} => {text}"
+        except Exception as e:
+            logger.exception("Exception in do_force_join:")
+            return f"Exception forcibly joining user => {e}"
+
+    # Schedule our async forced-join subroutine on the existing event loop:
+    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id), loop)
+
     def on_done(fut):
         try:
             result_msg = fut.result()
             print(f"SYSTEM: {result_msg}")
         except Exception as e:
             logger.exception(f"Exception in cmd_invite_user callback: {e}")
-            print(f"SYSTEM: Error inviting user: {e}")
+            print(f"SYSTEM: Error forcibly inviting user: {e}")
 
     future.add_done_callback(on_done)
     print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
+
+def cmd_add_user(args, loop):
+    """
+    Usage: add_user <user_id> <room_id_or_alias>
+
+    Example:
+      add_user @bob:localhost !testRoom:localhost
+      add_user @spyclops:localhost #mychannel:localhost
+
+    This console command force-joins a user to the given room or alias,
+    bypassing normal invite acceptance. It calls the Synapse Admin API
+    `POST /_synapse/admin/v1/join/<room_id_or_alias>` with a JSON body:
+    {
+      "user_id": "@bob:localhost"
+    }
+
+    Requires that the user running this command (Luna's director)
+    is an admin on the homeserver and already has power to invite in the room.
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 2:
+        print("SYSTEM: Usage: add_user <user_id> <room_id_or_alias>")
+        return
+
+    user_id = parts[0]
+    room_id_or_alias = parts[1]
+
+    async def do_force_join(user: str, room: str) -> str:
+        """
+        Asynchronous subroutine to forcibly join 'user' to 'room'
+        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
+        """
+        client = luna_functions.getClient()
+        if not client:
+            return "Error: No DIRECTOR_CLIENT set."
+
+        admin_token = client.access_token
+        if not admin_token:
+            return "Error: No admin token is present in DIRECTOR_CLIENT."
+
+        # The base homeserver URL (e.g., "http://localhost:8008")
+        homeserver_url = client.homeserver
+
+        # Synapse Admin API endpoint for forcing a user into a room:
+        # POST /_synapse/admin/v1/join/<room_id_or_alias>
+        # JSON body: { "user_id": "@someone:localhost" }
+        endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room}"
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        payload = {"user_id": user}
+
+        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(endpoint, headers=headers, json=payload) as resp:
+                    if resp.status in (200, 201):
+                        return f"Forcibly joined {user} to {room}."
+                    else:
+                        text = await resp.text()
+                        return f"Error {resp.status} forcibly joining {user} => {text}"
+        except Exception as e:
+            logger.exception("Exception in do_force_join:")
+            return f"Exception forcibly joining user => {e}"
+
+    # Schedule our async forced-join subroutine on the existing event loop:
+    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id_or_alias), loop)
+
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            logger.exception(f"Exception in cmd_add_user callback: {e}")
+            print(f"SYSTEM: Error forcibly adding user: {e}")
+
+    future.add_done_callback(on_done)
+    print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
 
 def cmd_create_bot_user(args, loop):
     """
@@ -2208,7 +2230,41 @@ def cmd_delete_bot(args, loop):
     
     
 # Suppose in luna_functions_create_inspired_bot.py you have:
+def cmd_create_room(args, loop):
+    """
+    Usage: create_room <roomName> [--private]
 
+    Examples:
+      create_room2 MyConferenceRoom
+      create_room2 MyPrivateRoom --private
+
+    Steps:
+    1) Parse the arguments to identify the desired room name and determine whether
+       the user wants a public room (default) or a private one (if --private is present).
+    2) If no room name is provided, print a usage message and return.
+    3) Convert the user's input into 'room_name' (string) and 'is_public' (bool).
+    4) Schedule the `create_room_luna(room_name, is_public)` coroutine on the event loop,
+       then block until the result is returned.
+    5) Print the outcome message (room created successfully or an error).
+    """
+    logging.info("Received create_room_luna command.")
+    parts = args.strip().split()
+    if not parts:
+        print("Usage: create_room <roomName> [--private]")
+        return
+
+    room_name = parts[0]
+    is_public = True
+    if "--private" in parts[1:]:
+        is_public = False
+
+    logging.info("Calling luna_functions.create_room.")
+    future = asyncio.run_coroutine_threadsafe(create_room(room_name, is_public), loop)
+    try:
+        result_msg = future.result()
+        print(f"SYSTEM: {result_msg}")
+    except Exception as e:
+        print(f"SYSTEM: Exception while creating room => {e}")
 
 
 def cmd_create_inspired_bot(args, loop):
@@ -2256,6 +2312,7 @@ COMMAND_ROUTER = {
     "server": cmd_list_server,
 
     "invite_user": cmd_invite_user,
+    "add_user_to_channel":cmd_add_user,
     "summarize_room": cmd_summarize_room,
     "summon_random":cmd_create_inspired_bot,
     "assemble": cmd_assemble
@@ -2394,6 +2451,100 @@ def cmd_summarize_room(args: str, loop) -> None:
 
     # 5) Print the result to console
     print(summary_result)
+=== src/luna_command_extensions/__init__.py ===
+
+=== src/luna_command_extensions/handle_dispatch2.py ===
+
+import logging
+from nio import RoomMessageText
+
+logger = logging.getLogger(__name__)
+
+LUNA_USER_ID = "@lunabot:localhost"
+ROUTE_LIMIT = 25  # Hard limit on routes
+MAX_USERS_TO_ROUTE = 0   # Global or external; in production you'd store this more robustly
+
+async def on_room_message_stub_logonly(room, event):
+    """
+    A minimal demonstration of your routing algorithm with logging only.
+    - Logs that we received a message and 'pretends' to write to CSV.
+    - Distinguishes between a 2-participant (auto-respond) channel and a multi-participant (mention-based).
+    - Tracks MAX_USERS_TO_ROUTE to emulate infinite-loop prevention (just logs warnings, doesn't enforce).
+    """
+
+    # 1) Confirm it's a text event
+    if not isinstance(event, RoomMessageText):
+        logger.debug("Ignoring non-text event (event_id=%s).", event.event_id)
+        return
+
+    # 2) Log the incoming message
+    logger.info(
+        "Received text event: room_id=%s, event_id=%s, sender=%s, body=%r",
+        room.room_id, event.event_id, event.sender, event.body
+    )
+    logger.debug("Pretending to write this message to CSV... (no real I/O)")
+
+    # 3) Count participants
+    #    'room.users' is a dict of user_id -> user_info in Matrix; adjust if your platform differs
+    participants = getattr(room, "users", {})
+    participant_count = len(participants)
+    logger.info("Room %s has %d participants.", room.room_id, participant_count)
+
+    # 4) If exactly 2 participants => auto respond
+    if participant_count == 2:
+        logger.info("2-participant channel => Luna automatically responds (stub).")
+
+        # Emulate route count increment
+        global MAX_USERS_TO_ROUTE
+        MAX_USERS_TO_ROUTE += 1
+        logger.debug("Incremented MAX_USERS_TO_ROUTE to %d (no enforcement yet).", MAX_USERS_TO_ROUTE)
+
+        # If MAX_USERS_TO_ROUTE hits 10 or 25, log that as well
+        if MAX_USERS_TO_ROUTE == 10:
+            logger.warning("**Route count is 10 => 'final message' would be posted here in real code.**")
+        elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
+            logger.warning("**Route limit (%d) reached => conversation halted.**", ROUTE_LIMIT)
+
+        # Log a pretend GPT response
+        logger.info("Pretending to generate a GPT-based reply and post it to the channel... Done.")
+
+    else:
+        # 5) More than 2 participants => respond only if there's a mention
+        logger.info("Multi-participant channel => respond only if @mentioned.")
+
+        # Extract mention info from the event's content
+        content = event.source.get("content", {})
+        mentions_field = content.get("m.mentions", {})
+        mentioned_ids = mentions_field.get("user_ids", [])
+        logger.debug("Mentioned IDs => %s", mentioned_ids)
+
+        if not mentioned_ids:
+            logger.info("No mentions => Luna (and other bots) remain silent in this group chat.")
+            return
+
+        # If we have mentions, pretend to route the message
+        logger.info("Detected mentions => routing to each mentioned entity. (Stub)")
+        logger.info("All mentions: %s", mentioned_ids)        
+
+        for mention_id in mentioned_ids:
+            MAX_USERS_TO_ROUTE += 1
+            logger.debug(
+                "Pretending to route the message to %s. MAX_USERS_TO_ROUTE=%d",
+                mention_id, MAX_USERS_TO_ROUTE
+            )
+
+            # Check MAX_USERS_TO_ROUTE for warnings
+            if MAX_USERS_TO_ROUTE == 10:
+                logger.warning("**Hit MAX_USERS_TO_ROUTE=10 => 'final message' would be posted.**")
+            elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
+                logger.warning("**Route limit (%d) reached => conversation halted.**", ROUTE_LIMIT)
+                # In real code, you'd break or return here if you truly want to stop responding
+
+            # In reality, we might generate a GPT reply as if from mention_id
+            logger.info("Pretending to log mention-based response and send it as user %s", mention_id)
+
+    logger.debug("Finished on_room_message_stub_logonly for event_id=%s.", event.event_id)
+
 === src/luna_functions.py ===
 """
 luna_functions.py
@@ -2423,7 +2574,7 @@ from nio import (
     LocalProtocolError
 )
 from nio.responses import ErrorResponse, SyncResponse, RoomMessagesResponse
-
+from src.luna_personas import _load_personalities
 logger = logging.getLogger(__name__)
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 
@@ -2501,21 +2652,9 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         logger.error(f"Password login failed: {resp}")
         raise Exception("Password login failed. Check credentials or homeserver settings.")
 
-async def create_room(room_name: str, is_public: bool = True) -> str:
-    from src.luna_functions import DIRECTOR_CLIENT
-    if not DIRECTOR_CLIENT:
-        return "Error: No DIRECTOR_CLIENT set."
+import logging
 
-    try:
-        visibility = "public" if is_public else "private"
-        response = await DIRECTOR_CLIENT.room_create(name=room_name, visibility=visibility)
-        if isinstance(response, RoomCreateResponse):
-            return f"Created room '{room_name}' => {response.room_id}"
-        else:
-            # Possibly an ErrorResponse
-            return f"Error creating room => {response}"
-    except Exception as e:
-        return f"Exception while creating room => {e}"
+logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────
 # CREATE USER LOGIC
@@ -2739,6 +2878,7 @@ async def on_invite_event(room, event):
     """
     Called whenever the client is invited to a room.
     """
+
     global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
         logger.warning("No DIRECTOR_CLIENT set. Cannot handle invites.")
@@ -2749,7 +2889,6 @@ async def on_invite_event(room, event):
         await DIRECTOR_CLIENT.join(room.room_id)
     except LocalProtocolError as e:
         logger.error(f"Error joining room {room.room_id}: {e}")
-
 
 # ──────────────────────────────────────────────────────────
 # CHECK RATE LIMIT
@@ -2990,28 +3129,57 @@ async def list_users() -> list[dict]:
 # ──────────────────────────────────────────────────────────
 # INVITE USER TO ROOM
 # ──────────────────────────────────────────────────────────
-async def invite_user_to_room(user_id: str, room_id: str) -> str:
+async def invite_user_to_room(user_id: str, room_id_or_alias: str) -> str:
     """
-    Invite an existing Matrix user to a room, using DIRECTOR_CLIENT to do so.
+    Force-join (invite) an existing Matrix user to a room/alias by calling
+    the Synapse Admin API (POST /_synapse/admin/v1/join/<room_id_or_alias>)
+    with a JSON body: {"user_id": "<user_id>"}
+
+    Unlike a normal Matrix invite, this bypasses user consent. The user is
+    automatically joined if they're local to this homeserver.
+
+    Requirements:
+      - The user running this code (DIRECTOR_CLIENT) must be a homeserver admin.
+      - The user_id must be local to this server.
+      - The admin must already be in the room with permission to invite.
     """
-    global DIRECTOR_CLIENT
-    if not DIRECTOR_CLIENT:
+    from src.luna_functions import DIRECTOR_CLIENT, getClient  # or your actual import path
+
+    # Ensure we have a valid client with admin credentials
+    client = getClient()  # or use DIRECTOR_CLIENT directly
+    if not client:
         error_msg = "Error: No DIRECTOR_CLIENT available."
         logger.error(error_msg)
         return error_msg
 
-    try:
-        resp = await DIRECTOR_CLIENT.room_invite(room_id, user_id)
-        if isinstance(resp, RoomInviteResponse):
-            logger.info(f"Successfully invited {user_id} to {room_id}.")
-            return f"Invited {user_id} to {room_id} successfully."
-        else:
-            logger.error(f"Failed to invite {user_id} to {room_id}: {resp}")
-            return f"Error inviting {user_id} to {room_id}. Response: {resp}"
-    except Exception as e:
-        logger.exception(f"Exception while inviting {user_id} to {room_id}: {e}")
-        return f"Exception inviting {user_id} to {room_id}: {e}"
+    admin_token = client.access_token
+    if not admin_token:
+        error_msg = "Error: No admin token is present in DIRECTOR_CLIENT."
+        logger.error(error_msg)
+        return error_msg
 
+    homeserver_url = client.homeserver
+    # Endpoint for forced join
+    endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room_id_or_alias}"
+
+    payload = {"user_id": user_id}
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    logger.debug("Force-joining user %s to room %s via %s", user_id, room_id_or_alias, endpoint)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers, json=payload) as resp:
+                if resp.status in (200, 201):
+                    logger.info(f"Successfully forced {user_id} into {room_id_or_alias}.")
+                    return f"Forcibly joined {user_id} to {room_id_or_alias}."
+                else:
+                    text = await resp.text()
+                    logger.error(f"Failed to force-join {user_id} to {room_id_or_alias}: {text}")
+                    return f"Error {resp.status} forcibly joining {user_id} => {text}"
+    except Exception as e:
+        logger.exception(f"Exception while forcing {user_id} into {room_id_or_alias}: {e}")
+        return f"Exception forcibly joining {user_id} => {e}"
 
 # ──────────────────────────────────────────────────────────
 # DELETE MATRIX USER
@@ -3045,6 +3213,223 @@ async def delete_matrix_user(localpart: str) -> str:
     except Exception as e:
         logger.exception(f"Error in delete_matrix_user({user_id}): {e}")
         return f"Exception deleting user {user_id}: {e}"
+
+def getClient():
+    return DIRECTOR_CLIENT
+
+=== src/luna_functions_assemble.py ===
+# File: luna_functions_team.py
+
+import json
+import logging
+import datetime
+import asyncio
+from src.ai_functions import get_gpt_response
+from src.luna_functions import create_user, invite_user_to_room, getClient
+from src.luna_functions_create_room import create_room
+from src.luna_personas import create_bot
+
+logger = logging.getLogger(__name__)
+
+def cmd_assemble(args, loop):
+    """
+    A synchronous console command that calls GPT asynchronously
+    and parses the JSON result.
+    """
+    # 1) Make a future
+    future = asyncio.run_coroutine_threadsafe(
+        get_gpt_response(
+            context=[{"role": "user", "content": "Generate some JSON"}],
+            model="gpt-4"
+        ),
+        loop
+    )
+
+    # 2) Block until that future is done, retrieving the actual string
+    try:
+        gpt_response_str = future.result()  # This is the JSON string
+    except Exception as e:
+        print(f"SYSTEM: Error calling GPT => {e}")
+        return
+
+    # 3) Now parse the string with json.loads
+    import json
+    try:
+        personas = json.loads(gpt_response_str)
+    except json.JSONDecodeError as e:
+        print(f"SYSTEM: GPT returned invalid JSON => {e}")
+        print("SYSTEM: Raw GPT response was:")
+        print(gpt_response_str)
+        return
+
+    print("SYSTEM: Successfully parsed GPT persona data:")
+    print(personas)
+=== src/luna_functions_create_inspired_bot.py ===
+import json
+import asyncio
+
+from src.ai_functions import get_gpt_response  # or however you've structured your import
+from src.luna_functions import create_user as matrix_create_user  # presumably in your code already
+import src.luna_personas
+
+def cmd_create_inspired_bot(args, loop):
+    """
+    Usage:
+      create_bot_inspired <inspiration_text>
+    """
+
+    if not args.strip():
+        print("SYSTEM: No inspiration provided. Please give a short string describing the persona idea.")
+        return
+
+    system_instructions = (
+        "You are a helpful assistant that must respond only with a single valid JSON object. "
+        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
+        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
+        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
+        "Do not provide any explanations—only raw JSON. "
+        "Any additional text or formatting outside the JSON object will invalidate the response. "
+        "INVALID: Sure, here's an example of a JSON that represents a person's contact details ```json..."
+    )
+
+    user_prompt = (
+        f"Generate a persona from this inspiration: '{args}'. "
+        f"The persona can be imaginative or grounded, but must be returned as raw JSON."
+    )
+
+    # We’ll call get_gpt_response asynchronously
+    # (similar to how you do with matrix_create_user)
+    # so we run it in the existing event loop with `run_coroutine_threadsafe`.
+    fut = asyncio.run_coroutine_threadsafe(
+        get_gpt_response(
+            context=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": user_prompt},
+            ],
+            model="gpt-4",
+            temperature=0.7,
+            max_tokens=300
+        ),
+        loop
+    )
+
+    try:
+        gpt_raw_response = fut.result()  # Wait for GPT to finish
+    except Exception as e:
+        print(f"SYSTEM: Error calling GPT => {e}")
+        return
+
+    # Now we expect the GPT response to be valid JSON. Let's parse it.
+    try:
+        persona_data = json.loads(gpt_raw_response)
+    except json.JSONDecodeError as e:
+        print(f"SYSTEM: GPT returned invalid JSON => {e}")
+        print("SYSTEM: Raw GPT response was:")
+        print(gpt_raw_response)
+        return
+
+    # Print out the data we got from GPT
+    print("SYSTEM: GPT suggested the following persona data:")
+    print(json.dumps(persona_data, indent=2))
+
+    # Optionally, auto-create the persona from GPT's output:
+    localpart = persona_data.get("localpart")
+    displayname = persona_data.get("displayname")
+    system_prompt = persona_data.get("system_prompt")
+    password = persona_data.get("password")
+    traits = persona_data.get("traits", {})
+
+    # Basic checks
+    required = [("localpart", localpart), ("displayname", displayname),
+                ("system_prompt", system_prompt), ("password", password)]
+    missing_fields = [name for (name, val) in required if not val]
+    if missing_fields:
+        print(f"SYSTEM: GPT persona is missing required fields: {missing_fields}")
+        return
+
+    bot_id = f"@{localpart}:localhost"
+
+    # Step A: Create local persona
+    try:
+        persona = src.luna_personas.create_bot(
+            bot_id=bot_id,
+            password=password,
+            displayname=displayname,
+            creator_user_id="@lunabot:localhost",
+            system_prompt=system_prompt,
+            traits=traits
+        )
+        print(f"SYSTEM: Local persona created => {persona}")
+    except Exception as e:
+        print(f"SYSTEM: Unexpected error => {e}")
+        return
+
+    # Step B: Register user with Synapse (async call)
+    from src.luna_functions import create_user as matrix_create_user
+    fut_reg = asyncio.run_coroutine_threadsafe(
+        matrix_create_user(localpart, password, is_admin=False),
+        loop
+    )
+    try:
+        result_msg = fut_reg.result()
+        print(f"SYSTEM: Matrix user creation => {result_msg}")
+    except Exception as e:
+        print(f"SYSTEM: Error creating matrix user => {e}")
+
+=== src/luna_functions_create_room.py ===
+import logging
+
+logger = logging.getLogger(__name__)
+
+from src.luna_functions import getClient
+from nio import RoomCreateResponse 
+from nio.api import RoomVisibility
+
+async def create_room(room_name: str, is_public: bool = True) -> str:
+    """
+    Creates a new Matrix room, returning a message describing the outcome.
+    By default, it creates a public room, but if is_public=False, a private room
+    is created instead. The function references DIRECTOR_CLIENT from src.luna_functions.
+    
+    Args:
+        room_name (str): The name for the new Matrix room.
+        is_public (bool): If True, room is public; otherwise it's private.
+    
+    Returns:
+        str: A result message describing success or failure.
+    """
+    logger.debug("Entering create_room() with room_name=%r, is_public=%r", room_name, is_public)
+    
+    client = getClient()
+    # Check if there's a global client available
+    if not client:
+        logger.debug("No DIRECTOR_CLIENT found. Exiting early with error message.")
+        return "Error: No DIRECTOR_CLIENT set."
+    
+    try:
+        # Convert is_public into the appropriate RoomVisibility
+        room_visibility = RoomVisibility.public if is_public else RoomVisibility.private
+        logger.debug("Setting room_visibility to %s", room_visibility)
+
+        # Attempt to create the room
+        logger.debug(
+            "Calling DIRECTOR_CLIENT.room_create(name=%r, visibility=%r)",
+            room_name, room_visibility
+        )
+        response = await client.room_create(name=room_name, visibility=room_visibility)
+
+        # Check the response type
+        if isinstance(response, RoomCreateResponse):
+            logger.debug("RoomCreateResponse received. room_id=%r", response.room_id)
+            return f"Created room '{room_name}' => {response.room_id}"
+        else:
+            # Possibly an ErrorResponse or another unexpected type
+            logger.debug("Received a non-RoomCreateResponse => %r", response)
+            return f"Error creating room => {response}"
+
+    except Exception as e:
+        logger.exception("Caught an exception while creating room %r:", room_name)
+        return f"Exception while creating room => {e}"
 
 === src/luna_functions_handledispatch.py ===
 """
@@ -3877,3 +4262,5 @@ def delete_bot_persona(bot_id: str) -> None:
     _save_personalities(data)
     # no return needed; it either succeeds or raises an exception
 
+=== sync_token.json ===
+{"sync_token": "s7_139_0_1_8_1_1_10_0_1"}

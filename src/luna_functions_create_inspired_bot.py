@@ -15,13 +15,16 @@ def cmd_create_inspired_bot(args, loop):
         print("SYSTEM: No inspiration provided. Please give a short string describing the persona idea.")
         return
 
-    # We’ll build a system and user message that instructs GPT to return JSON.
     system_instructions = (
-        "You are a helpful assistant that ONLY responds with valid JSON. "
-        "Your JSON must include the fields: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field should be a JSON object with zero or more fields. "
-        "No extra text, no markdown formatting—just valid JSON."
+        "You are a helpful assistant that must respond only with a single valid JSON object. "
+        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
+        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
+        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
+        "Do not provide any explanations—only raw JSON. "
+        "Any additional text or formatting outside the JSON object will invalidate the response. "
+        "INVALID: Sure, here's an example of a JSON that represents a person's contact details ```json..."
     )
+
     user_prompt = (
         f"Generate a persona from this inspiration: '{args}'. "
         f"The persona can be imaginative or grounded, but must be returned as raw JSON."

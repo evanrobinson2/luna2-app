@@ -17,8 +17,6 @@ import pandas as pd
 import logging
 from src.luna_functions import invite_user_to_room, list_rooms
 
-
-
 from src.luna_functions import (
     invite_user_to_room,
     list_rooms,
@@ -28,26 +26,23 @@ from src.luna_functions import (
 
 from src.luna_functions import invite_user_to_room, list_rooms
 from src.ai_functions import get_gpt_response  # or wherever your GPT integration resides
-
 import pandas as pd
 import os
 import logging
 from nio import RoomMessageText
+import pandas as pd
+import os
+import logging
+from nio import RoomMessageText
+import pandas as pd
+import os
+import logging
+from nio import RoomMessageText
+
 
 
 MESSAGES_CSV = "luna_messages.csv"
 
-import pandas as pd
-import os
-import logging
-from nio import RoomMessageText
-
-MESSAGES_CSV = "luna_messages.csv"
-
-import pandas as pd
-import os
-import logging
-from nio import RoomMessageText
 
 # Configure logging to write to 'luna.log' only
 logger = logging.getLogger('luna_logger')

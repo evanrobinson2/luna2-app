@@ -3,7 +3,7 @@ import os
 import json
 import datetime
 
-PERSONALITIES_FILE = "luna_personalities.json"
+PERSONALITIES_FILE = "data/luna_personalities.json"
 
 def _load_personalities() -> dict:
     """

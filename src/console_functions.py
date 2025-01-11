@@ -184,8 +184,8 @@ def cmd_rotate_logs(args, loop):
 
     # 1) Rotate the current file
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_file = "server.log"
-    rotated_file = f"server-{timestamp}.log"
+    log_file = "data/server.log"
+    rotated_file = f"data/logs/server-{timestamp}.log"
 
     if os.path.exists(log_file):
         try:

@@ -45,7 +45,7 @@ def configure_logging():
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     logger.debug("Formatter for logs created.")
 
-    file_handler = logging.FileHandler("server.log", mode="a")  # Append to server.log
+    file_handler = logging.FileHandler("data/logs/server.log", mode="a")  # Append to server.log
     file_handler.setLevel(logging.DEBUG)  # Store everything (DEBUG+) in the file
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
@@ -86,7 +86,6 @@ async def main_logic():
     # 2. Register callbacks
     # client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_room_message_stub_logonly, RoomMessageText)
-    
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
     # removing here for now - this may not at all be necessary, since the server will send notifications
