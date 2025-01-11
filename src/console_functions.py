@@ -3,6 +3,7 @@ import sys
 import logging
 import subprocess
 import asyncio
+import aiohttp
 from datetime import datetime
 import textwrap # or however you import from the same package
 from nio import AsyncClient
@@ -501,7 +502,7 @@ def _print_users_table(users_info: list[dict]):
 
         row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
         print(row)
-        
+
 def cmd_invite_user(args, loop):
     """
     Usage: invite_user <user_id> <room_id>
@@ -509,7 +510,9 @@ def cmd_invite_user(args, loop):
     Example:
       invite_user @bob:localhost !testRoom:localhost
 
-    Invites a user to the given room using the director client.
+    Invites (actually forces) a user to join the given room using the director client.
+    Unlike normal invites, this bypasses user consent by calling the Synapse Admin API.
+    Requires that the user running Luna has admin privileges on the homeserver.
     """
     parts = args.strip().split()
     if len(parts) < 2:
@@ -519,23 +522,134 @@ def cmd_invite_user(args, loop):
     user_id = parts[0]
     room_id = parts[1]
 
-    # 1) Schedule the async call on the main loop
-    future = asyncio.run_coroutine_threadsafe(
-        luna_functions.invite_user_to_room(user_id, room_id),
-        loop
-    )
+    # We'll define the forced-join logic inside this command function, so there's no helper function.
+    async def do_force_join(user: str, room: str) -> str:
+        """
+        Asynchronous subroutine to forcibly join 'user' to 'room'
+        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
+        """
+        client = luna_functions.getClient()
+        if not client:
+            return "Error: No DIRECTOR_CLIENT set."
 
-    # 2) Provide a callback to handle the result
+        admin_token = client.access_token
+        if not admin_token:
+            return "Error: No admin token is present in DIRECTOR_CLIENT."
+
+        # The base homeserver URL (e.g. "http://localhost:8008"); adjust if needed.
+        homeserver_url = client.homeserver
+
+        # Synapse Admin endpoint for forcing a user into a room:
+        # PUT /_synapse/admin/v1/rooms/{roomIdOrAlias}/join?user_id=@someone:domain
+        endpoint = f"{homeserver_url}/_synapse/admin/v1/rooms/{room}/join"
+        params = {"user_id": user}
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.put(endpoint, headers=headers, params=params) as resp:
+                    if resp.status in (200, 201):
+                        return f"Forcibly joined {user} to {room}."
+                    else:
+                        text = await resp.text()
+                        return f"Error {resp.status} forcibly joining {user} => {text}"
+        except Exception as e:
+            logger.exception("Exception in do_force_join:")
+            return f"Exception forcibly joining user => {e}"
+
+    # Schedule our async forced-join subroutine on the existing event loop:
+    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id), loop)
+
     def on_done(fut):
         try:
             result_msg = fut.result()
             print(f"SYSTEM: {result_msg}")
         except Exception as e:
             logger.exception(f"Exception in cmd_invite_user callback: {e}")
-            print(f"SYSTEM: Error inviting user: {e}")
+            print(f"SYSTEM: Error forcibly inviting user: {e}")
 
     future.add_done_callback(on_done)
     print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
+
+def cmd_add_user(args, loop):
+    """
+    Usage: add_user <user_id> <room_id_or_alias>
+
+    Example:
+      add_user @bob:localhost !testRoom:localhost
+      add_user @spyclops:localhost #mychannel:localhost
+
+    This console command force-joins a user to the given room or alias,
+    bypassing normal invite acceptance. It calls the Synapse Admin API
+    `POST /_synapse/admin/v1/join/<room_id_or_alias>` with a JSON body:
+    {
+      "user_id": "@bob:localhost"
+    }
+
+    Requires that the user running this command (Luna's director)
+    is an admin on the homeserver and already has power to invite in the room.
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 2:
+        print("SYSTEM: Usage: add_user <user_id> <room_id_or_alias>")
+        return
+
+    user_id = parts[0]
+    room_id_or_alias = parts[1]
+
+    async def do_force_join(user: str, room: str) -> str:
+        """
+        Asynchronous subroutine to forcibly join 'user' to 'room'
+        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
+        """
+        client = luna_functions.getClient()
+        if not client:
+            return "Error: No DIRECTOR_CLIENT set."
+
+        admin_token = client.access_token
+        if not admin_token:
+            return "Error: No admin token is present in DIRECTOR_CLIENT."
+
+        # The base homeserver URL (e.g., "http://localhost:8008")
+        homeserver_url = client.homeserver
+
+        # Synapse Admin API endpoint for forcing a user into a room:
+        # POST /_synapse/admin/v1/join/<room_id_or_alias>
+        # JSON body: { "user_id": "@someone:localhost" }
+        endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room}"
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        payload = {"user_id": user}
+
+        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(endpoint, headers=headers, json=payload) as resp:
+                    if resp.status in (200, 201):
+                        return f"Forcibly joined {user} to {room}."
+                    else:
+                        text = await resp.text()
+                        return f"Error {resp.status} forcibly joining {user} => {text}"
+        except Exception as e:
+            logger.exception("Exception in do_force_join:")
+            return f"Exception forcibly joining user => {e}"
+
+    # Schedule our async forced-join subroutine on the existing event loop:
+    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id_or_alias), loop)
+
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            logger.exception(f"Exception in cmd_add_user callback: {e}")
+            print(f"SYSTEM: Error forcibly adding user: {e}")
+
+    future.add_done_callback(on_done)
+    print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
 
 def cmd_create_bot_user(args, loop):
     """
@@ -761,6 +875,7 @@ COMMAND_ROUTER = {
     "server": cmd_list_server,
 
     "invite_user": cmd_invite_user,
+    "add_user_to_channel":cmd_add_user,
     "summarize_room": cmd_summarize_room,
     "summon_random":cmd_create_inspired_bot,
     "assemble": cmd_assemble

@@ -26,7 +26,7 @@ from nio import (
     LocalProtocolError
 )
 from nio.responses import ErrorResponse, SyncResponse, RoomMessagesResponse
-
+from src.luna_personas import _load_personalities
 logger = logging.getLogger(__name__)
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 
@@ -330,6 +330,7 @@ async def on_invite_event(room, event):
     """
     Called whenever the client is invited to a room.
     """
+
     global DIRECTOR_CLIENT
     if not DIRECTOR_CLIENT:
         logger.warning("No DIRECTOR_CLIENT set. Cannot handle invites.")
@@ -340,8 +341,7 @@ async def on_invite_event(room, event):
         await DIRECTOR_CLIENT.join(room.room_id)
     except LocalProtocolError as e:
         logger.error(f"Error joining room {room.room_id}: {e}")
-
-
+        
 # ──────────────────────────────────────────────────────────
 # CHECK RATE LIMIT
 # ──────────────────────────────────────────────────────────

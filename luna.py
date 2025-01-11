@@ -13,7 +13,11 @@ import logging
 import threading
 from src.console_apparatus import console_loop
 from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
-from src.luna_functions_handledispatch import on_room_message
+#
+# Trying to replace this with a new one
+# from src.luna_functions_handledispatch import on_room_message
+from src.luna_command_extensions.handle_dispatch2 import on_room_message_stub_logonly
+
 from src.luna_functions import fetch_all_new_messages
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
 from src.luna_functions import (
@@ -80,7 +84,9 @@ async def main_logic():
     )
 
     # 2. Register callbacks
-    client.add_event_callback(on_room_message, RoomMessageText)
+    # client.add_event_callback(on_room_message, RoomMessageText)
+    client.add_event_callback(on_room_message_stub_logonly, RoomMessageText)
+    
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
     # removing here for now - this may not at all be necessary, since the server will send notifications
