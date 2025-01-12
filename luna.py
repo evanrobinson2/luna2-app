@@ -12,7 +12,7 @@ import sys
 import logging
 import threading
 from src.console_apparatus import console_loop
-from src.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
+from src.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 #
 # Trying to replace this with a new one
 # from src.luna_functions_handledispatch import on_room_message

@@ -6,7 +6,7 @@ from datetime import datetime
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import ANSI  # <-- IMPORTANT for colored prompt
-from src.cmd_shutdown import SHOULD_SHUT_DOWN
+from src.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
 from src.luna_command_extensions.check_synapse_status import checkSynapseStatus
 from src.luna_command_extensions.ascii_art import show_ascii_banner
 

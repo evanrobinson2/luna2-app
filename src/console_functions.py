@@ -9,7 +9,7 @@ import textwrap # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
-from src.cmd_shutdown import request_shutdown
+from src.luna_command_extensions.cmd_shutdown import request_shutdown
 from . import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
@@ -396,7 +396,7 @@ def cmd_show_shutdown(args, loop):
 
     Prints the current value of SHOULD_SHUT_DOWN (a boolean).
     """
-    from src.cmd_shutdown import SHOULD_SHUT_DOWN
+    from cmd_shutdown import SHOULD_SHUT_DOWN
     print(f"SYSTEM: SHOULD_SHUT_DOWN is currently set to {SHOULD_SHUT_DOWN}.")
 
 
