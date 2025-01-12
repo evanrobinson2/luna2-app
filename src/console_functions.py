@@ -18,7 +18,7 @@ from src.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from src.luna_functions_create_room import create_room
-from src.console_functions_cmd_summarize_room import cmd_summarize_room
+from src.luna_command_extensions.console_functions_cmd_summarize_room import cmd_summarize_room
 
 logger = logging.getLogger(__name__)
 
