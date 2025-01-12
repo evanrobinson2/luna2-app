@@ -14,7 +14,6 @@ from . import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
 from src.luna_command_extensions.ascii_art import show_ascii_banner
-from src.luna_command_extensions.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from src.luna_command_extensions.create_room import create_room
@@ -266,6 +265,8 @@ def cmd_fetch_all(args, loop):
 
     Fetch all historical messages from all joined rooms in pages, 
     storing them in a CSV. This might take a while if rooms are large.
+
+    This version BLOCKS the console thread until the fetch completes.
     """
     logger.info("Console received 'fetch_all' command. Blocking until done...")
 
@@ -278,15 +279,13 @@ def cmd_fetch_all(args, loop):
         loop
     )
 
-    def on_done(fut):
-        try:
-            fut.result()
-            print("SYSTEM: Successfully fetched all historical messages.")
-        except Exception as e:
-            logger.exception(f"Error in fetch_all: {e}")
-            print(f"SYSTEM: Error in fetch_all: {e}")
-
-    future.add_done_callback(on_done)
+    try:
+        # BLOCK until the fetch completes
+        future.result()  # you could pass a timeout here if desired
+        print("SYSTEM: Successfully fetched all historical messages.")
+    except Exception as e:
+        logger.exception(f"Error in fetch_all: {e}")
+        print(f"SYSTEM: Error in fetch_all: {e}")
 
 
 def cmd_fetch_new(args, loop):
@@ -299,9 +298,7 @@ def cmd_fetch_new(args, loop):
     logger.info("Console received 'fetch_new' command. Blocking until done...")
 
     future = asyncio.run_coroutine_threadsafe(
-        luna_functions.fetch_all_new_messages(
-            luna_functions.DIRECTOR_CLIENT
-        ),
+        luna_functions.fetch_all_new_messages(),
         loop
     )
 
@@ -471,76 +468,6 @@ def _print_users_table(users_info: list[dict]):
         row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
         print(row)
 
-def cmd_invite_user(args, loop):
-    """
-    Usage: invite_user <user_id> <room_id>
-
-    Example:
-      invite_user @bob:localhost !testRoom:localhost
-
-    Invites (actually forces) a user to join the given room using the director client.
-    Unlike normal invites, this bypasses user consent by calling the Synapse Admin API.
-    Requires that the user running Luna has admin privileges on the homeserver.
-    """
-    parts = args.strip().split()
-    if len(parts) < 2:
-        print("SYSTEM: Usage: invite_user <user_id> <room_id>")
-        return
-
-    user_id = parts[0]
-    room_id = parts[1]
-
-    # We'll define the forced-join logic inside this command function, so there's no helper function.
-    async def do_force_join(user: str, room: str) -> str:
-        """
-        Asynchronous subroutine to forcibly join 'user' to 'room'
-        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
-        """
-        client = luna_functions.getClient()
-        if not client:
-            return "Error: No DIRECTOR_CLIENT set."
-
-        admin_token = client.access_token
-        if not admin_token:
-            return "Error: No admin token is present in DIRECTOR_CLIENT."
-
-        # The base homeserver URL (e.g. "http://localhost:8008"); adjust if needed.
-        homeserver_url = client.homeserver
-
-        # Synapse Admin endpoint for forcing a user into a room:
-        # PUT /_synapse/admin/v1/rooms/{roomIdOrAlias}/join?user_id=@someone:domain
-        endpoint = f"{homeserver_url}/_synapse/admin/v1/rooms/{room}/join"
-        params = {"user_id": user}
-        headers = {"Authorization": f"Bearer {admin_token}"}
-
-        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.put(endpoint, headers=headers, params=params) as resp:
-                    if resp.status in (200, 201):
-                        return f"Forcibly joined {user} to {room}."
-                    else:
-                        text = await resp.text()
-                        return f"Error {resp.status} forcibly joining {user} => {text}"
-        except Exception as e:
-            logger.exception("Exception in do_force_join:")
-            return f"Exception forcibly joining user => {e}"
-
-    # Schedule our async forced-join subroutine on the existing event loop:
-    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id), loop)
-
-    def on_done(fut):
-        try:
-            result_msg = fut.result()
-            print(f"SYSTEM: {result_msg}")
-        except Exception as e:
-            logger.exception(f"Exception in cmd_invite_user callback: {e}")
-            print(f"SYSTEM: Error forcibly inviting user: {e}")
-
-    future.add_done_callback(on_done)
-    print(f"SYSTEM: Inviting {user_id} to {room_id}... Please wait.")
-
 def cmd_add_user(args, loop):
     """
     Usage: add_user <user_id> <room_id_or_alias>
@@ -619,80 +546,6 @@ def cmd_add_user(args, loop):
     future.add_done_callback(on_done)
     print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
 
-def cmd_create_bot_user(args, loop):
-    """
-    Usage:
-      create_bot '{"localpart": "...", "displayname": "...", "system_prompt": "...", "password": "...", "traits": {...}}'
-    """
-
-    # 1. Check if there's any input at all
-    if not args.strip():
-        print("SYSTEM: No input provided. Please provide a valid JSON payload.")
-        return
-
-    # 2. Parse as JSON
-    try:
-        data = json.loads(args)
-    except json.JSONDecodeError as e:
-        print(f"SYSTEM: Invalid JSON: {e}")
-        return
-
-    # 3. Extract fields
-    localpart = data.get("localpart")
-    displayname = data.get("displayname")
-    system_prompt = data.get("system_prompt")
-    password = data.get("password")
-    traits = data.get("traits", {})
-
-    # 4. Validate required fields
-    missing_fields = []
-    if not localpart:
-        missing_fields.append("localpart")
-    if not displayname:
-        missing_fields.append("displayname")
-    if not system_prompt:
-        missing_fields.append("system_prompt")
-    if not password:
-        missing_fields.append("password")
-
-    if missing_fields:
-        print(f"SYSTEM: Missing required fields: {', '.join(missing_fields)}")
-        return
-
-    # 5. Construct bot_id
-    bot_id = f"@{localpart}:localhost"
-
-    # 6. Create local persona
-    try:
-        persona = luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=traits
-        )
-        print(f"SYSTEM: Local persona created => {persona}")
-    except ValueError as ve:
-        print(f"SYSTEM: Error creating persona: {ve}")
-        return
-    except Exception as e:
-        print(f"SYSTEM: Unexpected error => {e}")
-        return
-
-    # 7. Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
-
-    try:
-        result_msg = fut.result()
-        print(f"SYSTEM: Matrix user creation => {result_msg}")
-    except Exception as e:
-        print(f"SYSTEM: Error creating matrix user => {e}")
-
 def cmd_list_server(args, loop):
     """
     Usage: cmd_list_server
@@ -763,39 +616,28 @@ def cmd_delete_bot(args, loop):
 # Suppose in luna_functions_create_inspired_bot.py you have:
 def cmd_create_room(args, loop):
     """
-    Usage: create_room <roomName> [--private]
+    Usage: create_room "<roomName>" [--private]
 
-    Examples:
-      create_room2 MyConferenceRoom
-      create_room2 MyPrivateRoom --private
+    Example:
+      create_room "My Room With Spaces" --private
 
-    Steps:
-    1) Parse the arguments to identify the desired room name and determine whether
-       the user wants a public room (default) or a private one (if --private is present).
-    2) If no room name is provided, print a usage message and return.
-    3) Convert the user's input into 'room_name' (string) and 'is_public' (bool).
-    4) Schedule the `create_room_luna(room_name, is_public)` coroutine on the event loop,
-       then block until the result is returned.
-    5) Print the outcome message (room created successfully or an error).
+    We'll pass the entire 'args' to create_room(...) so it can parse
+    out the room name and flags with shlex.
     """
-    logging.info("Received create_room_luna command.")
-    parts = args.strip().split()
-    if not parts:
-        print("Usage: create_room <roomName> [--private]")
-        return
 
-    room_name = parts[0]
-    is_public = True
-    if "--private" in parts[1:]:
-        is_public = False
+    future = asyncio.run_coroutine_threadsafe(
+        create_room(args),  # <== note: just 'args'
+        loop
+    )
 
-    logging.info("Calling luna_functions.create_room.")
-    future = asyncio.run_coroutine_threadsafe(create_room(room_name, is_public), loop)
-    try:
-        result_msg = future.result()
-        print(f"SYSTEM: {result_msg}")
-    except Exception as e:
-        print(f"SYSTEM: Exception while creating room => {e}")
+    def on_done(fut):
+        try:
+            result_msg = fut.result()
+            print(f"SYSTEM: {result_msg}")
+        except Exception as e:
+            print(f"SYSTEM: Error creating room => {e}")
+
+    future.add_done_callback(on_done)
 
 
 def cmd_create_inspired_bot(args, loop):
@@ -827,22 +669,14 @@ COMMAND_ROUTER = {
     "who": cmd_who,
     "clear": cmd_clear,
     "purge_and_seed": cmd_purge_and_seed,
-    
     "banner": cmd_banner,
-
     "create_room": cmd_create_room,
-    "create_bot": cmd_create_bot_user,
-
     "fetch_all": cmd_fetch_all,
     "fetch_new": cmd_fetch_new,
-
     "list_users": cmd_list_users,
     "list_channels": cmd_list_rooms,
     "list_server": cmd_list_server,
     "server": cmd_list_server,
-
-    "invite_user": cmd_invite_user,
     "add_user_to_channel":cmd_add_user,
-    "summon_random":cmd_create_inspired_bot,
-    "assemble": cmd_assemble
+    "summon":cmd_create_inspired_bot
 }

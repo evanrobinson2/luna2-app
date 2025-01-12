@@ -18,7 +18,7 @@ from src.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_
 # from src.luna_functions_handledispatch import on_room_message
 from src.luna_command_extensions.handle_dispatch2 import on_room_message_stub_logonly
 
-from src.luna_functions import fetch_all_new_messages
+from src.luna_functions import fetch_all_messages_once
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
 from src.luna_functions import (
     on_invite_event,
@@ -150,26 +150,6 @@ def luna():
         logger.debug("Preparing to close the event loop.")
         loop.close()
         logger.info("Event loop closed. Exiting main function.")
-
-async def periodic_refresh_loop():
-    """
-    Runs indefinitely (until shutdown),
-    performing a 'refresh' task every N seconds (default 10s).
-    """
-    logger = logging.getLogger(__name__)
-
-    while not SHOULD_SHUT_DOWN:
-        try:
-            await fetch_all_new_messages()
-            logger.debug("periodic_refresh_loop(): Periodic refresh: fetch complete.")
-        except Exception as e:
-            logger.exception(f"Error in periodic_refresh_loop: {e}")
-
-        # Sleep for the configured interval, then repeat
-        await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
-
-    logger.info("periodic_refresh_loop exiting gracefully.")
-    
 
 if __name__ == "__main__":
     luna()

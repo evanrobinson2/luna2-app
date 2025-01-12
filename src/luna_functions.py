@@ -16,6 +16,7 @@ import time
 import json
 import pandas as pd
 import os
+import datetime
 from nio import (
     AsyncClient,
     LoginResponse,
@@ -482,55 +483,114 @@ async def _fetch_room_history_paged(
 
     return all_events
 
+async def fetch_all_messages_once(
+    client, 
+    room_ids: list[str] = None, 
+    page_size: int = 100
+) -> None:
+    """
+    Fetch *all* historical messages from the given room_ids (or all joined rooms if None),
+    then write them to a CSV, including a human-readable 'date' column in the first position.
+    """
+    if not room_ids:
+        room_ids = list(client.rooms.keys())
+        logger.info(f"No room_ids specified. Using all joined rooms: {room_ids}")
 
-# ──────────────────────────────────────────────────────────
-# FETCH ONLY NEW MESSAGES
-# ──────────────────────────────────────────────────────────
-async def fetch_all_new_messages() -> None:
-    """
-    Uses client.sync(...) with a stored sync_token to retrieve only new messages across all joined rooms.
-    ...
-    """
-    old_token = load_sync_token() or None
-    logger.info(f"Starting incremental sync from token={old_token}")
-    client = DIRECTOR_CLIENT
-    response = await client.sync(timeout=3000, since=old_token)
-    if not isinstance(response, SyncResponse):
-        logger.warning(f"Failed to sync for new messages: {response}")
+    all_records = []
+    for rid in room_ids:
+        logger.info(f"Fetching *all* messages for room: {rid}")
+        room_history = await _fetch_room_history_paged(client, rid, page_size=page_size)
+        all_records.extend(room_history)
+
+    if not all_records:
+        logger.warning("No messages fetched. CSV file will not be updated.")
         return
-    
-    new_records = []
-    for room_id, room_data in response.rooms.join.items():
-        for event in room_data.timeline.events:
-            if isinstance(event, RoomMessageText):
-                new_records.append({
-                    "room_id": room_id,
-                    "event_id": event.event_id,
-                    "sender": event.sender,
-                    "timestamp": event.server_timestamp,
-                    "body": event.body,
-                })
 
-    logger.info(f"Fetched {len(new_records)} new messages across {len(response.rooms.join)} joined rooms.")
+    # Build the DataFrame with a new column 'date' in the first column
+    df = pd.DataFrame(
+        all_records, 
+        columns=["date", "room_id", "event_id", "sender", "timestamp", "body"]  # order matters
+    )
+    logger.info(f"Fetched total {len(df)} messages across {len(room_ids)} room(s).")
 
-    if new_records:
-        df_new = pd.DataFrame(new_records, columns=["room_id", "event_id", "sender", "timestamp", "body"])
-
-        if os.path.exists(MESSAGES_CSV):
+    if os.path.exists(MESSAGES_CSV):
+        try:
             existing_df = pd.read_csv(MESSAGES_CSV)
-            combined_df = pd.concat([existing_df, df_new], ignore_index=True)
-            combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
-            combined_df.to_csv(MESSAGES_CSV, index=False)
-            logger.info(f"Appended new messages to {MESSAGES_CSV}. Updated total: {len(combined_df)}")
-        else:
-            df_new.to_csv(MESSAGES_CSV, index=False)
-            logger.info(f"Wrote new messages to fresh CSV {MESSAGES_CSV}.")
+            logger.debug(f"Existing CSV loaded with {len(existing_df)} records.")
+        except pd.errors.EmptyDataError:
+            # Handle empty CSV by creating an empty DataFrame with the correct columns
+            existing_df = pd.DataFrame(columns=["date", "room_id", "event_id", "sender", "timestamp", "body"])
+            logger.warning(f"{MESSAGES_CSV} is empty. Creating a new DataFrame with columns.")
 
-    new_token = response.next_batch
-    if new_token:
-        store_sync_token(new_token)
-        logger.info(f"Updated local sync token => {new_token}")
+        combined_df = pd.concat([existing_df, df], ignore_index=True)
+        combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
+        combined_df.to_csv(MESSAGES_CSV, index=False)
+        logger.info(f"Appended new records to existing {MESSAGES_CSV}. New total: {len(combined_df)}")
+    else:
+        # If CSV doesn't exist, create it with the new records
+        df.to_csv(MESSAGES_CSV, index=False)
+        logger.info(f"Wrote all records to new CSV {MESSAGES_CSV}.")
 
+
+async def _fetch_room_history_paged(
+    client, 
+    room_id: str, 
+    page_size: int
+) -> list[dict]:
+    """
+    Helper to page backwards in time until no more messages or we hit the server's earliest.
+    For each event, create a 'date' field in ISO format from the server timestamp.
+    """
+    from nio import RoomMessageText
+    all_events = []
+    end_token = None
+
+    while True:
+        try:
+            response = await client.room_messages(
+                room_id=room_id,
+                start=end_token,
+                limit=page_size,
+                direction="b"
+            )
+            if not isinstance(response, RoomMessagesResponse):
+                logger.warning(f"Got a non-success response: {response}")
+                break
+
+            chunk = response.chunk
+            if not chunk:
+                logger.info(f"No more chunk for {room_id}, done paging.")
+                break
+
+            for ev in chunk:
+                if isinstance(ev, RoomMessageText):
+                    # Convert 'server_timestamp' (ms) => human-readable UTC time
+                    # e.g. '2025-01-11 21:29:33'
+                    dt_utc = datetime.datetime.utcfromtimestamp(ev.server_timestamp / 1000.0)
+                    dt_str = dt_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+                    all_events.append({
+                        "date": dt_str,                   # new field
+                        "room_id": room_id,
+                        "event_id": ev.event_id,
+                        "sender": ev.sender,
+                        "timestamp": ev.server_timestamp, # keep the original numeric
+                        "body": ev.body
+                    })
+
+            end_token = response.end
+            if not end_token:
+                logger.info(f"Got empty 'end' token for {room_id}, done paging.")
+                break
+
+            logger.debug(f"Fetched {len(chunk)} messages this page for room={room_id}, new end={end_token}")
+            await asyncio.sleep(0.25)
+
+        except Exception as e:
+            logger.exception(f"Error in room_messages paging for {room_id}: {e}")
+            break
+
+    return all_events
 
 # ──────────────────────────────────────────────────────────
 # LIST USERS

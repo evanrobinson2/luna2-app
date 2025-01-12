@@ -1,51 +1,63 @@
 import logging
+import shlex  # <-- We’ll use this to parse user arguments correctly
 
 logger = logging.getLogger(__name__)
 
 from src.luna_functions import getClient
-from nio import RoomCreateResponse 
+from nio import RoomCreateResponse
 from nio.api import RoomVisibility
 
-async def create_room(room_name: str, is_public: bool = True) -> str:
+async def create_room(args_string: str) -> str:
     """
     Creates a new Matrix room, returning a message describing the outcome.
-    By default, it creates a public room, but if is_public=False, a private room
-    is created instead. The function references DIRECTOR_CLIENT from src.luna_functions.
+    By default, it creates a public room; if '--private' is given, it's private.
+
+    We now parse 'args_string' with shlex.split() so that quotes are respected.
+      Example usage from the console:
+        create_room "My new room" --private
     
-    Args:
-        room_name (str): The name for the new Matrix room.
-        is_public (bool): If True, room is public; otherwise it's private.
-    
-    Returns:
-        str: A result message describing success or failure.
+    :param args_string: The raw argument string from the console, which might
+                       contain quoted text or flags.
+    :return: A result message describing success or failure.
     """
-    logger.debug("Entering create_room() with room_name=%r, is_public=%r", room_name, is_public)
-    
-    client = getClient()
-    # Check if there's a global client available
-    if not client:
-        logger.debug("No DIRECTOR_CLIENT found. Exiting early with error message.")
-        return "Error: No DIRECTOR_CLIENT set."
-    
+
+    # 1) Parse the raw string with shlex to allow quoted words
     try:
-        # Convert is_public into the appropriate RoomVisibility
-        room_visibility = RoomVisibility.public if is_public else RoomVisibility.private
-        logger.debug("Setting room_visibility to %s", room_visibility)
+        tokens = shlex.split(args_string)
+    except ValueError as e:
+        logger.exception("Error parsing arguments with shlex:")
+        return f"Error parsing arguments: {e}"
 
-        # Attempt to create the room
-        logger.debug(
-            "Calling DIRECTOR_CLIENT.room_create(name=%r, visibility=%r)",
-            room_name, room_visibility
+    if not tokens:
+        return "Usage: create_room <roomName> [--private]"
+
+    # 2) Extract room name from the first token, check for optional "--private"
+    room_name = tokens[0]
+    is_public = True
+
+    if "--private" in tokens[1:]:
+        is_public = False
+
+    logger.debug("Creating room with name=%r, is_public=%r", room_name, is_public)
+
+    client = getClient()
+    if not client:
+        return "Error: No DIRECTOR_CLIENT set."
+
+    # 3) Convert is_public => the appropriate room visibility
+    room_visibility = RoomVisibility.public if is_public else RoomVisibility.private
+
+    # 4) Attempt to create the room via the client
+    try:
+        response = await client.room_create(
+            name=room_name,
+            visibility=room_visibility
         )
-        response = await client.room_create(name=room_name, visibility=room_visibility)
 
-        # Check the response type
         if isinstance(response, RoomCreateResponse):
-            logger.debug("RoomCreateResponse received. room_id=%r", response.room_id)
             return f"Created room '{room_name}' => {response.room_id}"
         else:
-            # Possibly an ErrorResponse or another unexpected type
-            logger.debug("Received a non-RoomCreateResponse => %r", response)
+            # Possibly an ErrorResponse or something else
             return f"Error creating room => {response}"
 
     except Exception as e:
