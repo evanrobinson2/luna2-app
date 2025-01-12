@@ -6,9 +6,9 @@ from datetime import datetime
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import ANSI  # <-- IMPORTANT for colored prompt
-
 from src.cmd_shutdown import SHOULD_SHUT_DOWN
 from src.luna_command_extensions.check_synapse_status import checkSynapseStatus
+from src.luna_command_extensions.ascii_art import show_ascii_banner
 
 # Assuming console_functions.py is in the same package directory.
 from . import console_functions
@@ -51,7 +51,6 @@ def console_loop(loop):
 
         if command_count == 0:
             console_functions.cmd_clear(None, loop)
-            from src.ascii_art import show_ascii_banner
             print("Welcome to LunaBot - where the magic of your imagination can come to life.\n")
             print(show_ascii_banner("LUNA BOT"))
             print("What should we create today?")

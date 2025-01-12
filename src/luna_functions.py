@@ -121,7 +121,7 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
     # 1) Load admin token
     HOMESERVER_URL = "http://localhost:8008"  # or read from config
     try:
-        with open("director_token.json", "r") as f:
+        with open("data/director_token.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
@@ -542,7 +542,7 @@ async def list_users() -> list[dict]:
     """
     homeserver_url = "http://localhost:8008"  # adjust if needed
     try:
-        with open("director_token.json", "r") as f:
+        with open("data/director_token.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
