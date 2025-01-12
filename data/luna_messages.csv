@@ -1,25 +1,6 @@
 date,room_id,event_id,sender,timestamp,body
-2025-01-12 02:37:46,!OBacxAuPnRsRfxSrnF:localhost,$zRN5b0sZYtF20M1cwAGw_Ekmc6tz-230NwDruBV1aEw,@evan:localhost,1736649466639,"I have a new message for you Luna, 937pm"
-2025-01-12 02:34:29,!OBacxAuPnRsRfxSrnF:localhost,$GZgvjkOfWtK65LaApqazhGylX_FSr5tM38lLq43tOmk,@evan:localhost,1736649269201,what about channel messages?!?!
-2025-01-12 02:30:48,!OBacxAuPnRsRfxSrnF:localhost,$V49kDXswctNMIXnrNo6u3LAYpE8wR1dgPrd8V3Qo0Eo,@evan:localhost,1736649048302,New message here!!
-2025-01-12 02:30:44,!OBacxAuPnRsRfxSrnF:localhost,$cxgdM3kkP6We0PeInf5PyerQLKcA4NVFo9-PHMavmzs,@evan:localhost,1736649044461,New message
-2025-01-12 02:30:42,!OBacxAuPnRsRfxSrnF:localhost,$sWRJsaJZxUnH6yc6v-ViA0BWb1cu2XvacGJvveadXok,@evan:localhost,1736649042651,kjnsdflk
-2025-01-12 02:30:41,!OBacxAuPnRsRfxSrnF:localhost,$bZz7xQyRpuvb7NneH1KIUEhAzKKV-xOOZYB8nPA7QMc,@evan:localhost,1736649041452,jknsdf
-2025-01-12 02:16:14,!OBacxAuPnRsRfxSrnF:localhost,$gIpnXOJi6mATxHKP4nSOGc8BpMHv0WFZ6BMyzpMv8bg,@evan:localhost,1736648174066,Hi @luna!
-2025-01-11 13:07:22,!OBacxAuPnRsRfxSrnF:localhost,$EuByr7pBQu4pqB8phTn-3iTvozZjLFbvEr-YqGMtH2E,@evan:localhost,1736600842758,@luna
-2025-01-11 02:52:20,!XBwtDVQGRLVcaKcUbm:localhost,$pEyxRI5FtH0XVpcwlyUiudNn6Mm-_MJ2ReBs19iY7K8,@evan:localhost,1736563940922,Hello lunabot 
-2025-01-11 17:44:24,!fhmXoYxDdsImUkYUpf:localhost,$gA2eVnLszEupQG0rBhKKNuToUb_dQqPvCTbKTCcpE4E,@evan:localhost,1736617464693,hello lunabot 
-2025-01-10 04:35:50,!fhmXoYxDdsImUkYUpf:localhost,$mKck7AUPntqhnCUEyglff8bl2IZ5n_t32cQQPcciKi8,@evan:localhost,1736483750170,:lunabot: hello
-2025-01-12 02:34:01,!wksSOEXmjceGUTMkdv:localhost,$flf20qdRG0W9JU1PpZXlJV0Ia_WSiHB_A7Uh_MWL85g,@evan:localhost,1736649241851,NOWNOWNOWNOWNOWNWONWO
-2025-01-12 02:33:59,!wksSOEXmjceGUTMkdv:localhost,$KuCcWiW5AQ6GilzQGeAqAQEaAyY8Cw6YwBsxnqd9SZY,@evan:localhost,1736649239931,123213kjndsldkfjnadlksfndsaklfjn
-2025-01-12 02:33:57,!wksSOEXmjceGUTMkdv:localhost,$o2kL-RxxFcM2zmPIKu6gvfwi0Gf7dZ-2rJ_QeIn-3Eg,@evan:localhost,1736649237963,testing 1123
-2025-01-11 02:50:39,!wksSOEXmjceGUTMkdv:localhost,$vl-3Ov3Cs8qqWknJZOzO-hZrWL28bwNafoqD4O8jRio,@evan:localhost,1736563839796,hello luna
-2025-01-11 02:48:24,!wksSOEXmjceGUTMkdv:localhost,$cgWI0aWm_Swyy7Fbin3lhJp0wd-_PfcH0Exi-LYQMKs,@evan:localhost,1736563704520,hello luna
 2025-01-11 02:42:21,!wksSOEXmjceGUTMkdv:localhost,$gGKxyJeH24fsxhKjziv27wJDWskV7bFBz78yhUYbC3Q,@lunabot:localhost,1736563341140,Hello! How can I assist you today?
-2025-01-11 02:42:20,!wksSOEXmjceGUTMkdv:localhost,$lBU7IQLaAxhN3yO3DXc4Q06kqmEMmZEH1CrrhxuFR0A,@evan:localhost,1736563340404,hello luna
 2025-01-10 04:39:41,!wksSOEXmjceGUTMkdv:localhost,$epknto4MCqSSIFGlWNTNwtwVDxwtCiMAHm4rWzWQUUc,@lunabot:localhost,1736483981054,"I'm sorry, but your request is a bit unclear. Could you please provide more details or context so I can assist you in the best way possible?"
-2025-01-10 04:39:38,!wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged
-2025-01-10 04:39:32,!wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot 
 2025-01-10 04:39:10,!wksSOEXmjceGUTMkdv:localhost,$DqAkRJkn-EF5oE0izNwSf23s-qx9tEZcBjCMgd0_r3Q,@lunabot:localhost,1736483950205,"Yes, I can communicate through text-based responses to assist with your queries and tasks."
 2025-01-10 04:39:09,!wksSOEXmjceGUTMkdv:localhost,$SxwxiUQgktvUwljSyA1n7r_HCarpYQcFPlMtEAY3CEk,@evan:localhost,1736483949111,Do you talk
 2025-01-10 04:36:05,!wksSOEXmjceGUTMkdv:localhost,$kIVMdgr0cQrrIPbHs_HGy9-ehkF8d1WtgF2JezjXeQQ,@lunabot:localhost,1736483765431,Hello! How can I assist you today?
@@ -82,3 +63,25 @@ Metamaterials are artificially structured materials used to control and manipula
 2025-01-09 13:39:26,!wksSOEXmjceGUTMkdv:localhost,$R0ppC-0Z1kHmZs52jx6pVgFvP3-zMv5rzMnc_-uxRYE,@lunabot:localhost,1736429966204,"Yes, I'm here! How can I assist you today?"
 2025-01-09 13:39:00,!wksSOEXmjceGUTMkdv:localhost,$Y38zgWCxf0cesaTY0OvbAjaAFyRvHr_0zJTl2MBhchI,@lunabot:localhost,1736429940818,"Yes, I'm here! How can I assist you today?"
 2025-01-09 13:38:58,!wksSOEXmjceGUTMkdv:localhost,$4g-8W7EPqYQ9qH6KvvLlaBuW7CESwzFOdpkHtpS33BI,@evan:localhost,1736429938588,lunabot: are you there?
+,!OBacxAuPnRsRfxSrnF:localhost,$EuByr7pBQu4pqB8phTn-3iTvozZjLFbvEr-YqGMtH2E,@evan:localhost,1736600842758,@luna
+,!OBacxAuPnRsRfxSrnF:localhost,$gIpnXOJi6mATxHKP4nSOGc8BpMHv0WFZ6BMyzpMv8bg,@evan:localhost,1736648174066,Hi @luna!
+,!OBacxAuPnRsRfxSrnF:localhost,$bZz7xQyRpuvb7NneH1KIUEhAzKKV-xOOZYB8nPA7QMc,@evan:localhost,1736649041452,jknsdf
+,!OBacxAuPnRsRfxSrnF:localhost,$sWRJsaJZxUnH6yc6v-ViA0BWb1cu2XvacGJvveadXok,@evan:localhost,1736649042651,kjnsdflk
+,!OBacxAuPnRsRfxSrnF:localhost,$cxgdM3kkP6We0PeInf5PyerQLKcA4NVFo9-PHMavmzs,@evan:localhost,1736649044461,New message
+,!OBacxAuPnRsRfxSrnF:localhost,$V49kDXswctNMIXnrNo6u3LAYpE8wR1dgPrd8V3Qo0Eo,@evan:localhost,1736649048302,New message here!!
+,!OBacxAuPnRsRfxSrnF:localhost,$GZgvjkOfWtK65LaApqazhGylX_FSr5tM38lLq43tOmk,@evan:localhost,1736649269201,what about channel messages?!?!
+,!OBacxAuPnRsRfxSrnF:localhost,$zRN5b0sZYtF20M1cwAGw_Ekmc6tz-230NwDruBV1aEw,@evan:localhost,1736649466639,"I have a new message for you Luna, 937pm"
+,!XBwtDVQGRLVcaKcUbm:localhost,$pEyxRI5FtH0XVpcwlyUiudNn6Mm-_MJ2ReBs19iY7K8,@evan:localhost,1736563940922,Hello lunabot 
+,!fhmXoYxDdsImUkYUpf:localhost,$mKck7AUPntqhnCUEyglff8bl2IZ5n_t32cQQPcciKi8,@evan:localhost,1736483750170,:lunabot: hello
+,!fhmXoYxDdsImUkYUpf:localhost,$gA2eVnLszEupQG0rBhKKNuToUb_dQqPvCTbKTCcpE4E,@evan:localhost,1736617464693,hello lunabot 
+,!wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot 
+,!wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged
+,!wksSOEXmjceGUTMkdv:localhost,$lBU7IQLaAxhN3yO3DXc4Q06kqmEMmZEH1CrrhxuFR0A,@evan:localhost,1736563340404,hello luna
+,!wksSOEXmjceGUTMkdv:localhost,$cgWI0aWm_Swyy7Fbin3lhJp0wd-_PfcH0Exi-LYQMKs,@evan:localhost,1736563704520,hello luna
+,!wksSOEXmjceGUTMkdv:localhost,$vl-3Ov3Cs8qqWknJZOzO-hZrWL28bwNafoqD4O8jRio,@evan:localhost,1736563839796,hello luna
+,!wksSOEXmjceGUTMkdv:localhost,$o2kL-RxxFcM2zmPIKu6gvfwi0Gf7dZ-2rJ_QeIn-3Eg,@evan:localhost,1736649237963,testing 1123
+,!wksSOEXmjceGUTMkdv:localhost,$KuCcWiW5AQ6GilzQGeAqAQEaAyY8Cw6YwBsxnqd9SZY,@evan:localhost,1736649239931,123213kjndsldkfjnadlksfndsaklfjn
+,!wksSOEXmjceGUTMkdv:localhost,$flf20qdRG0W9JU1PpZXlJV0Ia_WSiHB_A7Uh_MWL85g,@evan:localhost,1736649241851,NOWNOWNOWNOWNOWNWONWO
+,!wksSOEXmjceGUTMkdv:localhost,$xgQPHtWNDd1pvNAKEuqx05coJg7sHdRdfXkiSVpljVE,@evan:localhost,1736652878065,Luna it's 10:34pm.
+,!wksSOEXmjceGUTMkdv:localhost,$gWN7D3B7wwZg9PsgK5S6u2q8SVeL_N17J-GGUZKKK-Y,@evan:localhost,1736652937936,it's 10:35pm
+,!AdQHUmAdpfqWIWULNM:localhost,$NELKC8P-JOhwA1Bw4GhEd3roOXbtT0v-3YgOdFvLmuI,@evan:localhost,1736652954361,it's 10:36

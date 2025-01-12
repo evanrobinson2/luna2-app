@@ -593,8 +593,25 @@ Metamaterials are artificially structured materials used to control and manipula
     "creator_user_id": "@lunabot:localhost",
     "created_at": "2025-01-12T02:53:06.780862Z",
     "notes": ""
+  },
+  "@roaring_rat:localhost": {
+    "displayname": "Roaring Rat",
+    "system_prompt": "You're speaking with Roaring Rat, a sharp-dressed, quick-talking gangster from the 1920s.",
+    "password": "SpeakeasySneak123",
+    "traits": {
+      "era": "1920s",
+      "profession": "gangster",
+      "personality": "charismatic",
+      "style": "sharp-dressed",
+      "communication": "fast-talking"
+    },
+    "creator_user_id": "@lunabot:localhost",
+    "created_at": "2025-01-12T03:09:49.247099Z",
+    "notes": ""
   }
 }
+=== data/sync_token.json ===
+{"sync_token": "s166_3368_20_50_132_1_1_11_0_1"}
 === luna.md ===
 luna.md
 
@@ -1294,7 +1311,6 @@ from . import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
 from src.luna_command_extensions.ascii_art import show_ascii_banner
-from src.luna_command_extensions.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from src.luna_command_extensions.create_room import create_room
@@ -1827,80 +1843,6 @@ def cmd_add_user(args, loop):
     future.add_done_callback(on_done)
     print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
 
-def cmd_create_bot_user(args, loop):
-    """
-    Usage:
-      create_bot '{"localpart": "...", "displayname": "...", "system_prompt": "...", "password": "...", "traits": {...}}'
-    """
-
-    # 1. Check if there's any input at all
-    if not args.strip():
-        print("SYSTEM: No input provided. Please provide a valid JSON payload.")
-        return
-
-    # 2. Parse as JSON
-    try:
-        data = json.loads(args)
-    except json.JSONDecodeError as e:
-        print(f"SYSTEM: Invalid JSON: {e}")
-        return
-
-    # 3. Extract fields
-    localpart = data.get("localpart")
-    displayname = data.get("displayname")
-    system_prompt = data.get("system_prompt")
-    password = data.get("password")
-    traits = data.get("traits", {})
-
-    # 4. Validate required fields
-    missing_fields = []
-    if not localpart:
-        missing_fields.append("localpart")
-    if not displayname:
-        missing_fields.append("displayname")
-    if not system_prompt:
-        missing_fields.append("system_prompt")
-    if not password:
-        missing_fields.append("password")
-
-    if missing_fields:
-        print(f"SYSTEM: Missing required fields: {', '.join(missing_fields)}")
-        return
-
-    # 5. Construct bot_id
-    bot_id = f"@{localpart}:localhost"
-
-    # 6. Create local persona
-    try:
-        persona = luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=traits
-        )
-        print(f"SYSTEM: Local persona created => {persona}")
-    except ValueError as ve:
-        print(f"SYSTEM: Error creating persona: {ve}")
-        return
-    except Exception as e:
-        print(f"SYSTEM: Unexpected error => {e}")
-        return
-
-    # 7. Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
-
-    try:
-        result_msg = fut.result()
-        print(f"SYSTEM: Matrix user creation => {result_msg}")
-    except Exception as e:
-        print(f"SYSTEM: Error creating matrix user => {e}")
-
 def cmd_list_server(args, loop):
     """
     Usage: cmd_list_server
@@ -2026,7 +1968,6 @@ COMMAND_ROUTER = {
     "purge_and_seed": cmd_purge_and_seed,
     "banner": cmd_banner,
     "create_room": cmd_create_room,
-    "create_bot": cmd_create_bot_user,
     "fetch_all": cmd_fetch_all,
     "fetch_new": cmd_fetch_new,
     "list_users": cmd_list_users,
@@ -2034,8 +1975,7 @@ COMMAND_ROUTER = {
     "list_server": cmd_list_server,
     "server": cmd_list_server,
     "add_user_to_channel":cmd_add_user,
-    "summon_random":cmd_create_inspired_bot,
-    "assemble": cmd_assemble
+    "summon":cmd_create_inspired_bot
 }
 === src/luna_command_extensions/__init__.py ===
 
@@ -2370,53 +2310,6 @@ async def on_room_message_stub_logonly(room, event):
 
     logger.debug("Finished on_room_message_stub_logonly for event_id=%s.", event.event_id)
 
-=== src/luna_command_extensions/luna_functions_assemble.py ===
-# File: luna_functions_team.py
-
-import json
-import logging
-import datetime
-import asyncio
-from src.ai_functions import get_gpt_response
-from src.luna_functions import create_user, invite_user_to_room, getClient
-from src.luna_command_extensions.create_room import create_room
-from src.luna_personas import create_bot
-
-logger = logging.getLogger(__name__)
-
-def cmd_assemble(args, loop):
-    """
-    A synchronous console command that calls GPT asynchronously
-    and parses the JSON result.
-    """
-    # 1) Make a future
-    future = asyncio.run_coroutine_threadsafe(
-        get_gpt_response(
-            context=[{"role": "user", "content": "Generate some JSON"}],
-            model="gpt-4"
-        ),
-        loop
-    )
-
-    # 2) Block until that future is done, retrieving the actual string
-    try:
-        gpt_response_str = future.result()  # This is the JSON string
-    except Exception as e:
-        print(f"SYSTEM: Error calling GPT => {e}")
-        return
-
-    # 3) Now parse the string with json.loads
-    import json
-    try:
-        personas = json.loads(gpt_response_str)
-    except json.JSONDecodeError as e:
-        print(f"SYSTEM: GPT returned invalid JSON => {e}")
-        print("SYSTEM: Raw GPT response was:")
-        print(gpt_response_str)
-        return
-
-    print("SYSTEM: Successfully parsed GPT persona data:")
-    print(personas)
 === src/luna_command_extensions/luna_functions_create_inspired_bot.py ===
 import json
 import asyncio
@@ -2576,233 +2469,6 @@ def cmd_create_inspired_bot(args, loop):
         print(f"{GREEN}SYSTEM: Matrix user creation => {result_msg}{RESET}")
     except Exception as e:
         print(f"{RED}SYSTEM: Error creating matrix user => {e}{RESET}")
-
-
-def cmd_create_inspired_bot_dep_2(args, loop):
-    """
-    Usage:
-      create_bot_inspired <inspiration_text>
-    """
-
-    # ────────── ANSI COLORS ──────────
-    RED = "\x1b[31m"
-    GREEN = "\x1b[32m"
-    YELLOW = "\x1b[33m"
-    CYAN = "\x1b[36m"
-    BOLD = "\x1b[1m"
-    RESET = "\x1b[0m"
-
-    if not args.strip():
-        print(f"{RED}SYSTEM: No inspiration provided. Please give a short string describing the persona idea.{RESET}")
-        return
-
-    # A short message about what's happening
-    print(f"{YELLOW}Attempting to create an inspired bot...{RESET}")
-
-    system_instructions = (
-        "You are a helpful assistant that must respond only with a single valid JSON object. "
-        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
-        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
-        "Do not provide any explanations—only raw JSON. "
-        "Any additional text or formatting outside the JSON object will invalidate the response. "
-        "INVALID: Sure, here's an example of a JSON that represents a person's contact details ```json..."
-    )
-
-    user_prompt = (
-        f"Generate a persona from this inspiration: '{args}'. "
-        f"The persona can be imaginative or grounded, but must be returned as raw JSON."
-    )
-
-    # We’ll call get_gpt_response asynchronously,
-    # using run_coroutine_threadsafe in the current event loop.
-    fut = asyncio.run_coroutine_threadsafe(
-        get_gpt_response(
-            context=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": user_prompt},
-            ],
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=300
-        ),
-        loop
-    )
-
-    try:
-        gpt_raw_response = fut.result()  # Wait for GPT to finish
-    except Exception as e:
-        print(f"{RED}SYSTEM: Error calling GPT => {e}{RESET}")
-        return
-
-    # Now we expect the GPT response to be valid JSON. Let's parse it.
-    try:
-        persona_data = json.loads(gpt_raw_response)
-    except json.JSONDecodeError as e:
-        print(f"{RED}SYSTEM: GPT returned invalid JSON => {e}{RESET}")
-        print(f"{RED}SYSTEM: Raw GPT response was:{RESET}")
-        print(gpt_raw_response)
-        return
-
-    # Show the parsed JSON in a readable format
-    print(f"{BOLD}SYSTEM: GPT suggested the following persona data:{RESET}")
-    print(f"{CYAN}{json.dumps(persona_data, indent=2)}{RESET}")
-
-    # Extract the relevant fields
-    localpart = persona_data.get("localpart")
-    displayname = persona_data.get("displayname")
-    system_prompt = persona_data.get("system_prompt")
-    password = persona_data.get("password")
-    traits = persona_data.get("traits", {})
-
-    # Basic checks
-    required = [
-        ("localpart", localpart),
-        ("displayname", displayname),
-        ("system_prompt", system_prompt),
-        ("password", password)
-    ]
-    missing_fields = [name for (name, val) in required if not val]
-    if missing_fields:
-        print(f"{RED}SYSTEM: GPT persona is missing required fields: {missing_fields}{RESET}")
-        return
-
-    bot_id = f"@{localpart}:localhost"
-
-    # Step A: Create local persona in personalities.json
-    try:
-        persona = src.luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=traits
-        )
-        print(f"{GREEN}SYSTEM: Local persona created successfully!{RESET}")
-        print(f"{CYAN}{json.dumps(persona, indent=2)}{RESET}\n")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Unexpected error => {e}{RESET}")
-        return
-
-    # Step B: Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut_reg = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
-
-    try:
-        result_msg = fut_reg.result()
-        print(f"{GREEN}SYSTEM: Matrix user creation => {result_msg}{RESET}")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Error creating matrix user => {e}{RESET}")
-
-
-def cmd_create_inspired_bot_dep(args, loop):
-    """
-    Usage:
-      create_bot_inspired <inspiration_text>
-    """
-
-    if not args.strip():
-        print("SYSTEM: No inspiration provided. Please give a short string describing the persona idea.")
-        return
-
-    system_instructions = (
-        "You are a helpful assistant that must respond only with a single valid JSON object. "
-        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
-        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
-        "Do not provide any explanations—only raw JSON. "
-        "Any additional text or formatting outside the JSON object will invalidate the response. "
-        "INVALID: Sure, here's an example of a JSON that represents a person's contact details ```json..."
-    )
-
-    user_prompt = (
-        f"Generate a persona from this inspiration: '{args}'. "
-        f"The persona can be imaginative or grounded, but must be returned as raw JSON."
-    )
-
-    # We’ll call get_gpt_response asynchronously
-    # (similar to how you do with matrix_create_user)
-    # so we run it in the existing event loop with `run_coroutine_threadsafe`.
-    fut = asyncio.run_coroutine_threadsafe(
-        get_gpt_response(
-            context=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": user_prompt},
-            ],
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=300
-        ),
-        loop
-    )
-
-    try:
-        gpt_raw_response = fut.result()  # Wait for GPT to finish
-    except Exception as e:
-        print(f"SYSTEM: Error calling GPT => {e}")
-        return
-
-    # Now we expect the GPT response to be valid JSON. Let's parse it.
-    try:
-        persona_data = json.loads(gpt_raw_response)
-    except json.JSONDecodeError as e:
-        print(f"SYSTEM: GPT returned invalid JSON => {e}")
-        print("SYSTEM: Raw GPT response was:")
-        print(gpt_raw_response)
-        return
-
-    # Print out the data we got from GPT
-    print("SYSTEM: GPT suggested the following persona data:")
-    print(json.dumps(persona_data, indent=2))
-
-    # Optionally, auto-create the persona from GPT's output:
-    localpart = persona_data.get("localpart")
-    displayname = persona_data.get("displayname")
-    system_prompt = persona_data.get("system_prompt")
-    password = persona_data.get("password")
-    traits = persona_data.get("traits", {})
-
-    # Basic checks
-    required = [("localpart", localpart), ("displayname", displayname),
-                ("system_prompt", system_prompt), ("password", password)]
-    missing_fields = [name for (name, val) in required if not val]
-    if missing_fields:
-        print(f"SYSTEM: GPT persona is missing required fields: {missing_fields}")
-        return
-
-    bot_id = f"@{localpart}:localhost"
-
-    # Step A: Create local persona
-    try:
-        persona = src.luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=traits
-        )
-        print(f"SYSTEM: Local persona created => {persona}")
-    except Exception as e:
-        print(f"SYSTEM: Unexpected error => {e}")
-        return
-
-    # Step B: Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut_reg = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
-    try:
-        result_msg = fut_reg.result()
-        print(f"SYSTEM: Matrix user creation => {result_msg}")
-    except Exception as e:
-        print(f"SYSTEM: Error creating matrix user => {e}")
-
 === src/luna_command_extensions/luna_functions_handledispatch_dep.py ===
 """
 luna_functions_handledispatch.py
