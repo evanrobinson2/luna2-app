@@ -1,28 +1,19 @@
 import json
 import asyncio
+import logging
 
-from src.ai_functions import get_gpt_response  # or however you've structured your import
-from src.luna_functions import create_user as matrix_create_user  # presumably in your code already
-import src.luna_personas
-
-import json
-import asyncio
-
+# Adjust imports for your project structure
 from src.ai_functions import get_gpt_response
-import src.luna_personas
+from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
-import json
-import asyncio
+logger = logging.getLogger(__name__)
 
-from src.ai_functions import get_gpt_response
-import src.luna_personas
-
-def cmd_create_inspired_bot(args, loop):
+def create_inspired_bot(args, loop):
     """
     Usage:
       create_bot_inspired <inspiration_text>
 
-    Assumes GPT will always return well-formed JSON with:
+    GPT must return JSON with:
       {
         "localpart": "...",
         "displayname": "...",
@@ -31,8 +22,6 @@ def cmd_create_inspired_bot(args, loop):
         "traits": {...}
       }
     """
-
-    # ────────── ANSI COLORS ──────────
     RED = "\x1b[31m"
     GREEN = "\x1b[32m"
     YELLOW = "\x1b[33m"
@@ -47,19 +36,15 @@ def cmd_create_inspired_bot(args, loop):
     print(f"{YELLOW}Attempting to create an inspired bot...{RESET}")
 
     system_instructions = (
-        "You are a helpful assistant that must respond only with a single valid JSON object. "
-        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
-        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
-        "Do not provide any explanations—only raw JSON. "
+        "You are a helpful assistant that must respond ONLY with a single valid JSON object. "
+        "The JSON object must contain exactly: localpart, displayname, system_prompt, password, and traits. "
+        "The 'traits' field is a JSON object with zero or more key-value pairs. "
+        "No extra keys. Do not wrap your response in Markdown or code fences. "
+        "Do not provide any explanation—only raw JSON."
     )
+    user_prompt = f"Create a persona from this inspiration: '{args}'. Return as raw JSON."
 
-    user_prompt = (
-        f"Generate a persona from this inspiration: '{args}'. "
-        f"The persona can be imaginative or grounded, but must be returned as raw JSON."
-    )
-
-    # Asynchronously call get_gpt_response in the existing event loop
+    # 1) Ask GPT for the persona
     fut = asyncio.run_coroutine_threadsafe(
         get_gpt_response(
             context=[
@@ -74,85 +59,51 @@ def cmd_create_inspired_bot(args, loop):
     )
 
     try:
-        gpt_raw_response = fut.result()  # Wait for GPT to finish
+        gpt_raw_response = fut.result()
     except Exception as e:
         print(f"{RED}SYSTEM: Error calling GPT => {e}{RESET}")
         return
 
-    # We assume GPT returns valid JSON
-    persona_data = json.loads(gpt_raw_response)
-
-    # ─────────────────────────────────────────────────────────
-    # Print persona_data in a minimal ASCII table
-    # ─────────────────────────────────────────────────────────
-    print(f"{BOLD}SYSTEM: GPT suggested the following persona data (table format):{RESET}")
-
-    # Table header
-    header_key = "Key"
-    header_val = "Value"
-    print(f"{CYAN}{header_key:<15}|{header_val:<50}{RESET}")
-    print(f"{CYAN}{'-'*15}+{'-'*50}{RESET}")
-
-    # For the top-level fields
-    for field in ["localpart", "displayname", "system_prompt", "password"]:
-        value = persona_data.get(field, "")
-        print(f"{BOLD}{field:<15}{RESET}| {str(value):<50}")
-
-    # Now handle 'traits' which is a sub-dict
-    traits = persona_data.get("traits", {})
-    print(f"{BOLD}{'traits':<15}{RESET}|")
-    if isinstance(traits, dict):
-        for t_key, t_val in traits.items():
-            print(f"   - {t_key:<10}: {t_val}")
-    else:
-        # If for some reason 'traits' wasn't a dict
-        print(f"   (Not a dict) => {traits}")
-
-    print()  # extra blank line for readability
-
-    # Extract the relevant fields for persona creation
-    localpart = persona_data.get("localpart")
-    displayname = persona_data.get("displayname")
-    system_prompt = persona_data.get("system_prompt")
-    password = persona_data.get("password")
-
-    # Basic checks
-    required = [
-        ("localpart", localpart),
-        ("displayname", displayname),
-        ("system_prompt", system_prompt),
-        ("password", password)
-    ]
-    missing_fields = [name for (name, val) in required if not val]
-    if missing_fields:
-        print(f"{RED}SYSTEM: GPT persona is missing required fields: {missing_fields}{RESET}")
+    # 2) Parse the JSON
+    try:
+        persona_data = json.loads(gpt_raw_response)
+    except json.JSONDecodeError as jde:
+        print(f"{RED}SYSTEM: GPT response is not valid JSON => {jde}{RESET}")
         return
 
-    bot_id = f"@{localpart}:localhost"
+    # 3) Display the data (optional debugging)
+    print(f"{BOLD}SYSTEM: GPT suggested persona data:{RESET}")
+    for key in ["localpart", "displayname", "system_prompt", "password"]:
+        val = persona_data.get(key)
+        print(f"{CYAN}{key}{RESET} => {val}")
+    print(f"{CYAN}traits{RESET} => {persona_data.get('traits', {})}")
 
-    # Step A: Create local persona in personalities.json
-    try:
-        persona = src.luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=persona_data.get("traits", {})
+    # 4) Validate required fields
+    missing = [k for k in ("localpart", "displayname", "system_prompt", "password") if not persona_data.get(k)]
+    if missing:
+        print(f"{RED}SYSTEM: Missing fields: {missing}{RESET}")
+        return
+
+    # 5) Call create_and_login_bot in an async context
+    async def do_create_and_login():
+        full_bot_id = f"@{persona_data['localpart']}:localhost"
+        # Synchronously handle the entire persona creation & ephemeral login
+        return await create_and_login_bot(
+            bot_id=full_bot_id,
+            password=persona_data["password"],
+            displayname=persona_data["displayname"],
+            system_prompt=persona_data["system_prompt"],
+            traits=persona_data["traits"],
+            creator_user_id="@lunabot:localhost",  # or the actual user who triggered it
+            is_admin=False
         )
-        print(f"{GREEN}SYSTEM: Local persona created successfully!{RESET}")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Unexpected error => {e}{RESET}")
-        return
 
-    # Step B: Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut_reg = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
+    fut_create = asyncio.run_coroutine_threadsafe(do_create_and_login(), loop)
     try:
-        result_msg = fut_reg.result()
-        print(f"{GREEN}SYSTEM: Matrix user creation => {result_msg}{RESET}")
+        final_msg = fut_create.result()
+        if final_msg.startswith("Successfully created"):
+            print(f"{GREEN}SYSTEM: {final_msg}{RESET}")
+        else:
+            print(f"{RED}SYSTEM: {final_msg}{RESET}")
     except Exception as e:
-        print(f"{RED}SYSTEM: Error creating matrix user => {e}{RESET}")
+        print(f"{RED}SYSTEM: Failed to create & login => {e}{RESET}")

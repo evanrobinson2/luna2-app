@@ -9,10 +9,13 @@ luna.py
 
 import asyncio
 import sys
+import json
+import os
 import logging
 import threading
 from src.console_apparatus import console_loop
 from src.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
+from src.luna_functions import load_or_login_client_v2
 #
 # Trying to replace this with a new one
 # from src.luna_functions_handledispatch import on_room_message
@@ -30,10 +33,15 @@ from src.luna_functions import (
 MAIN_LOOP = None
 REFRESH_INTERVAL_SECONDS = 10
 
+# We’ll store the in-memory references here:
+BOTS = {}      # localpart -> AsyncClient
+bot_tasks = [] # list of asyncio tasks (one per bot’s sync loop)
+
 def configure_logging():
     """
     Configure Python's logging so logs go to both console and server.log.
     """
+    global logger
     logger = logging.getLogger(__name__)
     logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
     logger.debug("Entering configure_logging function.")
@@ -53,7 +61,6 @@ def configure_logging():
 
     logger.debug("Exiting configure_logging function.")
 
-
 def start_console_thread(loop):
     """
     Spawn the console input loop in a background thread,
@@ -71,7 +78,6 @@ def start_console_thread(loop):
 
     logger.debug("Exiting start_console_thread function.")
 
-
 async def main_logic():
     logger = logging.getLogger(__name__)
     logger.debug("Entering main_logic function...")
@@ -88,10 +94,12 @@ async def main_logic():
     client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
-    # removing here for now - this may not at all be necessary, since the server will send notifications
-    # for any 
-    # asyncio.create_task(periodic_refresh_loop())
+    await login_bots()
     
+    # Right after: await login_bots()
+    logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
+
+
     # 3. Repeatedly sync in short intervals, checking the shutdown flag
     logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
     while not SHOULD_SHUT_DOWN:
@@ -150,6 +158,50 @@ def luna():
         logger.debug("Preparing to close the event loop.")
         loop.close()
         logger.info("Event loop closed. Exiting main function.")
+
+async def login_bots():
+    """
+    Reads 'data/luna_personalities.json', logs in each bot via ephemeral password,
+    and stores the resulting AsyncClient in the global BOTS dict.
+
+    Does NOT create any sync loops or callbacks yet. You can do that separately.
+    """
+    personalities_file = "data/luna_personalities.json"
+    if not os.path.exists(personalities_file):
+        logger.error(f"[login_bots] File not found: {personalities_file}")
+        return
+
+    # Load the JSON
+    with open(personalities_file, "r") as f:
+        personalities_data = json.load(f)
+
+    homeserver_url = "http://localhost:8008"
+
+    # Iterate each user in the JSON
+    for user_id, persona in personalities_data.items():
+        # user_id might be something like "@inky:localhost"
+        localpart = user_id.split(":")[0].replace("@", "")  # "inky", etc.
+        password = persona.get("password")
+        if not password:
+            logger.warning(f"[login_bots] Skipping {user_id}, no password found.")
+            continue
+
+        try:
+            logger.info(f"[login_bots] Logging in bot => user_id={user_id}, localpart={localpart}")
+            client: AsyncClient = await load_or_login_client_v2(
+                homeserver_url=homeserver_url,
+                user_id=user_id,   # the full ID
+                password=password,
+                device_name=f"{localpart}_device"
+            )
+            # Store it in our global BOTS dict
+            BOTS[localpart] = client
+
+        except Exception as e:
+            logger.exception(f"[login_bots] Failed to login {user_id} => {e}")
+
+    logger.info(f"[login_bots] Completed ephemeral login for {len(BOTS)} bot(s).")
+
 
 if __name__ == "__main__":
     luna()

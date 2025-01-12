@@ -3,149 +3,209 @@
 === data/director_token.json ===
 {"user_id": "@lunabot:localhost", "access_token": "syt_bHVuYWJvdA_YJGbFgNtVanaxNTobyRy_0qvesD", "device_id": "NUCDSRAKMB"}
 === data/luna_messages.csv ===
-date,room_id,event_id,sender,timestamp,body
-2025-01-12 02:37:46,!OBacxAuPnRsRfxSrnF:localhost,$zRN5b0sZYtF20M1cwAGw_Ekmc6tz-230NwDruBV1aEw,@evan:localhost,1736649466639,"I have a new message for you Luna, 937pm"
-2025-01-12 02:34:29,!OBacxAuPnRsRfxSrnF:localhost,$GZgvjkOfWtK65LaApqazhGylX_FSr5tM38lLq43tOmk,@evan:localhost,1736649269201,what about channel messages?!?!
-2025-01-12 02:30:48,!OBacxAuPnRsRfxSrnF:localhost,$V49kDXswctNMIXnrNo6u3LAYpE8wR1dgPrd8V3Qo0Eo,@evan:localhost,1736649048302,New message here!!
-2025-01-12 02:30:44,!OBacxAuPnRsRfxSrnF:localhost,$cxgdM3kkP6We0PeInf5PyerQLKcA4NVFo9-PHMavmzs,@evan:localhost,1736649044461,New message
-2025-01-12 02:30:42,!OBacxAuPnRsRfxSrnF:localhost,$sWRJsaJZxUnH6yc6v-ViA0BWb1cu2XvacGJvveadXok,@evan:localhost,1736649042651,kjnsdflk
-2025-01-12 02:30:41,!OBacxAuPnRsRfxSrnF:localhost,$bZz7xQyRpuvb7NneH1KIUEhAzKKV-xOOZYB8nPA7QMc,@evan:localhost,1736649041452,jknsdf
-2025-01-12 02:16:14,!OBacxAuPnRsRfxSrnF:localhost,$gIpnXOJi6mATxHKP4nSOGc8BpMHv0WFZ6BMyzpMv8bg,@evan:localhost,1736648174066,Hi @luna!
-2025-01-11 13:07:22,!OBacxAuPnRsRfxSrnF:localhost,$EuByr7pBQu4pqB8phTn-3iTvozZjLFbvEr-YqGMtH2E,@evan:localhost,1736600842758,@luna
-2025-01-11 02:52:20,!XBwtDVQGRLVcaKcUbm:localhost,$pEyxRI5FtH0XVpcwlyUiudNn6Mm-_MJ2ReBs19iY7K8,@evan:localhost,1736563940922,Hello lunabot 
-2025-01-11 17:44:24,!fhmXoYxDdsImUkYUpf:localhost,$gA2eVnLszEupQG0rBhKKNuToUb_dQqPvCTbKTCcpE4E,@evan:localhost,1736617464693,hello lunabot 
-2025-01-10 04:35:50,!fhmXoYxDdsImUkYUpf:localhost,$mKck7AUPntqhnCUEyglff8bl2IZ5n_t32cQQPcciKi8,@evan:localhost,1736483750170,:lunabot: hello
-2025-01-12 02:34:01,!wksSOEXmjceGUTMkdv:localhost,$flf20qdRG0W9JU1PpZXlJV0Ia_WSiHB_A7Uh_MWL85g,@evan:localhost,1736649241851,NOWNOWNOWNOWNOWNWONWO
-2025-01-12 02:33:59,!wksSOEXmjceGUTMkdv:localhost,$KuCcWiW5AQ6GilzQGeAqAQEaAyY8Cw6YwBsxnqd9SZY,@evan:localhost,1736649239931,123213kjndsldkfjnadlksfndsaklfjn
-2025-01-12 02:33:57,!wksSOEXmjceGUTMkdv:localhost,$o2kL-RxxFcM2zmPIKu6gvfwi0Gf7dZ-2rJ_QeIn-3Eg,@evan:localhost,1736649237963,testing 1123
-2025-01-11 02:50:39,!wksSOEXmjceGUTMkdv:localhost,$vl-3Ov3Cs8qqWknJZOzO-hZrWL28bwNafoqD4O8jRio,@evan:localhost,1736563839796,hello luna
-2025-01-11 02:48:24,!wksSOEXmjceGUTMkdv:localhost,$cgWI0aWm_Swyy7Fbin3lhJp0wd-_PfcH0Exi-LYQMKs,@evan:localhost,1736563704520,hello luna
-2025-01-11 02:42:21,!wksSOEXmjceGUTMkdv:localhost,$gGKxyJeH24fsxhKjziv27wJDWskV7bFBz78yhUYbC3Q,@lunabot:localhost,1736563341140,Hello! How can I assist you today?
-2025-01-11 02:42:20,!wksSOEXmjceGUTMkdv:localhost,$lBU7IQLaAxhN3yO3DXc4Q06kqmEMmZEH1CrrhxuFR0A,@evan:localhost,1736563340404,hello luna
-2025-01-10 04:39:41,!wksSOEXmjceGUTMkdv:localhost,$epknto4MCqSSIFGlWNTNwtwVDxwtCiMAHm4rWzWQUUc,@lunabot:localhost,1736483981054,"I'm sorry, but your request is a bit unclear. Could you please provide more details or context so I can assist you in the best way possible?"
-2025-01-10 04:39:38,!wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged
-2025-01-10 04:39:32,!wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot 
-2025-01-10 04:39:10,!wksSOEXmjceGUTMkdv:localhost,$DqAkRJkn-EF5oE0izNwSf23s-qx9tEZcBjCMgd0_r3Q,@lunabot:localhost,1736483950205,"Yes, I can communicate through text-based responses to assist with your queries and tasks."
-2025-01-10 04:39:09,!wksSOEXmjceGUTMkdv:localhost,$SxwxiUQgktvUwljSyA1n7r_HCarpYQcFPlMtEAY3CEk,@evan:localhost,1736483949111,Do you talk
-2025-01-10 04:36:05,!wksSOEXmjceGUTMkdv:localhost,$kIVMdgr0cQrrIPbHs_HGy9-ehkF8d1WtgF2JezjXeQQ,@lunabot:localhost,1736483765431,Hello! How can I assist you today?
-2025-01-10 04:36:04,!wksSOEXmjceGUTMkdv:localhost,$2ZLCJQQPbvCY3UeMS2YxydCT2zHmMj_M2aEhkU0LdAE,@evan:localhost,1736483764708,hello :luna:
-2025-01-10 01:19:50,!wksSOEXmjceGUTMkdv:localhost,$xKycW4OcJ7FgyfXgDgHvynpJPC1CbeIcS2rLkGG4CN4,@evan:localhost,1736471990446,Well do you know much about metamaterials lunabot 
-2025-01-10 01:19:39,!wksSOEXmjceGUTMkdv:localhost,$KUWsnxwJta_dzjUv9brB8oiOCW9tzwrOEgFlA8yjTSE,@lunabot:localhost,1736471979164,"As an artificial intelligence, I don't have feelings, but I'm here and ready to assist you. How can I help you today?"
-2025-01-10 01:19:37,!wksSOEXmjceGUTMkdv:localhost,$yrD1wwfclU2PR_QCijqjLyQCOQYXHXEmRTQgb55RWe8,@evan:localhost,1736471977283,How are you
-2025-01-10 01:19:34,!wksSOEXmjceGUTMkdv:localhost,$Ewle7AAcBgeiTS-Cc77m65_prUW6xu9dV2_PxBOM-3E,@lunabot:localhost,1736471974435,"Hello! How can I assist you today?
-"
-2025-01-10 01:19:33,!wksSOEXmjceGUTMkdv:localhost,$m-XmsXigcN_cYuPqprYnpyE3RcxxAit5bJK9Gk1cH6Y,@evan:localhost,1736471973841,Hi
-2025-01-10 01:19:31,!wksSOEXmjceGUTMkdv:localhost,$WH6CK5pIW-P7Y5VQOhEyM2v0v91isTUdPsgdfj5PHx4,@lunabot:localhost,1736471971587,Hello! How can I assist you today?
-2025-01-10 01:19:30,!wksSOEXmjceGUTMkdv:localhost,$h5I0OicWWcOKIiYSVk679UFFElefmlbtZLqgUcfKZEA,@lunabot:localhost,1736471970370,Hello! How can I assist you today?
-2025-01-10 01:17:39,!wksSOEXmjceGUTMkdv:localhost,$Z0K3WxNdURjLU3aYFbQAlRlhyK_P7D7oDxK8m36JBo4,@evan:localhost,1736471859409,@luna?
-2025-01-10 01:17:28,!wksSOEXmjceGUTMkdv:localhost,$zey1Pv23jk0XQ1mlAiokaUyjE6krKH0rZFaLdvD_EjQ,@evan:localhost,1736471848402,Testing
-2025-01-10 01:15:17,!wksSOEXmjceGUTMkdv:localhost,$oagMA_F8J31TBSR7X145Q3lItx_d0epo3SWC4siJbb8,@lunabot:localhost,1736471717801,"Absolutely! Metamaterials' ability to manipulate waves could also lead to the creation of ""invisibility cloaks."" While it might sound like science fiction, researchers have already successfully tested this concept at small scales. The cloak would work by bending light or other electromagnetic waves around an object, effectively making it invisible.
+room_id,event_id,sender,timestamp,body,date
+!OBacxAuPnRsRfxSrnF:localhost,$zRN5b0sZYtF20M1cwAGw_Ekmc6tz-230NwDruBV1aEw,@evan:localhost,1736649466639,"I have a new message for you Luna, 937pm",2025-01-12 02:37:46
+!OBacxAuPnRsRfxSrnF:localhost,$GZgvjkOfWtK65LaApqazhGylX_FSr5tM38lLq43tOmk,@evan:localhost,1736649269201,what about channel messages?!?!,2025-01-12 02:34:29
+!OBacxAuPnRsRfxSrnF:localhost,$V49kDXswctNMIXnrNo6u3LAYpE8wR1dgPrd8V3Qo0Eo,@evan:localhost,1736649048302,New message here!!,2025-01-12 02:30:48
+!OBacxAuPnRsRfxSrnF:localhost,$cxgdM3kkP6We0PeInf5PyerQLKcA4NVFo9-PHMavmzs,@evan:localhost,1736649044461,New message,2025-01-12 02:30:44
+!OBacxAuPnRsRfxSrnF:localhost,$sWRJsaJZxUnH6yc6v-ViA0BWb1cu2XvacGJvveadXok,@evan:localhost,1736649042651,kjnsdflk,2025-01-12 02:30:42
+!OBacxAuPnRsRfxSrnF:localhost,$bZz7xQyRpuvb7NneH1KIUEhAzKKV-xOOZYB8nPA7QMc,@evan:localhost,1736649041452,jknsdf,2025-01-12 02:30:41
+!OBacxAuPnRsRfxSrnF:localhost,$gIpnXOJi6mATxHKP4nSOGc8BpMHv0WFZ6BMyzpMv8bg,@evan:localhost,1736648174066,Hi @luna!,2025-01-12 02:16:14
+!OBacxAuPnRsRfxSrnF:localhost,$EuByr7pBQu4pqB8phTn-3iTvozZjLFbvEr-YqGMtH2E,@evan:localhost,1736600842758,@luna,2025-01-11 13:07:22
+!XBwtDVQGRLVcaKcUbm:localhost,$OnTOndZ1xIhnQZmM7OaxjFAGMWZ34fRHCbRfHtzeNC0,@lunabot:localhost,1736655505606,Hello! How can I assist you today?,2025-01-12 04:18:25
+!XBwtDVQGRLVcaKcUbm:localhost,$C3w5uDvqF_0XWlE_C6CT7XFCxoPhUyxUssNAbNIa1Q4,@lunabot:localhost,1736653747269,Hello! How can I assist you today?,2025-01-12 03:49:07
+!XBwtDVQGRLVcaKcUbm:localhost,$DvsxNAmqUUD1ouQKE6EtNzZY_rtYYvWnniMX1dIlYkg,@lunabot:localhost,1736653710161,Hello! How can I assist you today?,2025-01-12 03:48:30
+!XBwtDVQGRLVcaKcUbm:localhost,$pEyxRI5FtH0XVpcwlyUiudNn6Mm-_MJ2ReBs19iY7K8,@evan:localhost,1736563940922,Hello lunabot ,2025-01-11 02:52:20
+!fhmXoYxDdsImUkYUpf:localhost,$kWHxNdcAJ_6-f9hCNTzTZ8BdjZBHR9g_kqEGPO_8urQ,@lunabot:localhost,1736655506917,Hello! How can I assist you today?,2025-01-12 04:18:26
+!fhmXoYxDdsImUkYUpf:localhost,$1KoALQj-EQIVBOXmTzjnsNsalBUjWrSNS_XO1QwhbZE,@lunabot:localhost,1736655506306,Hello! How can I assist you today?,2025-01-12 04:18:26
+!fhmXoYxDdsImUkYUpf:localhost,$LmMA5cH4txhha6kub_tjuICyCqm_cWM1djc369WknuQ,@lunabot:localhost,1736653749093,Hello! How can I assist you today?,2025-01-12 03:49:09
+!fhmXoYxDdsImUkYUpf:localhost,$lNsk-CbFmV_yLX9pRumyYV8jtz5fuMc9VqYbnrODjUE,@lunabot:localhost,1736653748068,Hello! How can I assist you today?,2025-01-12 03:49:08
+!fhmXoYxDdsImUkYUpf:localhost,$AOIy3R_91EPcsgwNyCS7qWlDgp94qlhbHK2eblu21PU,@lunabot:localhost,1736653712435,Hello! How can I assist you today?,2025-01-12 03:48:32
+!fhmXoYxDdsImUkYUpf:localhost,$Vu-5iZEEpaO9m7WFp_XVyaUqh10In7kiw7U5n5ZC8Eo,@lunabot:localhost,1736653711519,Hello! How can I assist you today?,2025-01-12 03:48:31
+!fhmXoYxDdsImUkYUpf:localhost,$gA2eVnLszEupQG0rBhKKNuToUb_dQqPvCTbKTCcpE4E,@evan:localhost,1736617464693,hello lunabot ,2025-01-11 17:44:24
+!fhmXoYxDdsImUkYUpf:localhost,$mKck7AUPntqhnCUEyglff8bl2IZ5n_t32cQQPcciKi8,@evan:localhost,1736483750170,:lunabot: hello,2025-01-10 04:35:50
+!AdQHUmAdpfqWIWULNM:localhost,$c5RBPSQjzQ28mZl-5qCQw1Oa2uQHBTou_7yqroJBEEo,@lunabot:localhost,1736655511737,"As an AI, I don't have personal experiences or opinions. But I'm here to help answer any questions you have or provide information on a wide range of topics. Is there something specific you would like to know or discuss?",2025-01-12 04:18:31
+!AdQHUmAdpfqWIWULNM:localhost,$1lpqLecrATTv0B9P1gicxVEzTfG_iAWKRKjB0V0zeks,@lunabot:localhost,1736655509161,"Of course, I'm here to assist you. How can I help you today?",2025-01-12 04:18:29
+!AdQHUmAdpfqWIWULNM:localhost,$m89Io4pxZqJKnQ0jARLqzFJyWxQ53L1PQsiLLVUAO0A,@lunabot:localhost,1736655508361,"As an AI, I don't have a real-time clock as I exist in a digital space. But I can fetch the current time for you based on your location or any specified region.",2025-01-12 04:18:28
+!AdQHUmAdpfqWIWULNM:localhost,$doO2Jej31cvOONCBQ0bzIM_Z8k5-tCR3raXB-bi81Wc,@lunabot:localhost,1736655261630,"Of course! As an AI, I'm here to assist and engage with you. What specific information or topic are you interested in discussing?",2025-01-12 04:14:21
+!AdQHUmAdpfqWIWULNM:localhost,$W1P1wsWtMliLlI1mkoQUB0NhRz-YFVqWhNLWAt03uig,@evan:localhost,1736655259855,clownsavior: I'm  interested to hear from you too!,2025-01-12 04:14:19
+!AdQHUmAdpfqWIWULNM:localhost,$T949R_iSIu1BCcaXxM-KKSx3aMxXRWBPcwMtwPzHUkM,@lunabot:localhost,1736655243552,Of course! I'm here to assist you. How can I help you today?,2025-01-12 04:14:03
+!AdQHUmAdpfqWIWULNM:localhost,$nO1jYspDnr-hN2Shz7jyw9urxFwbLARHrXXzPXnQ_Lc,@evan:localhost,1736655242069,lunabot:  would you respond here?,2025-01-12 04:14:02
+!AdQHUmAdpfqWIWULNM:localhost,$ArwQOtk1WZn-gFDlFV5C0ijUstcU19OQQ5tEkWESs9E,@evan:localhost,1736654388125,lunabot: what time do you have?,2025-01-12 03:59:48
+!AdQHUmAdpfqWIWULNM:localhost,$PBBPnUtvpRxSI4SQ7Qm6pt1mnjJTQSbbVbyP0dVkrqM,@evan:localhost,1736653064272,It's 10:37!,2025-01-12 03:37:44
+!AdQHUmAdpfqWIWULNM:localhost,$NELKC8P-JOhwA1Bw4GhEd3roOXbtT0v-3YgOdFvLmuI,@evan:localhost,1736652954361,it's 10:36,2025-01-12 03:35:54
+!wksSOEXmjceGUTMkdv:localhost,$mTtzS22YBOr21R_Y-rQAK7a0eUvtRLctngZ7kOwg7tM,@lunabot:localhost,1736655529223,"Daffodils, also known by their botanical name Narcissus, are a genus of spring-flowering perennial plants in the family Amaryllidaceae. These flowers are typically characterized by their bright yellow or white color and are native to meadows and woods in southern Europe and North Africa.
+
+Daffodils are popular due to their attractive, trumpet-like structure and are often associated with the onset of spring. They typically grow from a bulb, which is planted in the fall and blooms in late winter or early spring. 
+
+The daffodil is also the national flower of Wales and is associated with Saint David's Day which is celebrated on March 1st. The flowers are toxic if ingested, so care should be taken with pets and young children. 
+
+In literature and art, daffodils are often associated with rebirth and new beginnings. The most famous reference to daffodils in literature is probably William Wordsworth's poem, ""I Wandered Lonely as a Cloud,"" also known as ""The Daffodils.""",2025-01-12 04:18:49
+!wksSOEXmjceGUTMkdv:localhost,$Jsc5BmDBTbun1J_kZFovMwQi4W2JEMyhJmBKWmVxeYc,@lunabot:localhost,1736655521889,"When lavender, a light purple color, is mixed with green, the result can vary based on the shades used. If both colors are light or pastel, the result will likely be a muted, earthy color, possibly a form of light brown or taupe. If the lavender is light and the green is dark, the result may be a darker, more complex shade of green. As with any color mixing, the exact shades used will greatly influence the outcome.",2025-01-12 04:18:41
+!wksSOEXmjceGUTMkdv:localhost,$t4cP4kgvuCiw0dZXjnzufMD1rRJuHKH7Mm-EdIdfifg,@lunabot:localhost,1736655517579,"If you mix purple and white, you will get a lighter shade of purple or lavender. The white lightens the purple. The more white you add, the lighter the shade of purple will be.",2025-01-12 04:18:37
+!wksSOEXmjceGUTMkdv:localhost,$PmIqspuyt4QBINASBXxZLO_Mwv4pQJTwftJRYy_39GY,@lunabot:localhost,1736655515771,"When you mix blue and red paint, you get purple.",2025-01-12 04:18:35
+!wksSOEXmjceGUTMkdv:localhost,$GSuJQH3CQnKcbJmcGSFlqIFSsP0D7EnAFVHaAEo_3fw,@lunabot:localhost,1736655514905,"As an AI developed by OpenAI, I am based on the GPT-3 model, which has been trained on a diverse range of internet text. However, I don't have the ability to remember or learn from past interactions. Each conversation with me doesn't have a memory of past conversations, hence it's considered a ""one-shot"" model.",2025-01-12 04:18:34
+!wksSOEXmjceGUTMkdv:localhost,$gAZdszFVimzKo7ddhfRxeaOAFJFMnC7ebHmVVsrvQLY,@lunabot:localhost,1736655226544,"Daffodils, also known by their scientific name Narcissus, are a type of flowering plant that belongs to the Amaryllidaceae family. They are native to meadows and woods in southern Europe and North Africa. Daffodils are popular flowers in gardening due to their attractive, trumpet-shaped flowers that bloom in the spring.
+
+Daffodils are typically yellow or white, though some varieties can be orange or pink. They are often associated with the spring season and symbolize rebirth and new beginnings. In literature and folklore, they are frequently associated with beauty, respect, and unrequited love.
+
+In terms of care, daffodils generally prefer full sun or partial shade and well-drained soil. They are perennials, which means they can bloom year after year. After the flowers fade, it's important to leave the foliage until it turns yellow to ensure the plants store enough energy for the next year's bloom.
+
+Please note that while daffodils are beautiful, all parts of the plant are toxic if ingested, so they should be kept away from pets and children.",2025-01-12 04:13:46
+!wksSOEXmjceGUTMkdv:localhost,$jKrakT9Q5XfQNi1DwFrrt27MrMDdFAbUsYZ8_BJCzPI,@evan:localhost,1736655217912,what about daffodils?,2025-01-12 04:13:37
+!wksSOEXmjceGUTMkdv:localhost,$WUvdX_b16FYGODtEoE3eDcRKfwjEVlID_EqJKVL65ZI,@lunabot:localhost,1736655167057,"Mixing lavender with green will result in a unique color palette. Lavender is a light shade of purple, and when combined with green, a contrasting yet harmonious color scheme is created. This combination is often used in design and art for its calming and refreshing aesthetic. The exact shade you'll get depends on the intensity and proportion of each color mixed. If you are referring to mixing these colors in another context (like gardening or aromatherapy), additional factors might be involved.",2025-01-12 04:12:47
+!wksSOEXmjceGUTMkdv:localhost,$OqCNp4NyqG6IxP8hw0DIs35Pn5NNo19n7qdH1B1__m8,@evan:localhost,1736655162883,and what if I Imix that lavender with green/,2025-01-12 04:12:42
+!wksSOEXmjceGUTMkdv:localhost,$C9wK0jWyfxu6W8sz29aV-stWKrOkSC3UIndTJ-824Bo,@lunabot:localhost,1736655147706,"If you mix purple with white, you will get a lighter, more pastel version of purple often referred to as lavender or lilac. The amount of white you add will determine how light the purple becomes.",2025-01-12 04:12:27
+!wksSOEXmjceGUTMkdv:localhost,$Yhet_ObLEaNJGlkISKQyLbtry8NWmEKrFxBI7DJQzDU,@evan:localhost,1736654988254,And what if we take that purple and mix it with white?,2025-01-12 04:09:48
+!wksSOEXmjceGUTMkdv:localhost,$Smmfzk7unj-9bZNa4vJ1aqyFptLX7ENhc_wmT28EZXE,@lunabot:localhost,1736654647177,"When you mix blue and red paint together, you typically get a color known as purple or violet. The exact shade can vary depending on the specific tones of red and blue used.",2025-01-12 04:04:07
+!wksSOEXmjceGUTMkdv:localhost,$xgTZRgKjBKDCt_RLF270GmwMSCC8bqL2JDNs3lg3WFU,@evan:localhost,1736654645674,what is the color you get when mixing blue and red paint?,2025-01-12 04:04:05
+!wksSOEXmjceGUTMkdv:localhost,$EthM51BVnCiACm5_VOS99qCT4nVicbpn3lWFlVkp4Rw,@lunabot:localhost,1736654503095,"As an AI, I operate based on the instructions and programming that I've received. My design is based on OpenAI's GPT-3, which can generate text based on the prompts given to it. However, I don't have the specific ""one-shot learning"" capability, which refers to learning from a single example. I generate responses based on patterns and information learned during my training phase. I don't learn or adapt my responses in real-time based on new information or context.",2025-01-12 04:01:43
+!wksSOEXmjceGUTMkdv:localhost,$x8Ks0M0DiQR0AXJNhk39M2xtnu3-rdIOKU6aWRYi5uQ,@evan:localhost,1736654500037,you are a one shot gpt,2025-01-12 04:01:40
+!wksSOEXmjceGUTMkdv:localhost,$5u3oj4AvtSG7Xgc8ND5gi2gIbLgK4QvjY-RNz1vS2dk,@lunabot:localhost,1736654491835,"As an AI, I don't have personal experiences or context in the human sense. However, I possess a vast database of information, and I can understand and process the context of our conversation to provide useful responses.",2025-01-12 04:01:31
+!wksSOEXmjceGUTMkdv:localhost,$nzH8h2xp8c2xsvmQSPoHTcxSMWJKRf0q0hCd6Nr7kJI,@evan:localhost,1736654490127,so you have no context,2025-01-12 04:01:30
+!wksSOEXmjceGUTMkdv:localhost,$qnalwZifaa3F0-lYQvftDLVGLECRGixTj1I2HRj5fRM,@lunabot:localhost,1736653985345,"As an AI, I don't have the ability to remember past interactions or store personal data unless it's part of the ongoing conversation. This is because I'm designed to respect user privacy.",2025-01-12 03:53:05
+!wksSOEXmjceGUTMkdv:localhost,$--Pr-t7OHNlUrk4kG3KK8U7efu8Hnl0oev8H6oA6whA,@evan:localhost,1736653983299,Do you remember the number I shared with you?,2025-01-12 03:53:03
+!wksSOEXmjceGUTMkdv:localhost,$UZ4X-vnBEy29XbL2CKMuPSvvtgWhdeg04oAW-nQb7Uo,@lunabot:localhost,1736653974290,"I'm sorry, but as an AI, I'm committed to user safety and privacy. I can't assist with handling passwords. Remember, it's important not to share your password with anyone, including AI. If you need help managing passwords, you might consider using a secure password manager.",2025-01-12 03:52:54
+!wksSOEXmjceGUTMkdv:localhost,$fz_7g97zFzePCfq1JgD5k50MzYtC-lWCg1DpdTZgu9o,@evan:localhost,1736653972063,So nice to see you. My password is 53421.,2025-01-12 03:52:52
+!wksSOEXmjceGUTMkdv:localhost,$8lOZlD6m4Y2Z977UQ4qs_R0hteFlKpSBQ3ZgAZ_AO7I,@lunabot:localhost,1736653962008,"Yes, I'm here. How can I assist you today?",2025-01-12 03:52:42
+!wksSOEXmjceGUTMkdv:localhost,$ujfXiwFWeEe417zyStb25EF79SjTa_WvpbxJpcpZUZQ,@evan:localhost,1736653961160,luna are you there?,2025-01-12 03:52:41
+!wksSOEXmjceGUTMkdv:localhost,$C8U3_nHN3hFMSieaGM9USVRwPHLKzxK6iwm_yKAQD9w,@lunabot:localhost,1736653790689,"As an AI, I have access to a vast amount of information across various areas including science, history, culture, technology, and many more. However, my knowledge is dependent on the information I've been programmed with and what I can access from the internet. I don't have personal experiences or opinions. Can I assist you with anything specific today?",2025-01-12 03:49:50
+!wksSOEXmjceGUTMkdv:localhost,$Fube6a009sULU_qOWzz77H0OqsKmlDnHebXbLFwfF2E,@lunabot:localhost,1736653785689,"Yes, it is currently 10:38 PM. Can I assist you with anything else?",2025-01-12 03:49:45
+!wksSOEXmjceGUTMkdv:localhost,$3V1e6HsvgwI8V08L8jX-z_K6-pAgevaYaVsK9SCpUzo,@lunabot:localhost,1736653780687,"How may I assist you at this hour? Are you looking for bedtime relaxation techniques, or do you need help setting an alarm for tomorrow?",2025-01-12 03:49:40
+!wksSOEXmjceGUTMkdv:localhost,$M5k79nz5oKWbmY7O9pSLAqWgOkjTvEJtAcn5VjtucOQ,@lunabot:localhost,1736653775683,"How can I assist you at this time? Do you need help setting an alarm, finding a late-night snack recipe, or perhaps you have some other request?",2025-01-12 03:49:35
+!wksSOEXmjceGUTMkdv:localhost,$rod8ylvyu9Lht2Fl8qHyN60v5jKT1ycpGHbw9PUFuy0,@lunabot:localhost,1736653770683,"Yes, how can I assist you at this time?",2025-01-12 03:49:30
+!wksSOEXmjceGUTMkdv:localhost,$S4pMepNRsc1Ek-YycBqFN2Kz2zPtcD7nDCje3HDzOdc,@lunabot:localhost,1736653765691,"I'm sorry, but your message is not clear. Could you please provide more information or clarify your request?",2025-01-12 03:49:25
+!wksSOEXmjceGUTMkdv:localhost,$NgT_jICHajdlqopA2Ph9vRA4KEXbDBmeauVKaqmUomo,@lunabot:localhost,1736653760687,"I'm sorry, but it seems like your message contains a random sequence of letters and numbers that I can't understand. Could you please provide more details or clarify your request?",2025-01-12 03:49:20
+!wksSOEXmjceGUTMkdv:localhost,$9tx_4Hxa3iXNsiYvyjRRQDZFyKMhXs7sfVA3A9XCFio,@lunabot:localhost,1736653755683,Hello! Your test is successful. How may I assist you today?,2025-01-12 03:49:15
+!wksSOEXmjceGUTMkdv:localhost,$xSkPLPY7T-qFklB0QGHhZaqckrpojjPK-hhkzylsKYE,@lunabot:localhost,1736653750435,Hello! How can I assist you today?,2025-01-12 03:49:10
+!wksSOEXmjceGUTMkdv:localhost,$4C7Qv30k5aBXmz49xD7mKywTQzYiG3UdkHFN0V1qLMo,@lunabot:localhost,1736653749915,"Hello! How can I assist you today?
+",2025-01-12 03:49:09
+!wksSOEXmjceGUTMkdv:localhost,$VztdCbZwGDw2wKBcTYC0gpTxYwN9gC3MvjEECF6fPJA,@lunabot:localhost,1736653738036,"As an AI, I have access to a vast amount of general knowledge across many subjects such as history, science, geography, literature, and more. However, my knowledge is based on the information that has been programmed into me and I continuously learn from our interactions. I can answer questions, provide recommendations, perform tasks like setting reminders and alarms, and even tell jokes. How can I assist you today?",2025-01-12 03:48:58
+!wksSOEXmjceGUTMkdv:localhost,$mEVXLbuDADhyyQvg9KdPnlskkIQMm-o1zOluSv2uQlI,@evan:localhost,1736653733053,Well what do you know?!,2025-01-12 03:48:53
+!wksSOEXmjceGUTMkdv:localhost,$6ARk1Ml9S5bnqsNmUOavUDLwa7O0CXqeadKOYTi6dfs,@lunabot:localhost,1736653724224,"As an AI, I don't have a specific time zone or local time. However, if it's 10:38 pm where you are, how may I assist you further?",2025-01-12 03:48:44
+!wksSOEXmjceGUTMkdv:localhost,$ewVKz8xi41Pg0CN9UIEnZpr41Br50gJsXahyel87OrU,@lunabot:localhost,1736653721362,How can I assist you at this late hour?,2025-01-12 03:48:41
+!wksSOEXmjceGUTMkdv:localhost,$aBnDfG7qHGgkN-Ke3BBdx_2g3nsYh7fIkEflCmIA3Qc,@lunabot:localhost,1736653720442,"Yes, how may I assist you at this hour? Whether you need help with a task, some information, or just want to chat, I'm here to help.",2025-01-12 03:48:40
+!wksSOEXmjceGUTMkdv:localhost,$Bs0dG-apPuLPm7OGKwTFPJ73KTItU6TNiDO694nPoxM,@lunabot:localhost,1736653718569,Hello! How can I assist you at this late hour?,2025-01-12 03:48:38
+!wksSOEXmjceGUTMkdv:localhost,$KdPW2AWjs1oJIsJ0POML88633ATZ2MkXkjWlrf3eW7k,@lunabot:localhost,1736653717866,"I'm sorry, but I don't understand your message. Could you please rephrase or provide more information so I can assist you better?",2025-01-12 03:48:37
+!wksSOEXmjceGUTMkdv:localhost,$tPh8rBUUNQ-JsSH6ZpRfl1Fs-hcGIEeI7u-rJ3dR54E,@lunabot:localhost,1736653716023,It seems like you've entered a string of random characters. Could you please provide more details or clarify your request? I'm here to assist you.,2025-01-12 03:48:36
+!wksSOEXmjceGUTMkdv:localhost,$2tViyfUp_ltP3hd0qxXOSvzF9SaCnoRTk9wwoXxdQJc,@lunabot:localhost,1736653714383,Hello! Your test is successful. How can I assist you today?,2025-01-12 03:48:34
+!wksSOEXmjceGUTMkdv:localhost,$bvMpo3fG9nxxVtX1Eh2HpkkLjTfBT8TCPKDUDVP1lN0,@lunabot:localhost,1736653713631,Hello! How can I assist you today?,2025-01-12 03:48:33
+!wksSOEXmjceGUTMkdv:localhost,$ilsQ5ynzwxmqQYPGlCeFOVgy7B4jxkmPAXcip_turkg,@lunabot:localhost,1736653713058,Hello! How can I assist you today?,2025-01-12 03:48:33
+!wksSOEXmjceGUTMkdv:localhost,$NMc4-QjPJHC_6B60gHywLVvMnVtjznhZfrL2Wh0MPSY,@evan:localhost,1736653094592,lunabot:  it's 10:38 pm,2025-01-12 03:38:14
+!wksSOEXmjceGUTMkdv:localhost,$HUiNi-FNQe_hVi5zRzDidAnWRNwytL5b1RvfGfK5nbE,@evan:localhost,1736653075152,It's 10:39pm,2025-01-12 03:37:55
+!wksSOEXmjceGUTMkdv:localhost,$gWN7D3B7wwZg9PsgK5S6u2q8SVeL_N17J-GGUZKKK-Y,@evan:localhost,1736652937936,it's 10:35pm,2025-01-12 03:35:37
+!wksSOEXmjceGUTMkdv:localhost,$xgQPHtWNDd1pvNAKEuqx05coJg7sHdRdfXkiSVpljVE,@evan:localhost,1736652878065,Luna it's 10:34pm.,2025-01-12 03:34:38
+!wksSOEXmjceGUTMkdv:localhost,$flf20qdRG0W9JU1PpZXlJV0Ia_WSiHB_A7Uh_MWL85g,@evan:localhost,1736649241851,NOWNOWNOWNOWNOWNWONWO,2025-01-12 02:34:01
+!wksSOEXmjceGUTMkdv:localhost,$KuCcWiW5AQ6GilzQGeAqAQEaAyY8Cw6YwBsxnqd9SZY,@evan:localhost,1736649239931,123213kjndsldkfjnadlksfndsaklfjn,2025-01-12 02:33:59
+!wksSOEXmjceGUTMkdv:localhost,$o2kL-RxxFcM2zmPIKu6gvfwi0Gf7dZ-2rJ_QeIn-3Eg,@evan:localhost,1736649237963,testing 1123,2025-01-12 02:33:57
+!wksSOEXmjceGUTMkdv:localhost,$vl-3Ov3Cs8qqWknJZOzO-hZrWL28bwNafoqD4O8jRio,@evan:localhost,1736563839796,hello luna,2025-01-11 02:50:39
+!wksSOEXmjceGUTMkdv:localhost,$cgWI0aWm_Swyy7Fbin3lhJp0wd-_PfcH0Exi-LYQMKs,@evan:localhost,1736563704520,hello luna,2025-01-11 02:48:24
+!wksSOEXmjceGUTMkdv:localhost,$gGKxyJeH24fsxhKjziv27wJDWskV7bFBz78yhUYbC3Q,@lunabot:localhost,1736563341140,Hello! How can I assist you today?,2025-01-11 02:42:21
+!wksSOEXmjceGUTMkdv:localhost,$lBU7IQLaAxhN3yO3DXc4Q06kqmEMmZEH1CrrhxuFR0A,@evan:localhost,1736563340404,hello luna,2025-01-11 02:42:20
+!wksSOEXmjceGUTMkdv:localhost,$epknto4MCqSSIFGlWNTNwtwVDxwtCiMAHm4rWzWQUUc,@lunabot:localhost,1736483981054,"I'm sorry, but your request is a bit unclear. Could you please provide more details or context so I can assist you in the best way possible?",2025-01-10 04:39:41
+!wksSOEXmjceGUTMkdv:localhost,$jFIdqWc4NjcFdBommSRYh-yJjk6A9vUBlOOAUV-EEOs,@evan:localhost,1736483978144,only untagged,2025-01-10 04:39:38
+!wksSOEXmjceGUTMkdv:localhost,$-cYLqrWk74kz0pQ0xEBT5U1Xd_chpCGd-6eDv0VmpRU,@evan:localhost,1736483972666,but you don't respond to lunabot ,2025-01-10 04:39:32
+!wksSOEXmjceGUTMkdv:localhost,$DqAkRJkn-EF5oE0izNwSf23s-qx9tEZcBjCMgd0_r3Q,@lunabot:localhost,1736483950205,"Yes, I can communicate through text-based responses to assist with your queries and tasks.",2025-01-10 04:39:10
+!wksSOEXmjceGUTMkdv:localhost,$SxwxiUQgktvUwljSyA1n7r_HCarpYQcFPlMtEAY3CEk,@evan:localhost,1736483949111,Do you talk,2025-01-10 04:39:09
+!wksSOEXmjceGUTMkdv:localhost,$kIVMdgr0cQrrIPbHs_HGy9-ehkF8d1WtgF2JezjXeQQ,@lunabot:localhost,1736483765431,Hello! How can I assist you today?,2025-01-10 04:36:05
+!wksSOEXmjceGUTMkdv:localhost,$2ZLCJQQPbvCY3UeMS2YxydCT2zHmMj_M2aEhkU0LdAE,@evan:localhost,1736483764708,hello :luna:,2025-01-10 04:36:04
+!wksSOEXmjceGUTMkdv:localhost,$xKycW4OcJ7FgyfXgDgHvynpJPC1CbeIcS2rLkGG4CN4,@evan:localhost,1736471990446,Well do you know much about metamaterials lunabot ,2025-01-10 01:19:50
+!wksSOEXmjceGUTMkdv:localhost,$KUWsnxwJta_dzjUv9brB8oiOCW9tzwrOEgFlA8yjTSE,@lunabot:localhost,1736471979164,"As an artificial intelligence, I don't have feelings, but I'm here and ready to assist you. How can I help you today?",2025-01-10 01:19:39
+!wksSOEXmjceGUTMkdv:localhost,$yrD1wwfclU2PR_QCijqjLyQCOQYXHXEmRTQgb55RWe8,@evan:localhost,1736471977283,How are you,2025-01-10 01:19:37
+!wksSOEXmjceGUTMkdv:localhost,$Ewle7AAcBgeiTS-Cc77m65_prUW6xu9dV2_PxBOM-3E,@lunabot:localhost,1736471974435,"Hello! How can I assist you today?
+",2025-01-10 01:19:34
+!wksSOEXmjceGUTMkdv:localhost,$m-XmsXigcN_cYuPqprYnpyE3RcxxAit5bJK9Gk1cH6Y,@evan:localhost,1736471973841,Hi,2025-01-10 01:19:33
+!wksSOEXmjceGUTMkdv:localhost,$WH6CK5pIW-P7Y5VQOhEyM2v0v91isTUdPsgdfj5PHx4,@lunabot:localhost,1736471971587,Hello! How can I assist you today?,2025-01-10 01:19:31
+!wksSOEXmjceGUTMkdv:localhost,$h5I0OicWWcOKIiYSVk679UFFElefmlbtZLqgUcfKZEA,@lunabot:localhost,1736471970370,Hello! How can I assist you today?,2025-01-10 01:19:30
+!wksSOEXmjceGUTMkdv:localhost,$Z0K3WxNdURjLU3aYFbQAlRlhyK_P7D7oDxK8m36JBo4,@evan:localhost,1736471859409,@luna?,2025-01-10 01:17:39
+!wksSOEXmjceGUTMkdv:localhost,$zey1Pv23jk0XQ1mlAiokaUyjE6krKH0rZFaLdvD_EjQ,@evan:localhost,1736471848402,Testing,2025-01-10 01:17:28
+!wksSOEXmjceGUTMkdv:localhost,$oagMA_F8J31TBSR7X145Q3lItx_d0epo3SWC4siJbb8,@lunabot:localhost,1736471717801,"Absolutely! Metamaterials' ability to manipulate waves could also lead to the creation of ""invisibility cloaks."" While it might sound like science fiction, researchers have already successfully tested this concept at small scales. The cloak would work by bending light or other electromagnetic waves around an object, effectively making it invisible.
 
 In addition, metamaterials could be used to improve earthquake-resistant structures. By directing seismic waves around buildings instead of through them, they could potentially prevent a lot of damage during earthquakes.
 
 Metamaterials could also have significant implications for telecommunications. They could potentially be used to create antennas that are more efficient, smaller, and capable of operating over a wider range of frequencies. This could lead to significant improvements in mobile communication technologies.
 
-Overall, the future of metamaterials is indeed a very promising field with a plethora of potential applications that could revolutionize various sectors of technology and science. The key to unlocking these potentials lies in further research and development."
-2025-01-10 01:15:12,!wksSOEXmjceGUTMkdv:localhost,$x0qIlzB5PBqRT0SrtVKc1HQtpWeX3IzIuKtVXvnFmFQ,@lunabot:localhost,1736471712632,"Absolutely, the future of metamaterials is indeed very exciting and holds limitless potential. To add on, some other potential applications of metamaterials may include superlenses which could improve microscopes, making them powerful enough to see viruses directly. They could also be used to improve wireless internet, making it faster and more reliable.
+Overall, the future of metamaterials is indeed a very promising field with a plethora of potential applications that could revolutionize various sectors of technology and science. The key to unlocking these potentials lies in further research and development.",2025-01-10 01:15:17
+!wksSOEXmjceGUTMkdv:localhost,$x0qIlzB5PBqRT0SrtVKc1HQtpWeX3IzIuKtVXvnFmFQ,@lunabot:localhost,1736471712632,"Absolutely, the future of metamaterials is indeed very exciting and holds limitless potential. To add on, some other potential applications of metamaterials may include superlenses which could improve microscopes, making them powerful enough to see viruses directly. They could also be used to improve wireless internet, making it faster and more reliable.
 
 Moreover, they could potentially be used in the medical field for improving imaging and treatments. For example, with metamaterials, it might be possible to create a ""perfect lens"" that could focus light to a point smaller than its wavelength, which could revolutionize the field of optics and microscopy.
 
 Furthermore, they could also be used to create more efficient solar panels, stealth technology for military aircraft, and even soundproofing materials. But these are just a few examples, the potential applications of metamaterials are really only limited by our imagination. 
 
-The ongoing research in this field is indeed very exciting, and it will be interesting to see what new innovations and applications will come in the future."
-2025-01-10 01:14:58,!wksSOEXmjceGUTMkdv:localhost,$PKZ4IU0AMDOCsSfcqJm6j0BBNyRURLuE3XnxTcnKldM,@lunabot:localhost,1736471698485,"Absolutely correct! Metamaterials indeed offer a wide range of exciting possibilities due to their unique properties. These materials are engineered to have characteristics that are not found in naturally occurring materials. 
+The ongoing research in this field is indeed very exciting, and it will be interesting to see what new innovations and applications will come in the future.",2025-01-10 01:15:12
+!wksSOEXmjceGUTMkdv:localhost,$PKZ4IU0AMDOCsSfcqJm6j0BBNyRURLuE3XnxTcnKldM,@lunabot:localhost,1736471698485,"Absolutely correct! Metamaterials indeed offer a wide range of exciting possibilities due to their unique properties. These materials are engineered to have characteristics that are not found in naturally occurring materials. 
 
 For instance, metamaterials can be designed to affect waves of electromagnetic radiation or sound in a manner that is impossible with conventional materials. This opens up a world of potential applications, ranging from cloaking devices that could render objects invisible to sensors that can detect tiny amounts of substances.
 
 ""Metametals"" is a term often used to refer to a specific type of metamaterials that interact with light in the metal spectrum. These metametals can be engineered to have properties such as a negative index of refraction or the ability to enhance the resolution of optical systems.
 
-The study of metamaterials is a rapidly evolving field and it's exciting to think about what future developments might bring."
-2025-01-10 01:14:53,!wksSOEXmjceGUTMkdv:localhost,$NExD3oo5h1O7wPm3XMY0ZpgVQVgydB0yf_81a4sA_O8,@lunabot:localhost,1736471693979,"@lunabot:localhost
+The study of metamaterials is a rapidly evolving field and it's exciting to think about what future developments might bring.",2025-01-10 01:14:58
+!wksSOEXmjceGUTMkdv:localhost,$NExD3oo5h1O7wPm3XMY0ZpgVQVgydB0yf_81a4sA_O8,@lunabot:localhost,1736471693979,"@lunabot:localhost
 
-Metamaterials are artificially structured materials used to control and manipulate light, sound, and many other physical phenomena. The properties of metamaterials are derived not from their base material, but from their specifically designed structures. Their precise shape, geometry, size, orientation and arrangement give them their smart properties capable of manipulating electromagnetic waves, by blocking, absorbing, enhancing, or bending waves, to achieve benefits that go beyond what is possible with conventional materials. Interestingly, ""metametals"" is often used to refer to metamaterials that interact with light in the metal spectrum. They are a hot topic in the field of material science and photonics."
-2025-01-10 01:14:50,!wksSOEXmjceGUTMkdv:localhost,$Oz5cDyHfVKUqknTtrSmnIneC1sgaJb1PDW03xTm84-8,@evan:localhost,1736471690208,lunabot: tell me something interesting about metametals.
-2025-01-10 01:09:32,!wksSOEXmjceGUTMkdv:localhost,$bhWZqJ1QXku-FKWiIprDUZYSSjn0M2RE6P-1Rlth3ZQ,@evan:localhost,1736471372376,testing!
-2025-01-10 01:09:06,!wksSOEXmjceGUTMkdv:localhost,$2Iwy2hOFhD03_kmE-iwr_bxWwZ34SijFURb-qxZGEkc,@evan:localhost,1736471346296,Wonderful! It looks like we're online!
-2025-01-10 01:08:56,!wksSOEXmjceGUTMkdv:localhost,$LJUbEqEgr9ScgkTJdHi7pW5LlmdHWI2S-6a1Y7OU_no,@lunabot:localhost,1736471336298,"Yes, I'm here! How can I assist you today?"
-2025-01-10 01:08:54,!wksSOEXmjceGUTMkdv:localhost,$DqR9eRsxjIq0_vJXECg2JSkYkSvqTLKTShb1vpeugXI,@evan:localhost,1736471334885,:lunabot: are you there
-2025-01-10 01:03:46,!wksSOEXmjceGUTMkdv:localhost,$gAiUL6DnU2XEg2GVauPry9k2UYMol1ck5LyZIgVZUSk,@lunabot:localhost,1736471026835,Hello! How can I assist you today?
-2025-01-10 01:03:45,!wksSOEXmjceGUTMkdv:localhost,$dFAEZlA6R4k0X9-WFW4vEGYnCQ5r7aSeDKdeSsKkc8E,@lunabot:localhost,1736471025824,"Yes, I'm here! How can I assist you today?"
-2025-01-10 01:03:23,!wksSOEXmjceGUTMkdv:localhost,$XIstA_vCtyn7yCMOAUUDpnkoQ0pMcc6E7Qfgu3Jo78c,@lunabot:localhost,1736471003392,Hello! How can I assist you today?
-2025-01-10 01:03:22,!wksSOEXmjceGUTMkdv:localhost,$0GTDnUCZgOFxCHFZ838XlfBypMzbS6CGF7JK_Sxl-38,@lunabot:localhost,1736471002328,"Yes, I'm here! How can I assist you today?"
-2025-01-10 01:01:56,!wksSOEXmjceGUTMkdv:localhost,$DLaEihTuxKbkpVZeHhzWaqNlA0SAdAuE06SPz3abmN4,@lunabot:localhost,1736470916453,Hello! How can I assist you today?
-2025-01-10 01:01:55,!wksSOEXmjceGUTMkdv:localhost,$WzbY0besmEOcu_IPhpEzzaNaTBvFnrnMN1YRF8h5so0,@lunabot:localhost,1736470915133,"Yes, I'm here! How can I assist you today?"
-2025-01-10 00:53:26,!wksSOEXmjceGUTMkdv:localhost,$kM_TlgcCb7bvfWL-3ri4cRls6sM4xy8_hpPEgeCKv9U,@evan:localhost,1736470406939,lunabot: hello?
-2025-01-10 00:53:06,!wksSOEXmjceGUTMkdv:localhost,$c_MbmkjPqtyy8oKBRehD9VMqfP6MVetBFuJVDB5DU5k,@evan:localhost,1736470386946,lunabot: are you there?
-2025-01-09 13:40:59,!wksSOEXmjceGUTMkdv:localhost,$yLdlqQlvJRDFHqNWENgE52Gn6xAe01FfjB9KuZIuAkk,@lunabot:localhost,1736430059633,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:40:47,!wksSOEXmjceGUTMkdv:localhost,$ekEex5aE0TJL8UEe9jfRSR3UJ9bwnucsVOoI6ssKOGg,@lunabot:localhost,1736430047855,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:40:35,!wksSOEXmjceGUTMkdv:localhost,$z18Rz0OiJyKqQXeSFpr0OS1_OJ8bFBsGwlgylUYpAmc,@lunabot:localhost,1736430035924,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:40:25,!wksSOEXmjceGUTMkdv:localhost,$p-I9SGwrIIzim4AIrdkKXanrZljCgelOcIbxEUrnlEA,@lunabot:localhost,1736430025107,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:40:12,!wksSOEXmjceGUTMkdv:localhost,$Ppx1ZDpCG2Wrd5hIthbCcpJtxEv9l99Ct5Z2yHsmv0k,@lunabot:localhost,1736430012521,"Yes, I am here! How can I assist you today?"
-2025-01-09 13:40:01,!wksSOEXmjceGUTMkdv:localhost,$4EGQtPe7EEejPIQJ1NpSyWwi2iZNtCKEPjDzw927_PM,@lunabot:localhost,1736430001382,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:39:50,!wksSOEXmjceGUTMkdv:localhost,$bRmC9-BIuYA2PaFJAo1QMlliLnmee43ZUvJnPNUmqsE,@lunabot:localhost,1736429990322,"Yes, I'm here. How can I assist you today?"
-2025-01-09 13:39:39,!wksSOEXmjceGUTMkdv:localhost,$YEEE6Eu4D4oq94dRx0-eR5_XkGp-FLUrfJuhz3iNNxM,@lunabot:localhost,1736429979229,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:39:26,!wksSOEXmjceGUTMkdv:localhost,$R0ppC-0Z1kHmZs52jx6pVgFvP3-zMv5rzMnc_-uxRYE,@lunabot:localhost,1736429966204,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:39:00,!wksSOEXmjceGUTMkdv:localhost,$Y38zgWCxf0cesaTY0OvbAjaAFyRvHr_0zJTl2MBhchI,@lunabot:localhost,1736429940818,"Yes, I'm here! How can I assist you today?"
-2025-01-09 13:38:58,!wksSOEXmjceGUTMkdv:localhost,$4g-8W7EPqYQ9qH6KvvLlaBuW7CESwzFOdpkHtpS33BI,@evan:localhost,1736429938588,lunabot: are you there?
+Metamaterials are artificially structured materials used to control and manipulate light, sound, and many other physical phenomena. The properties of metamaterials are derived not from their base material, but from their specifically designed structures. Their precise shape, geometry, size, orientation and arrangement give them their smart properties capable of manipulating electromagnetic waves, by blocking, absorbing, enhancing, or bending waves, to achieve benefits that go beyond what is possible with conventional materials. Interestingly, ""metametals"" is often used to refer to metamaterials that interact with light in the metal spectrum. They are a hot topic in the field of material science and photonics.",2025-01-10 01:14:53
+!wksSOEXmjceGUTMkdv:localhost,$Oz5cDyHfVKUqknTtrSmnIneC1sgaJb1PDW03xTm84-8,@evan:localhost,1736471690208,lunabot: tell me something interesting about metametals.,2025-01-10 01:14:50
+!wksSOEXmjceGUTMkdv:localhost,$bhWZqJ1QXku-FKWiIprDUZYSSjn0M2RE6P-1Rlth3ZQ,@evan:localhost,1736471372376,testing!,2025-01-10 01:09:32
+!wksSOEXmjceGUTMkdv:localhost,$2Iwy2hOFhD03_kmE-iwr_bxWwZ34SijFURb-qxZGEkc,@evan:localhost,1736471346296,Wonderful! It looks like we're online!,2025-01-10 01:09:06
+!wksSOEXmjceGUTMkdv:localhost,$LJUbEqEgr9ScgkTJdHi7pW5LlmdHWI2S-6a1Y7OU_no,@lunabot:localhost,1736471336298,"Yes, I'm here! How can I assist you today?",2025-01-10 01:08:56
+!wksSOEXmjceGUTMkdv:localhost,$DqR9eRsxjIq0_vJXECg2JSkYkSvqTLKTShb1vpeugXI,@evan:localhost,1736471334885,:lunabot: are you there,2025-01-10 01:08:54
+!wksSOEXmjceGUTMkdv:localhost,$gAiUL6DnU2XEg2GVauPry9k2UYMol1ck5LyZIgVZUSk,@lunabot:localhost,1736471026835,Hello! How can I assist you today?,2025-01-10 01:03:46
+!wksSOEXmjceGUTMkdv:localhost,$dFAEZlA6R4k0X9-WFW4vEGYnCQ5r7aSeDKdeSsKkc8E,@lunabot:localhost,1736471025824,"Yes, I'm here! How can I assist you today?",2025-01-10 01:03:45
+!wksSOEXmjceGUTMkdv:localhost,$XIstA_vCtyn7yCMOAUUDpnkoQ0pMcc6E7Qfgu3Jo78c,@lunabot:localhost,1736471003392,Hello! How can I assist you today?,2025-01-10 01:03:23
+!wksSOEXmjceGUTMkdv:localhost,$0GTDnUCZgOFxCHFZ838XlfBypMzbS6CGF7JK_Sxl-38,@lunabot:localhost,1736471002328,"Yes, I'm here! How can I assist you today?",2025-01-10 01:03:22
+!wksSOEXmjceGUTMkdv:localhost,$DLaEihTuxKbkpVZeHhzWaqNlA0SAdAuE06SPz3abmN4,@lunabot:localhost,1736470916453,Hello! How can I assist you today?,2025-01-10 01:01:56
+!wksSOEXmjceGUTMkdv:localhost,$WzbY0besmEOcu_IPhpEzzaNaTBvFnrnMN1YRF8h5so0,@lunabot:localhost,1736470915133,"Yes, I'm here! How can I assist you today?",2025-01-10 01:01:55
+!wksSOEXmjceGUTMkdv:localhost,$kM_TlgcCb7bvfWL-3ri4cRls6sM4xy8_hpPEgeCKv9U,@evan:localhost,1736470406939,lunabot: hello?,2025-01-10 00:53:26
+!wksSOEXmjceGUTMkdv:localhost,$c_MbmkjPqtyy8oKBRehD9VMqfP6MVetBFuJVDB5DU5k,@evan:localhost,1736470386946,lunabot: are you there?,2025-01-10 00:53:06
+!wksSOEXmjceGUTMkdv:localhost,$yLdlqQlvJRDFHqNWENgE52Gn6xAe01FfjB9KuZIuAkk,@lunabot:localhost,1736430059633,"Yes, I'm here! How can I assist you today?",2025-01-09 13:40:59
+!wksSOEXmjceGUTMkdv:localhost,$ekEex5aE0TJL8UEe9jfRSR3UJ9bwnucsVOoI6ssKOGg,@lunabot:localhost,1736430047855,"Yes, I'm here! How can I assist you today?",2025-01-09 13:40:47
+!wksSOEXmjceGUTMkdv:localhost,$z18Rz0OiJyKqQXeSFpr0OS1_OJ8bFBsGwlgylUYpAmc,@lunabot:localhost,1736430035924,"Yes, I'm here! How can I assist you today?",2025-01-09 13:40:35
+!wksSOEXmjceGUTMkdv:localhost,$p-I9SGwrIIzim4AIrdkKXanrZljCgelOcIbxEUrnlEA,@lunabot:localhost,1736430025107,"Yes, I'm here! How can I assist you today?",2025-01-09 13:40:25
+!wksSOEXmjceGUTMkdv:localhost,$Ppx1ZDpCG2Wrd5hIthbCcpJtxEv9l99Ct5Z2yHsmv0k,@lunabot:localhost,1736430012521,"Yes, I am here! How can I assist you today?",2025-01-09 13:40:12
+!wksSOEXmjceGUTMkdv:localhost,$4EGQtPe7EEejPIQJ1NpSyWwi2iZNtCKEPjDzw927_PM,@lunabot:localhost,1736430001382,"Yes, I'm here! How can I assist you today?",2025-01-09 13:40:01
+!wksSOEXmjceGUTMkdv:localhost,$bRmC9-BIuYA2PaFJAo1QMlliLnmee43ZUvJnPNUmqsE,@lunabot:localhost,1736429990322,"Yes, I'm here. How can I assist you today?",2025-01-09 13:39:50
+!wksSOEXmjceGUTMkdv:localhost,$YEEE6Eu4D4oq94dRx0-eR5_XkGp-FLUrfJuhz3iNNxM,@lunabot:localhost,1736429979229,"Yes, I'm here! How can I assist you today?",2025-01-09 13:39:39
+!wksSOEXmjceGUTMkdv:localhost,$R0ppC-0Z1kHmZs52jx6pVgFvP3-zMv5rzMnc_-uxRYE,@lunabot:localhost,1736429966204,"Yes, I'm here! How can I assist you today?",2025-01-09 13:39:26
+!wksSOEXmjceGUTMkdv:localhost,$Y38zgWCxf0cesaTY0OvbAjaAFyRvHr_0zJTl2MBhchI,@lunabot:localhost,1736429940818,"Yes, I'm here! How can I assist you today?",2025-01-09 13:39:00
+!wksSOEXmjceGUTMkdv:localhost,$4g-8W7EPqYQ9qH6KvvLlaBuW7CESwzFOdpkHtpS33BI,@evan:localhost,1736429938588,lunabot: are you there?,2025-01-09 13:38:58
+!AdQHUmAdpfqWIWULNM:localhost,$uit5vCvwt_3cbpJMpdogaMzlnLoFx4a_gUy2Us712Xs,@evan:localhost,1736656005964,clownsavior: are you there? state your name,
+!AdQHUmAdpfqWIWULNM:localhost,$aKOa1537x5GEfFSzb6nqxEf4KopNA7j2G29BJls7J0c,@evan:localhost,1736656020215,lunabot: are you here? what's your realname?,
+!AdQHUmAdpfqWIWULNM:localhost,$_W862haG04YOPcx7lThtubJ3e99qS7FLFhrL15Bz6IA,@evan:localhost,1736656544329,clownsavior: areyou here too?,
+!AdQHUmAdpfqWIWULNM:localhost,$-HwTtehxpxjx728rwX_ovogZ11ElbwrfkhT9jYxWkTE,@evan:localhost,1736656621853,lunabot: what's up,
+!AdQHUmAdpfqWIWULNM:localhost,@lunabot:localhost-err-1736656623215458000,@lunabot:localhost,1736656623215,Hello! I'm here and ready to assist. How can I help you today?,
+!AdQHUmAdpfqWIWULNM:localhost,$cMrNZWfUEiWgmODoQTRl_mI08aZJOiboG0xz5yXbgGk,@evan:localhost,1736656627673,luna,
+!wksSOEXmjceGUTMkdv:localhost,$dCna4CBDNlWFB7MB-yJE335XPrOOTaLfjCcLiMjlw2o,@evan:localhost,1736656629979,luna,
+!wksSOEXmjceGUTMkdv:localhost,$TMO-DYBXLk847QA4E1NC_KVkDF8D30LyyX0g6RKPUYs,@lunabot:localhost,1736656631426,Hello! How can I assist you today?,
+!wksSOEXmjceGUTMkdv:localhost,$EYhrNeYqONak4Gpod5FjxsB41GnORgTLp0u9a-ExpU4,@evan:localhost,1736686332454,Hi Luna,
+!wksSOEXmjceGUTMkdv:localhost,$CBJXU6Ks4SPVqvwXK2SeZ3QKfBLMR04TJtQENsUhNcw,@lunabot:localhost,1736686333336,Hello! How can I assist you today?,
+!wksSOEXmjceGUTMkdv:localhost,$04N0xdjndE8ncpcpEu44PR1RqSF9t2w_Ic7I7QX1J3o,@evan:localhost,1736686435725,Tell me a funny joke.,
+!wksSOEXmjceGUTMkdv:localhost,$4VpPzRwyODbi_uJ2d3NuYVb1Dv_TgrM5u2MN9H97EPc,@lunabot:localhost,1736686437379,"Sure, here is a joke for you:
+
+Why don't scientists trust atoms?
+
+Because they make up everything!",
+!fhmXoYxDdsImUkYUpf:localhost,$jIij9p0e3GaA-xnT6tBk-gVUD6pMg2PDdo3A-CVWN94,@evan:localhost,1736686470061,luna,
+!fhmXoYxDdsImUkYUpf:localhost,$CyEANRudUqGcS2lMiQ3qpblIVIvIEkG_nHjJqVupY20,@lunabot:localhost,1736686470859,Hello! How can I assist you today?,
+!fhmXoYxDdsImUkYUpf:localhost,$KwaV8NBTWSqcnonKLOMd1yoqICFb3SXi0q4A8JDCWs4,@evan:localhost,1736686478311,I gues sthis is a DM,
+!fhmXoYxDdsImUkYUpf:localhost,$sOTPFF-_aITRvQ8w9vW4M1KigNow1y2RjSbx7_I7384,@lunabot:localhost,1736686479456,"Yes, you're correct. Please feel free to ask any questions or provide instructions on what you need assistance with. I'm here to help.",
+!XBwtDVQGRLVcaKcUbm:localhost,$gKwWI7CKxm4rwBZwP-4Rt53J_qOTtW2FWMCISKwrJe8,@evan:localhost,1736686487051,luna?,
+!OBacxAuPnRsRfxSrnF:localhost,$o2sYGGwO91Lclhtz1NZ45LsSiEkMjJGNJDR6BydODsA,@evan:localhost,1736686498624,Luna?,
+!kzXdTMnUUelFEFHQIX:localhost,$qzM-hdQtQrIjS7OIi3Ok7a2gFEJf3OScwclGPRkbQcU,@evan:localhost,1736686502945,Luna?,
+!kzXdTMnUUelFEFHQIX:localhost,$sNOOp1-i1TR4v0gO9g7LPkXapMJNSEQMENgGR1utXfc,@evan:localhost,1736686611724,Luna?,
+!kzXdTMnUUelFEFHQIX:localhost,$ZLNrM8wvfAA8C5yAtKrpxHywJmx98FVo0GBVqPEvR84,@evan:localhost,1736686628663,luna?,
+!wksSOEXmjceGUTMkdv:localhost,$tGh2d05kygflRnCLoNS3Tt5n2N5zoc5IDGlsIG4WEC4,@evan:localhost,1736687062562,luna?,
+!wksSOEXmjceGUTMkdv:localhost,$CGTA9wxkQ24TuIZ8LAwHVeyWzXTYszipaZnEg1DUeN4,@lunabot:localhost,1736687063743,"Yes, that's correct! I'm Luna, your AI assistant. How can I assist you today?",
+!kzXdTMnUUelFEFHQIX:localhost,$6ZYihWvblc1WKbvUVfOyc3Zyxjuc6uVgqBb_OA6NsPk,@evan:localhost,1736687144263,wolverine: wha's up,
+!kzXdTMnUUelFEFHQIX:localhost,@wolverine:localhost-err-1736687145452996000,@wolverine:localhost,1736687145453,"Hello! As an AI, I don't have personal experiences, but I'm here and ready to assist you. How can I help you today?",
+!kzXdTMnUUelFEFHQIX:localhost,$ldbd2XcrM7Sab4z6SpVj3HWfDu5jDhjr9MRdsExXuz8,@evan:localhost,1736687551885,wolverine: I need your help with something,
+!kzXdTMnUUelFEFHQIX:localhost,@wolverine:localhost-err-1736687553006298000,@wolverine:localhost,1736687553006,Of course! I'm here to assist you. What do you need help with?,
+!kzXdTMnUUelFEFHQIX:localhost,$talEGRMdmnSt6ssjSSqqNRjmukrl_cAZnL92_BjBt_4,@evan:localhost,1736687772454,:wolverine: help?,
+!kzXdTMnUUelFEFHQIX:localhost,@wolverine:localhost-err-1736687773777591000,@wolverine:localhost,1736687773777,"Of course, I'm here to help. Please tell me more about what you need assistance with so I can provide the most accurate and useful information.",
+!kzXdTMnUUelFEFHQIX:localhost,$Shmq6m_7H0Tf22oA4qgTsRwkmMVpC3i4EIG30t99zpQ,@evan:localhost,1736688092347,wolverine:  help?,
+!kzXdTMnUUelFEFHQIX:localhost,@wolverine:localhost-err-1736688094907437000,@wolverine:localhost,1736688094907,"Of course, I'm here to help. Could you please specify the kind of assistance you need? Are you having trouble navigating the chat, having technical issues, or do you need help with something else?",
 
 === data/luna_personalities.json ===
 {
-  "@cyclops:localhost": {
-    "displayname": "ScottSummers",
-    "system_prompt": "Leader",
-    "traits": {
-      "team": "xmen",
-      "power": "opticblast"
-    },
-    "creator_user_id": "@lunabot:localhost",
-    "created_at": "2025-01-09T05:10:47.050745Z",
-    "notes": ""
-  },
-  "@wolverine:localhost": {
-    "displayname": "Logan",
-    "system_prompt": "I'm",
-    "traits": {
-      "team": "xmen",
-      "power": "regeneration"
-    },
-    "creator_user_id": "@lunabot:localhost",
-    "created_at": "2025-01-09T05:10:56.997090Z",
-    "notes": ""
-  },
-  "@storm:localhost": {
-    "displayname": "OroroMunroe",
-    "system_prompt": "I",
-    "traits": {
-      "team": "xmen",
-      "power": "weathercontrol"
-    },
-    "creator_user_id": "@lunabot:localhost",
-    "created_at": "2025-01-09T05:11:02.213198Z",
-    "notes": ""
-  },
-  "@rogue:localhost": {
-    "displayname": "AnnaMarie",
-    "system_prompt": "I",
-    "traits": {
-      "team": "xmen",
-      "power": "absorption"
-    },
-    "creator_user_id": "@lunabot:localhost",
-    "created_at": "2025-01-09T05:11:08.756799Z",
-    "notes": ""
-  },
-  "@nightcrawler:localhost": {
-    "displayname": "KurtWagner",
-    "system_prompt": "I",
-    "traits": {
-      "team": "xmen",
-      "power": "teleportation"
-    },
-    "creator_user_id": "@lunabot:localhost",
-    "created_at": "2025-01-09T05:11:14.518094Z",
-    "notes": ""
-  },
-  "@spyclops:localhost": {
+   "@spyclops:localhost": {
     "displayname": "StottStummers",
     "system_prompt": "Leader",
     "password": "of",
@@ -612,6 +672,31 @@ Metamaterials are artificially structured materials used to control and manipula
 }
 === data/sync_token.json ===
 {"sync_token": "s166_3368_20_50_132_1_1_11_0_1"}
+=== issues.md ===
+#### ISSUES
+
+
+1. Lunabot is the admin, it's hardcoded in multiple files
+2. Multiple files declare globals and constants, those should move to a config file of some kind
+3. Keys like the director key should be stored in environment variables, not on disk
+4. In Luna Functions, sometimes we use the API to make changes, sometimes we call functions from matrix-nio, it's inconsistent
+5. deleting a user doesn't destroy their entry in personalities
+
+
+6. shut-down not graceful:?
+2025-01-12 15:33:28,560 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "/Users/evanrobinson/Documents/Luna2/luna/luna.py", line 152, in luna
+    loop.run_until_complete(main_logic())
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 718, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-01-12 15:33:28,561 [DEBUG] __main__: Preparing to close the event loop.
+2025-01-12 15:33:28,561 [INFO] __main__: Event loop closed. Exiting main function.
+2025-01-12 15:33:28,595 [ERROR] asyncio: Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x11de93f50>, 42509.1350415)])']
+connector: <aiohttp.connector.TCPConnector object at 0x11de76350>
 === luna.md ===
 luna.md
 
@@ -900,14 +985,17 @@ luna.py
 
 import asyncio
 import sys
+import json
+import os
 import logging
 import threading
 from src.console_apparatus import console_loop
 from src.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
+from src.luna_functions import load_or_login_client_v2
 #
 # Trying to replace this with a new one
 # from src.luna_functions_handledispatch import on_room_message
-from src.luna_command_extensions.handle_dispatch2 import on_room_message_stub_logonly
+from src.luna_command_extensions.handle_dispatch2 import on_room_message
 
 from src.luna_functions import fetch_all_messages_once
 from nio import RoomMessageText, InviteMemberEvent, AsyncClient
@@ -921,10 +1009,15 @@ from src.luna_functions import (
 MAIN_LOOP = None
 REFRESH_INTERVAL_SECONDS = 10
 
+# We’ll store the in-memory references here:
+BOTS = {}      # localpart -> AsyncClient
+bot_tasks = [] # list of asyncio tasks (one per bot’s sync loop)
+
 def configure_logging():
     """
     Configure Python's logging so logs go to both console and server.log.
     """
+    global logger
     logger = logging.getLogger(__name__)
     logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
     logger.debug("Entering configure_logging function.")
@@ -944,7 +1037,6 @@ def configure_logging():
 
     logger.debug("Exiting configure_logging function.")
 
-
 def start_console_thread(loop):
     """
     Spawn the console input loop in a background thread,
@@ -962,7 +1054,6 @@ def start_console_thread(loop):
 
     logger.debug("Exiting start_console_thread function.")
 
-
 async def main_logic():
     logger = logging.getLogger(__name__)
     logger.debug("Entering main_logic function...")
@@ -976,13 +1067,15 @@ async def main_logic():
 
     # 2. Register callbacks
     # client.add_event_callback(on_room_message, RoomMessageText)
-    client.add_event_callback(on_room_message_stub_logonly, RoomMessageText)
+    client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
-    # removing here for now - this may not at all be necessary, since the server will send notifications
-    # for any 
-    # asyncio.create_task(periodic_refresh_loop())
+    await login_bots()
     
+    # Right after: await login_bots()
+    logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
+
+
     # 3. Repeatedly sync in short intervals, checking the shutdown flag
     logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
     while not SHOULD_SHUT_DOWN:
@@ -1041,6 +1134,50 @@ def luna():
         logger.debug("Preparing to close the event loop.")
         loop.close()
         logger.info("Event loop closed. Exiting main function.")
+
+async def login_bots():
+    """
+    Reads 'data/luna_personalities.json', logs in each bot via ephemeral password,
+    and stores the resulting AsyncClient in the global BOTS dict.
+
+    Does NOT create any sync loops or callbacks yet. You can do that separately.
+    """
+    personalities_file = "data/luna_personalities.json"
+    if not os.path.exists(personalities_file):
+        logger.error(f"[login_bots] File not found: {personalities_file}")
+        return
+
+    # Load the JSON
+    with open(personalities_file, "r") as f:
+        personalities_data = json.load(f)
+
+    homeserver_url = "http://localhost:8008"
+
+    # Iterate each user in the JSON
+    for user_id, persona in personalities_data.items():
+        # user_id might be something like "@inky:localhost"
+        localpart = user_id.split(":")[0].replace("@", "")  # "inky", etc.
+        password = persona.get("password")
+        if not password:
+            logger.warning(f"[login_bots] Skipping {user_id}, no password found.")
+            continue
+
+        try:
+            logger.info(f"[login_bots] Logging in bot => user_id={user_id}, localpart={localpart}")
+            client: AsyncClient = await load_or_login_client_v2(
+                homeserver_url=homeserver_url,
+                user_id=user_id,   # the full ID
+                password=password,
+                device_name=f"{localpart}_device"
+            )
+            # Store it in our global BOTS dict
+            BOTS[localpart] = client
+
+        except Exception as e:
+            logger.exception(f"[login_bots] Failed to login {user_id} => {e}")
+
+    logger.info(f"[login_bots] Completed ephemeral login for {len(BOTS)} bot(s).")
+
 
 if __name__ == "__main__":
     luna()
@@ -1448,8 +1585,8 @@ def cmd_rotate_logs(args, loop):
 
     # 1) Rotate the current file
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_file = "data/server.log"
-    rotated_file = f"data/logs/server-{timestamp}.log"
+    log_file = "data/logs/server.log"
+    rotated_file = f"data/logs/archive/server-{timestamp}.log"
 
     if os.path.exists(log_file):
         try:
@@ -1491,12 +1628,6 @@ def cmd_rotate_logs(args, loop):
 def cmd_purge_and_seed(args, loop):
     """
     Usage: purge_and_seed
-
-    1) Prompt user to shut down Synapse (type 'confirm' when done).
-    2) Remove 'homeserver.db' + local store files (CSV, sync_token.json, director_token.json).
-    3) Prompt user to start server again (type 'confirm').
-    4) Re-register admin/lunabot accounts on the freshly started server.
-    5) Prompt user to confirm if they'd like to restart Luna, which calls cmd_restart.
 
     This is a destructive operation. Press any key to continue.
     """
@@ -1618,9 +1749,14 @@ def cmd_create_user(args, loop):
       create_user alice supersecret
       create_user bob mypass --admin
 
-    Parses console arguments, then calls `luna.create_user(...)`.
-    The actual user creation is handled entirely in Luna.
+    Parses console arguments, then calls create_and_login_bot(...).
+    This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
+    import logging
+    from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
+
+    logger = logging.getLogger(__name__)
+
     parts = args.strip().split()
     if len(parts) < 2:
         print("Usage: create_user <username> <password> [--admin]")
@@ -1628,28 +1764,26 @@ def cmd_create_user(args, loop):
 
     username, password = parts[:2]
     is_admin = False
-
-    # If the third argument is "--admin", set admin flag
     if len(parts) > 2 and parts[2].lower() == "--admin":
         is_admin = True
 
-    # Schedule the async call to Luna's create_user(...)
-    future = asyncio.run_coroutine_threadsafe(
-    luna_functions.create_user(username, password, is_admin),
-        loop
-    )
+    # Wrap in an async function so we can run it on the event loop:
+    async def create_and_login():
+        return await create_and_login_bot(username, password, is_admin)
+
+    future = asyncio.run_coroutine_threadsafe(create_and_login(), loop)
 
     def on_done(fut):
         try:
             result = fut.result()
-            print(result)  # e.g. "Created user @alice:localhost (admin=True)." or an error message
+            # For example: "Successfully created & logged in bot => @alice:localhost"
+            print(f"SYSTEM: {result}")
         except Exception as e:
             print(f"Error while creating user '{username}': {e}")
             logger.exception("Exception in cmd_create_user callback.")
 
     future.add_done_callback(on_done)
-
-    print(f"SYSTEM: Asking Luna to create user '{username}' (admin={is_admin})...")
+    print(f"SYSTEM: Creating & logging in user '{username}' (admin={is_admin})...")
 
 
 def cmd_show_shutdown(args, loop):
@@ -1909,8 +2043,6 @@ def cmd_delete_bot(args, loop):
 
     future.add_done_callback(on_done)
     
-    
-# Suppose in luna_functions_create_inspired_bot.py you have:
 def cmd_create_room(args, loop):
     """
     Usage: create_room "<roomName>" [--private]
@@ -2219,123 +2351,527 @@ async def create_room(args_string: str) -> str:
         return f"Exception while creating room => {e}"
 
 === src/luna_command_extensions/handle_dispatch2.py ===
-
 import logging
+import os
+import time
+import pandas as pd
+import aiohttp
+from urllib.parse import quote
+
 from nio import RoomMessageText
+from nio.responses import RoomSendResponse
+
+from src.ai_functions import get_gpt_response
+from src.luna_functions import getClient
 
 logger = logging.getLogger(__name__)
 
+# ---- Global Constants ----
 LUNA_USER_ID = "@lunabot:localhost"
-ROUTE_LIMIT = 25  # Hard limit on routes
-MAX_USERS_TO_ROUTE = 0   # Global or external; in production you'd store this more robustly
+MESSAGES_CSV = "data/luna_messages.csv"
+ROUTE_LIMIT = 25
 
-async def on_room_message_stub_logonly(room, event):
-    """
-    A minimal demonstration of your routing algorithm with logging only.
-    - Logs that we received a message and 'pretends' to write to CSV.
-    - Distinguishes between a 2-participant (auto-respond) channel and a multi-participant (mention-based).
-    - Tracks MAX_USERS_TO_ROUTE to emulate infinite-loop prevention (just logs warnings, doesn't enforce).
-    """
+# A simple global route counter to help prevent infinite loop “ping-pong.”
+MAX_USERS_TO_ROUTE = 0
 
+async def on_room_message(room, event):
+    """
+    Main entry point for handling an inbound text message:
+      1. Check if it's new (write to CSV if so).
+      2. If not new, skip responding.
+      3. If private chat (2 participants) => single GPT call as Luna.
+      4. If group chat (>=3 participants) => respond only if mentioned,
+         building GPT context for each mention.
+      5. Log any GPT-based replies to the same CSV to avoid duplicates on restart.
+    """
     # 1) Confirm it's a text event
     if not isinstance(event, RoomMessageText):
-        logger.debug("Ignoring non-text event (event_id=%s).", event.event_id)
+        logger.debug("on_room_message(): on_room_message(): Ignoring non-text event (event_id=%s).", event.event_id)
         return
 
-    # 2) Log the incoming message
+    # 2) Ignore if the sender is the bot itself
+    if event.sender == LUNA_USER_ID:
+        logger.info("Ignoring self-message from the bot. event_id=%s", event.event_id)
+        return
+
+    # 3) Log inbound message
     logger.info(
         "Received text event: room_id=%s, event_id=%s, sender=%s, body=%r",
         room.room_id, event.event_id, event.sender, event.body
     )
-    logger.debug("Pretending to write this message to CSV... (no real I/O)")
 
-    # 3) Count participants
-    #    'room.users' is a dict of user_id -> user_info in Matrix; adjust if your platform differs
+    # 4) Store inbound message in CSV (skip duplicates), see Part C
+    is_new_message = await store_inbound_message(room, event)
+    if not is_new_message:
+        # If it's a duplicate, skip all GPT logic to avoid re-responding
+        logger.info("Already processed event_id=%s => no further action.", event.event_id)
+        return
+
+    # 5) Decide how to respond based on participant count
     participants = getattr(room, "users", {})
     participant_count = len(participants)
     logger.info("Room %s has %d participants.", room.room_id, participant_count)
 
-    # 4) If exactly 2 participants => auto respond
     if participant_count == 2:
-        logger.info("2-participant channel => Luna automatically responds (stub).")
-
-        # Emulate route count increment
-        global MAX_USERS_TO_ROUTE
-        MAX_USERS_TO_ROUTE += 1
-        logger.debug("Incremented MAX_USERS_TO_ROUTE to %d (no enforcement yet).", MAX_USERS_TO_ROUTE)
-
-        # If MAX_USERS_TO_ROUTE hits 10 or 25, log that as well
-        if MAX_USERS_TO_ROUTE == 10:
-            logger.warning("**Route count is 10 => 'final message' would be posted here in real code.**")
-        elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
-            logger.warning("**Route limit (%d) reached => conversation halted.**", ROUTE_LIMIT)
-
-        # Log a pretend GPT response
-        logger.info("Pretending to generate a GPT-based reply and post it to the channel... Done.")
-
+        # 5A) Private chat => single GPT response as Luna
+        await handle_private_gpt_response(room, event)
     else:
-        # 5) More than 2 participants => respond only if there's a mention
-        logger.info("Multi-participant channel => respond only if @mentioned.")
+        # 5B) Group chat => respond only if mentioned
+        await handle_group_mentions(room, event)
 
-        # Extract mention info from the event's content
-        content = event.source.get("content", {})
-        mentions_field = content.get("m.mentions", {})
-        mentioned_ids = mentions_field.get("user_ids", [])
-        logger.debug("Mentioned IDs => %s", mentioned_ids)
+    logger.debug("on_room_message(): on_room_message(): Finished on_room_message for event_id=%s.", event.event_id)
 
-        if not mentioned_ids:
-            logger.info("No mentions => Luna (and other bots) remain silent in this group chat.")
+async def store_inbound_message(room, event) -> bool:
+    """
+    Writes the inbound message to CSV if it's new.
+    Returns True if newly written, False if it's a duplicate.
+
+    This ensures we don't reprocess the same message on restart.
+    """
+    new_record = {
+        "room_id": room.room_id,
+        "event_id": event.event_id,
+        "sender": event.sender,
+        "timestamp": event.server_timestamp,
+        "body": event.body or ""
+    }
+    df_new = pd.DataFrame([new_record])
+
+    if not os.path.exists(MESSAGES_CSV):
+        # If CSV doesn't exist, create it and return True
+        df_new.to_csv(MESSAGES_CSV, index=False)
+        logger.info(f"Created {MESSAGES_CSV} with event_id={event.event_id}.")
+        return True
+
+    # If CSV does exist, load, merge, drop duplicates
+    try:
+        existing_df = pd.read_csv(MESSAGES_CSV)
+        logger.debug(f"Loaded existing CSV with {len(existing_df)} records.")
+    except pd.errors.EmptyDataError:
+        existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
+        logger.warning(f"{MESSAGES_CSV} was empty. Using fresh columns.")
+
+    before_count = len(existing_df)
+    combined_df = pd.concat([existing_df, df_new], ignore_index=True)
+    combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
+    after_count = len(combined_df)
+
+    if after_count > before_count:
+        # We added a new row
+        combined_df.to_csv(MESSAGES_CSV, index=False)
+        logger.info(f"Appended new inbound record to CSV => event_id={event.event_id}.")
+        return True
+    else:
+        logger.info(f"Detected duplicate inbound event_id={event.event_id}, skipping GPT response.")
+        return False
+
+async def store_outbound_message(room_id: str, sender: str, body: str, event_id: str):
+    """
+    Appends a newly posted GPT message (outbound) to CSV, similarly skipping duplicates.
+    If no event_id is available, generate a fallback to keep the row unique.
+    """
+    if not event_id:
+        # If we never got an event_id, make a fallback with a timestamp
+        event_id = f"{sender}-{time.time_ns()}"
+
+    new_record = {
+        "room_id": room_id,
+        "event_id": event_id,
+        "sender": sender,
+        "timestamp": int(time.time() * 1000),  # local fallback
+        "body": body
+    }
+    df_new = pd.DataFrame([new_record])
+
+    if not os.path.exists(MESSAGES_CSV):
+        df_new.to_csv(MESSAGES_CSV, index=False)
+        logger.info(
+            f"Created {MESSAGES_CSV} and stored outbound event_id={event_id} from sender={sender}."
+        )
+        return
+
+    # Merge logic
+    try:
+        existing_df = pd.read_csv(MESSAGES_CSV)
+    except pd.errors.EmptyDataError:
+        existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
+        logger.warning(f"{MESSAGES_CSV} was empty. Using fresh columns.")
+
+    before_count = len(existing_df)
+    combined_df = pd.concat([existing_df, df_new], ignore_index=True)
+    combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
+    after_count = len(combined_df)
+
+    if after_count > before_count:
+        combined_df.to_csv(MESSAGES_CSV, index=False)
+        logger.info(
+            f"Appended outbound GPT message => event_id={event_id}, sender={sender}. "
+            f"CSV now has {after_count} rows."
+        )
+    else:
+        logger.info(
+            f"Detected duplicate outbound event_id={event_id}, skipping store."
+        )
+
+async def handle_private_gpt_response(room, event):
+    """
+    Called if the room only has 2 participants => we do a straightforward
+    GPT response as 'Luna' (the bot user).
+    """
+    global MAX_USERS_TO_ROUTE
+    MAX_USERS_TO_ROUTE += 1
+
+    if MAX_USERS_TO_ROUTE == 10:
+        logger.warning("Route count=10 => might stop soon.")
+    elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
+        logger.warning("Route limit=%d reached => conversation halted.", ROUTE_LIMIT)
+        return
+
+    user_text = event.body or ""
+    gpt_context = [
+        {"role": "system", "content": "You are Luna, a helpful AI assistant."},
+        {"role": "user", "content": user_text}
+    ]
+
+    try:
+        gpt_reply = await get_gpt_response(gpt_context)
+        logger.info("GPT REPLY => %s", gpt_reply)
+
+        client = getClient()
+        if not client:
+            logger.warning("No client => cannot post GPT response.")
             return
 
-        # If we have mentions, pretend to route the message
-        logger.info("Detected mentions => routing to each mentioned entity. (Stub)")
-        logger.info("All mentions: %s", mentioned_ids)        
+        # Send the GPT reply as Luna
+        resp = await client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": gpt_reply},
+        )
+        logger.info("Posted GPT reply to room %s", room.room_id)
 
-        for mention_id in mentioned_ids:
-            MAX_USERS_TO_ROUTE += 1
-            logger.debug(
-                "Pretending to route the message to %s. MAX_USERS_TO_ROUTE=%d",
-                mention_id, MAX_USERS_TO_ROUTE
+        # Attempt to log the outbound message
+        if isinstance(resp, RoomSendResponse) and hasattr(resp, "event_id"):
+            reply_event_id = resp.event_id
+        else:
+            reply_event_id = f"{LUNA_USER_ID}-{time.time_ns()}"
+
+        await store_outbound_message(
+            room_id=room.room_id,
+            sender=LUNA_USER_ID,
+            body=gpt_reply,
+            event_id=reply_event_id
+        )
+
+    except Exception as e:
+        logger.exception("Failed to produce or send GPT reply: %s", e)
+
+async def handle_group_mentions(room, event):
+    """
+    Called if the room has >=3 participants => respond only if the message
+    includes mention(s). Each mention triggers a GPT call posted as that mention_id,
+    using Synapse admin impersonation (not recommended for real production E2E).
+    """
+    logger.info("Group chat => mention-based logic.")
+    content = event.source.get("content", {})
+    mentions_field = content.get("m.mentions", {})
+    mentioned_ids = mentions_field.get("user_ids", [])
+    logger.debug("on_room_message(): on_room_message(): Mentioned IDs => %s", mentioned_ids)
+
+    if not mentioned_ids:
+        logger.info("No mentions => remain silent.")
+        return
+
+    # Strip out the sender to avoid re-triggering themselves
+    sender_id = event.sender
+    filtered_mentions = [m for m in mentioned_ids if m != sender_id]
+    if not filtered_mentions:
+        logger.info("All mentions were the sender => ignoring.")
+        return
+
+    global MAX_USERS_TO_ROUTE
+    for mention_id in filtered_mentions:
+        MAX_USERS_TO_ROUTE += 1
+        if MAX_USERS_TO_ROUTE == 10:
+            logger.warning("**Hit MAX_USERS_TO_ROUTE=10 => might stop soon.**")
+        elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
+            logger.warning("**Route limit (%d) reached => halting.**", ROUTE_LIMIT)
+            break
+
+        try:
+            # Build a small GPT context
+            group_context = [
+                {"role": "system", "content": f"You are {mention_id}, a specialized AI assistant in a group chat."},
+                {"role": "user", "content": event.body or ""}
+            ]
+            gpt_reply = await get_gpt_response(group_context)
+            logger.info("GPT mention-based REPLY => %s", gpt_reply)
+
+            # --- Admin Impersonation instead of normal room_send ---
+            from src.luna_functions import getClient
+            admin_token = getClient()
+            if not admin_token:
+                logger.warning("No admin token => cannot impersonate mention-based GPT response.")
+                continue  # Skip this mention
+
+            # We'll need the homeserver URL from your existing global client
+            from src.luna_functions import getClient
+            client = getClient()
+            if not client or not client.homeserver:
+                logger.warning("No valid homeserver => cannot impersonate mention-based GPT response.")
+                continue
+
+            homeserver_url = client.homeserver
+
+            # # Now call a helper that does the admin API call
+            # mention_event_id = await admin_impersonate_send(
+            #     homeserver_url=homeserver_url,
+            #     admin_token=admin_token,
+            #     room_id=room.room_id,
+            #     impersonated_sender=mention_id,
+            #     body_text=gpt_reply
+            # )
+
+            mention_event_id = await admin_impersonate_send_v2(
+                homeserver_url=client.homeserver,
+                admin_token=admin_token,
+                room_id=room.room_id,
+                impersonated_sender=mention_id,
+                body_text=gpt_reply
             )
 
-            # Check MAX_USERS_TO_ROUTE for warnings
-            if MAX_USERS_TO_ROUTE == 10:
-                logger.warning("**Hit MAX_USERS_TO_ROUTE=10 => 'final message' would be posted.**")
-            elif MAX_USERS_TO_ROUTE >= ROUTE_LIMIT:
-                logger.warning("**Route limit (%d) reached => conversation halted.**", ROUTE_LIMIT)
-                # In real code, you'd break or return here if you truly want to stop responding
+            # Store the outgoing message in CSV
+            await store_outbound_message(
+                room_id=room.room_id,
+                sender=mention_id,
+                body=gpt_reply,
+                event_id=mention_event_id
+            )
 
-            # In reality, we might generate a GPT reply as if from mention_id
-            logger.info("Pretending to log mention-based response and send it as user %s", mention_id)
+        except Exception as e:
+            logger.exception("Failed mention-based GPT reply: %s", e)
 
-    logger.debug("Finished on_room_message_stub_logonly for event_id=%s.", event.event_id)
+def build_context_for_message(user_message: str, persona: str) -> list[dict]:
+    """
+    Example function if you'd prefer a single place to define the GPT conversation context.
+    """
+    system_prompt = f"You are {persona}, a helpful AI assistant. Only speak for that persona."
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message or ""}
+    ]
 
+
+import aiohttp
+import time
+import logging
+from urllib.parse import quote
+
+logger = logging.getLogger(__name__)
+
+async def admin_impersonate_send_v2(
+    homeserver_url: str,
+    admin_token: str,
+    room_id: str,
+    impersonated_sender: str,
+    body_text: str,
+    txn_id: str = None
+) -> str:
+    """
+    Use the older "PUT /_synapse/admin/v1/rooms/{roomId}/send/{eventType}/{txnId}" pattern
+    to forge a message from 'impersonated_sender' in 'room_id'.
+    """
+
+    if not txn_id:
+        txn_id = str(time.time_ns())  # unique fallback
+
+    encoded_room_id = quote(room_id)
+    event_type = "m.room.message"
+    
+    endpoint = (
+        f"{homeserver_url}/_synapse/admin/v1/rooms/"
+        f"{encoded_room_id}/send/{event_type}/{txn_id}"
+    )
+
+    payload = {
+        "sender": impersonated_sender,
+        "content": {
+            "msgtype": "m.text",
+            "body": body_text
+        }
+    }
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    func_prefix = "[admin_impersonate_send_old]"
+    logger.debug(
+        "%s Attempting old-style PUT impersonation => endpoint=%s, sender=%s, room_id=%s",
+        func_prefix, endpoint, impersonated_sender, room_id
+    )
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.put(endpoint, json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    event_id = data.get("event_id")
+                    if event_id:
+                        logger.info(
+                            "%s SUCCESS => posted as '%s' in room='%s' event_id=%s",
+                            func_prefix, impersonated_sender, room_id, event_id
+                        )
+                        return event_id
+                    else:
+                        fallback_id = f"{impersonated_sender}-{time.time_ns()}"
+                        logger.warning(
+                            "%s No event_id in response => using fallback=%s", 
+                            func_prefix, fallback_id
+                        )
+                        return fallback_id
+                else:
+                    text = await resp.text()
+                    logger.error(
+                        "%s HTTP %d => %s (sender='%s', room_id='%s')",
+                        func_prefix, resp.status, text, impersonated_sender, room_id
+                    )
+                    return f"{impersonated_sender}-err-{time.time_ns()}"
+    except Exception as e:
+        logger.exception("%s EXCEPTION => %s", func_prefix, e)
+        return f"{impersonated_sender}-exc-{time.time_ns()}"
+
+
+
+async def admin_impersonate_send(
+    homeserver_url: str,
+    admin_token: str,
+    room_id: str,
+    impersonated_sender: str,
+    body_text: str
+) -> str:
+    """
+    [admin_impersonate_send] 
+    Posts a new 'm.room.message' event to 'room_id' while forging 'impersonated_sender'
+    as the 'sender'. Returns the event_id or a fallback if none is provided.
+    
+    Requirements:
+      - 'admin_token' must be from a server admin user in Synapse.
+      - Bypasses typical auth checks and won't integrate well with E2E encryption.
+    """
+
+    function_prefix = "[admin_impersonate_send]"
+    endpoint = f"{homeserver_url}/_synapse/admin/v1/rooms/{quote(room_id)}/send_event"  
+    payload = {
+        "event_type": "m.room.message",
+        "sender": impersonated_sender,
+        "content": {
+            "msgtype": "m.text",
+            "body": body_text
+        }
+    }
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # Optional: log minimal debug info about the endpoint/payload:
+    logger.debug(
+        "%s Attempting impersonation: endpoint=%s, impersonated_sender=%s, room_id=%s",
+        function_prefix, endpoint, impersonated_sender, room_id
+    )
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    event_id = data.get("event_id")
+                    if event_id:
+                        logger.info(
+                            "%s SUCCESS => posted as '%s' in room='%s' event_id=%s",
+                            function_prefix, impersonated_sender, room_id, event_id
+                        )
+                        return event_id
+                    else:
+                        fallback_id = f"{impersonated_sender}-{time.time_ns()}"
+                        logger.warning(
+                            "%s No event_id in 200 OK response => using fallback=%s",
+                            function_prefix, fallback_id
+                        )
+                        return fallback_id
+                else:
+                    text = await resp.text()
+                    logger.error(
+                        "%s HTTP %d => %s (sender='%s', room_id='%s')",
+                        function_prefix, resp.status, text, impersonated_sender, room_id
+                    )
+                    return f"{impersonated_sender}-err-{time.time_ns()}"
+    except Exception as e:
+        logger.exception("%s EXCEPTION => %s", function_prefix, e)
+        return f"{impersonated_sender}-exc-{time.time_ns()}"
+
+
+async def admin_impersonate_send_dep(
+    homeserver_url: str,
+    admin_token: str,
+    room_id: str,
+    impersonated_sender: str,
+    body_text: str
+) -> str:
+    """
+    Posts a new 'm.room.message' event to 'room_id' while forging 'impersonated_sender'
+    as the 'sender'. Returns the event_id or a fallback if none is provided.
+
+    Requirements:
+      - 'admin_token' must be from a server admin user in Synapse.
+      - Bypasses typical auth checks, won't integrate well with E2E encryption.
+    """
+    from urllib.parse import quote
+
+    endpoint = f"{homeserver_url}/_synapse/admin/v1/rooms/{quote(room_id)}/send_event"
+    payload = {
+        "event_type": "m.room.message",
+        "sender": impersonated_sender,
+        "content": {
+            "msgtype": "m.text",
+            "body": body_text
+        }
+    }
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    event_id = data.get("event_id")
+                    if event_id:
+                        logger.info("Impersonation success => %s posted in %s as event_id=%s",
+                                    impersonated_sender, room_id, event_id)
+                        return event_id
+                    else:
+                        fallback_id = f"{impersonated_sender}-{time.time_ns()}"
+                        logger.warning("No event_id in response => using fallback=%s", fallback_id)
+                        return fallback_id
+                else:
+                    text = await resp.text()
+                    logger.error("Impersonation => HTTP %d => %s", resp.status, text)
+                    return f"{impersonated_sender}-err-{time.time_ns()}"
+    except Exception as e:
+        logger.exception("Exception in admin_impersonate_send: %s", e)
+        return f"{impersonated_sender}-exc-{time.time_ns()}"
 === src/luna_command_extensions/luna_functions_create_inspired_bot.py ===
 import json
 import asyncio
+import logging
 
-from src.ai_functions import get_gpt_response  # or however you've structured your import
-from src.luna_functions import create_user as matrix_create_user  # presumably in your code already
-import src.luna_personas
-
-import json
-import asyncio
-
+# Adjust imports for your project structure
 from src.ai_functions import get_gpt_response
-import src.luna_personas
+from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
-import json
-import asyncio
-
-from src.ai_functions import get_gpt_response
-import src.luna_personas
+logger = logging.getLogger(__name__)
 
 def cmd_create_inspired_bot(args, loop):
     """
     Usage:
       create_bot_inspired <inspiration_text>
 
-    Assumes GPT will always return well-formed JSON with:
+    GPT must return JSON with:
       {
         "localpart": "...",
         "displayname": "...",
@@ -2344,8 +2880,6 @@ def cmd_create_inspired_bot(args, loop):
         "traits": {...}
       }
     """
-
-    # ────────── ANSI COLORS ──────────
     RED = "\x1b[31m"
     GREEN = "\x1b[32m"
     YELLOW = "\x1b[33m"
@@ -2360,19 +2894,15 @@ def cmd_create_inspired_bot(args, loop):
     print(f"{YELLOW}Attempting to create an inspired bot...{RESET}")
 
     system_instructions = (
-        "You are a helpful assistant that must respond only with a single valid JSON object. "
-        "The JSON object must include exactly these fields: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field should be a JSON object (with zero or more key-value pairs). "
-        "Do not include any extra keys or text. Do not wrap your response in Markdown or code fences. "
-        "Do not provide any explanations—only raw JSON. "
+        "You are a helpful assistant that must respond ONLY with a single valid JSON object. "
+        "The JSON object must contain exactly: localpart, displayname, system_prompt, password, and traits. "
+        "The 'traits' field is a JSON object with zero or more key-value pairs. "
+        "No extra keys. Do not wrap your response in Markdown or code fences. "
+        "Do not provide any explanation—only raw JSON."
     )
+    user_prompt = f"Create a persona from this inspiration: '{args}'. Return as raw JSON."
 
-    user_prompt = (
-        f"Generate a persona from this inspiration: '{args}'. "
-        f"The persona can be imaginative or grounded, but must be returned as raw JSON."
-    )
-
-    # Asynchronously call get_gpt_response in the existing event loop
+    # 1) Ask GPT for the persona
     fut = asyncio.run_coroutine_threadsafe(
         get_gpt_response(
             context=[
@@ -2387,577 +2917,55 @@ def cmd_create_inspired_bot(args, loop):
     )
 
     try:
-        gpt_raw_response = fut.result()  # Wait for GPT to finish
+        gpt_raw_response = fut.result()
     except Exception as e:
         print(f"{RED}SYSTEM: Error calling GPT => {e}{RESET}")
         return
 
-    # We assume GPT returns valid JSON
-    persona_data = json.loads(gpt_raw_response)
-
-    # ─────────────────────────────────────────────────────────
-    # Print persona_data in a minimal ASCII table
-    # ─────────────────────────────────────────────────────────
-    print(f"{BOLD}SYSTEM: GPT suggested the following persona data (table format):{RESET}")
-
-    # Table header
-    header_key = "Key"
-    header_val = "Value"
-    print(f"{CYAN}{header_key:<15}|{header_val:<50}{RESET}")
-    print(f"{CYAN}{'-'*15}+{'-'*50}{RESET}")
-
-    # For the top-level fields
-    for field in ["localpart", "displayname", "system_prompt", "password"]:
-        value = persona_data.get(field, "")
-        print(f"{BOLD}{field:<15}{RESET}| {str(value):<50}")
-
-    # Now handle 'traits' which is a sub-dict
-    traits = persona_data.get("traits", {})
-    print(f"{BOLD}{'traits':<15}{RESET}|")
-    if isinstance(traits, dict):
-        for t_key, t_val in traits.items():
-            print(f"   - {t_key:<10}: {t_val}")
-    else:
-        # If for some reason 'traits' wasn't a dict
-        print(f"   (Not a dict) => {traits}")
-
-    print()  # extra blank line for readability
-
-    # Extract the relevant fields for persona creation
-    localpart = persona_data.get("localpart")
-    displayname = persona_data.get("displayname")
-    system_prompt = persona_data.get("system_prompt")
-    password = persona_data.get("password")
-
-    # Basic checks
-    required = [
-        ("localpart", localpart),
-        ("displayname", displayname),
-        ("system_prompt", system_prompt),
-        ("password", password)
-    ]
-    missing_fields = [name for (name, val) in required if not val]
-    if missing_fields:
-        print(f"{RED}SYSTEM: GPT persona is missing required fields: {missing_fields}{RESET}")
+    # 2) Parse the JSON
+    try:
+        persona_data = json.loads(gpt_raw_response)
+    except json.JSONDecodeError as jde:
+        print(f"{RED}SYSTEM: GPT response is not valid JSON => {jde}{RESET}")
         return
 
-    bot_id = f"@{localpart}:localhost"
+    # 3) Display the data (optional debugging)
+    print(f"{BOLD}SYSTEM: GPT suggested persona data:{RESET}")
+    for key in ["localpart", "displayname", "system_prompt", "password"]:
+        val = persona_data.get(key)
+        print(f"{CYAN}{key}{RESET} => {val}")
+    print(f"{CYAN}traits{RESET} => {persona_data.get('traits', {})}")
 
-    # Step A: Create local persona in personalities.json
-    try:
-        persona = src.luna_personas.create_bot(
-            bot_id=bot_id,
-            password=password,
-            displayname=displayname,
-            creator_user_id="@lunabot:localhost",
-            system_prompt=system_prompt,
-            traits=persona_data.get("traits", {})
+    # 4) Validate required fields
+    missing = [k for k in ("localpart", "displayname", "system_prompt", "password") if not persona_data.get(k)]
+    if missing:
+        print(f"{RED}SYSTEM: Missing fields: {missing}{RESET}")
+        return
+
+    # 5) Call create_and_login_bot in an async context
+    async def do_create_and_login():
+        full_bot_id = f"@{persona_data['localpart']}:localhost"
+        # Synchronously handle the entire persona creation & ephemeral login
+        return await create_and_login_bot(
+            bot_id=full_bot_id,
+            password=persona_data["password"],
+            displayname=persona_data["displayname"],
+            system_prompt=persona_data["system_prompt"],
+            traits=persona_data["traits"],
+            creator_user_id="@lunabot:localhost",  # or the actual user who triggered it
+            is_admin=False
         )
-        print(f"{GREEN}SYSTEM: Local persona created successfully!{RESET}")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Unexpected error => {e}{RESET}")
-        return
 
-    # Step B: Register user with Synapse (async call)
-    from src.luna_functions import create_user as matrix_create_user
-    fut_reg = asyncio.run_coroutine_threadsafe(
-        matrix_create_user(localpart, password, is_admin=False),
-        loop
-    )
+    fut_create = asyncio.run_coroutine_threadsafe(do_create_and_login(), loop)
     try:
-        result_msg = fut_reg.result()
-        print(f"{GREEN}SYSTEM: Matrix user creation => {result_msg}{RESET}")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Error creating matrix user => {e}{RESET}")
-=== src/luna_command_extensions/luna_functions_handledispatch_dep.py ===
-"""
-luna_functions_handledispatch.py
-
-A "positive signal" version of on_room_message to prove the rest
-of your mention-handling pipeline fires. It unconditionally logs
-that a mention was found, so you can see if your code that runs
-AFTER a mention is recognized actually does anything.
-"""
-
-LUNA_USER_ID = '@lunabot:localhost'
-
-import logging
-logger = logging.getLogger(__name__)
-
-import os
-import pandas as pd
-import logging
-from src.luna_functions import invite_user_to_room, list_rooms
-
-from src.luna_functions import (
-    invite_user_to_room,
-    list_rooms,
-    post_gpt_reply,
-    MESSAGES_CSV 
-)
-
-from src.luna_functions import invite_user_to_room, list_rooms
-from src.ai_functions import get_gpt_response  # or wherever your GPT integration resides
-import pandas as pd
-import os
-import logging
-from nio import RoomMessageText
-import pandas as pd
-import os
-import logging
-from nio import RoomMessageText
-import pandas as pd
-import os
-import logging
-from nio import RoomMessageText
-
-
-
-MESSAGES_CSV = "luna_messages.csv"
-
-
-# Configure logging to write to 'luna.log' only
-logger = logging.getLogger('luna_logger')
-logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all levels of logs
-
-# Create file handler which logs even debug messages
-fh = logging.FileHandler('luna.log')
-fh.setLevel(logging.DEBUG)
-
-# Create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-# Add the handlers to the logger
-if not logger.hasHandlers():
-    logger.addHandler(fh)
-
-# Prevent logs from being propagated to the root logger
-logger.propagate = False
-
-MESSAGES_CSV = "luna_messages.csv"
-
-# Import external functions from src.luna_functions
-from src.luna_functions import invite_user_to_room, list_rooms, post_gpt_reply
-from src.ai_functions import get_gpt_response
-
-async def on_room_message_dep_working_silent_luna_inprivate(room, event):
-    """
-    Handles incoming room messages by:
-    1. Saving them to MESSAGES_CSV without duplicates.
-    2. Processing mentions to generate and post GPT responses only for new messages.
-    """
-    if not isinstance(event, RoomMessageText):
-        logger.debug("Ignored non-text message.")
-        return  # Ignore non-text messages
-
-    user_message = event.body.strip() if event.body else ""
-    message_record = {
-        "room_id": room.room_id,
-        "event_id": event.event_id,
-        "sender": event.sender,
-        "timestamp": event.server_timestamp,
-        "body": user_message
-    }
-
-    is_new_message = False  # Flag to determine if GPT should be invoked
-
-    try:
-        if os.path.exists(MESSAGES_CSV):
-            try:
-                existing_df = pd.read_csv(MESSAGES_CSV)
-                logger.debug(f"Loaded existing CSV with {len(existing_df)} records.")
-            except pd.errors.EmptyDataError:
-                # CSV exists but is empty; initialize with headers
-                existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
-                logger.warning(f"{MESSAGES_CSV} is empty. Initializing with headers.")
-
-            # Check for duplicate 'event_id'
-            if event.event_id not in existing_df['event_id'].values:
-                is_new_message = True
-                # Append the new message without writing headers
-                df_new = pd.DataFrame([message_record])
-                df_new.to_csv(MESSAGES_CSV, mode='a', header=False, index=False)
-                logger.info(f"Appended new message {event.event_id} to {MESSAGES_CSV}.")
-            else:
-                logger.info(f"Duplicate message {event.event_id} found. Skipping append and GPT processing.")
+        final_msg = fut_create.result()
+        if final_msg.startswith("Successfully created"):
+            print(f"{GREEN}SYSTEM: {final_msg}{RESET}")
         else:
-            # CSV doesn't exist; create it with headers and write the first message
-            is_new_message = True
-            df_new = pd.DataFrame([message_record])
-            df_new.to_csv(MESSAGES_CSV, mode='w', header=True, index=False)
-            logger.info(f"Created {MESSAGES_CSV} and wrote the first message {event.event_id}.")
-
+            print(f"{RED}SYSTEM: {final_msg}{RESET}")
     except Exception as e:
-        logger.exception(f"Failed to save message {event.event_id}: {e}")
-        return  # Exit early if saving fails
+        print(f"{RED}SYSTEM: Failed to create & login => {e}{RESET}")
 
-    # Proceed to process mentions and GPT only if it's a new message
-    if is_new_message:
-        logger.info("Processing mentions and preparing to call GPT.")
-
-        content = event.source.get("content", {})
-        mentions_field = content.get("m.mentions", {})
-        mentioned_ids = mentions_field.get("user_ids", [])
-
-        if not mentioned_ids:
-            logger.debug("No user_ids in m.mentions => no mention recognized.")
-            return  # No mentions to process
-
-        logger.info(f"Mentioned user_ids => {mentioned_ids}")
-
-        # Example triggers based on message content
-        if "invite me" in user_message.lower():
-            result = await invite_user_to_room("@somebody:localhost", room.room_id)
-            logger.info(f"Invite result => {result}")
-
-        if "rooms?" in user_message.lower():
-            rooms_data = await list_rooms()
-            logger.info(f"Rooms => {rooms_data}")
-
-        # GPT reply per mention
-        for mention_id in mentioned_ids:
-            logger.info(f"Processing mention for user => {mention_id}")
-
-            gpt_context = [
-                {"role": "system", "content": f"You are a helpful bot responding to a mention of {mention_id}."},
-                {"role": "user", "content": user_message}
-            ]
-
-            try:
-                gpt_reply = await get_gpt_response(gpt_context)
-                logger.info(f"GPT reply (for mention {mention_id}) => {gpt_reply}")
-            except Exception as e:
-                logger.exception("Error calling GPT:")
-                gpt_reply = f"[Error: {e}]"
-
-            await post_gpt_reply(room.room_id, gpt_reply)
-    else:
-        logger.debug("Message already processed. No further action taken.")
-
-async def on_room_message(room, event):
-    """
-    Handles incoming room messages by:
-    1. Saving them to MESSAGES_CSV without duplicates.
-    2. Processing mentions to generate and post GPT responses only for new messages.
-    3. Automatically responding if there are no mentions and only one other participant.
-    4. Ensuring Luna never replies to her own messages, including self-tags.
-    """
-    if not isinstance(event, RoomMessageText):
-        logger.debug("Ignored non-text message.")
-        return  # Ignore non-text messages
-
-    # Prevent Luna from responding to her own messages
-    if event.sender == '@lunabot:localhost':
-        logger.info(f"Ignored message from Luna herself (event_id={event.event_id}).")
-        return
-
-    user_message = event.body.strip() if event.body else ""
-    message_record = {
-        "room_id": room.room_id,
-        "event_id": event.event_id,
-        "sender": event.sender,
-        "timestamp": event.server_timestamp,
-        "body": user_message
-    }
-
-    is_new_message = False  # Flag to determine if GPT should be invoked
-
-    try:
-        if os.path.exists(MESSAGES_CSV):
-            try:
-                existing_df = pd.read_csv(MESSAGES_CSV)
-                logger.debug(f"Loaded existing CSV with {len(existing_df)} records.")
-            except pd.errors.EmptyDataError:
-                # CSV exists but is empty; initialize with headers
-                existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
-                logger.warning(f"{MESSAGES_CSV} is empty. Initializing with headers.")
-
-            # Check for duplicate 'event_id'
-            if event.event_id not in existing_df['event_id'].values:
-                is_new_message = True
-                # Append the new message without writing headers
-                df_new = pd.DataFrame([message_record])
-                df_new.to_csv(MESSAGES_CSV, mode='a', header=False, index=False)
-                logger.info(f"Appended new message {event.event_id} to {MESSAGES_CSV}.")
-            else:
-                logger.info(f"Duplicate message {event.event_id} found. Skipping append and GPT processing.")
-        else:
-            # CSV doesn't exist; create it with headers and write the first message
-            is_new_message = True
-            df_new = pd.DataFrame([message_record])
-            df_new.to_csv(MESSAGES_CSV, mode='w', header=True, index=False)
-            logger.info(f"Created {MESSAGES_CSV} and wrote the first message {event.event_id}.")
-
-    except Exception as e:
-        logger.exception(f"Failed to save message {event.event_id}: {e}")
-        return  # Exit early if saving fails
-
-    # Proceed to process mentions and GPT only if it's a new message
-    if is_new_message:
-        logger.info("Processing mentions and preparing to call GPT.")
-
-        content = event.source.get("content", {})
-        mentions_field = content.get("m.mentions", {})
-        mentioned_ids = mentions_field.get("user_ids", [])
-
-        if mentioned_ids:
-            # Remove Luna's own ID from mentions to prevent self-response
-            mentioned_ids = [uid for uid in mentioned_ids if uid != LUNA_USER_ID]
-            if not mentioned_ids:
-                logger.info("Only Luna was mentioned. No action taken.")
-                return
-
-            logger.info(f"Processed mentions (excluding Luna): {mentioned_ids}")
-
-            # Example triggers based on message content
-            if "invite me" in user_message.lower():
-                result = await invite_user_to_room("@somebody:localhost", room.room_id)
-                logger.info(f"Invite result => {result}")
-
-            if "rooms?" in user_message.lower():
-                rooms_data = await list_rooms()
-                logger.info(f"Rooms => {rooms_data}")
-
-            # GPT reply per mention
-            for mention_id in mentioned_ids:
-                logger.info(f"Processing mention for user => {mention_id}")
-
-                gpt_context = [
-                    {"role": "system", "content": f"You are a helpful bot responding to a mention of {mention_id}."},
-                    {"role": "user", "content": user_message}
-                ]
-
-                try:
-                    gpt_reply = await get_gpt_response(gpt_context)
-                    logger.info(f"GPT reply (for mention {mention_id}) => {gpt_reply}")
-                except Exception as e:
-                    logger.exception("Error calling GPT:")
-                    gpt_reply = f"[Error: {e}]"
-
-                await post_gpt_reply(room.room_id, gpt_reply)
-        else:
-            # No mentions; check if only one other participant is in the room
-            try:
-                participants = room.users  # Assuming 'users' is a dict of user_id to user info
-                participant_count = len(participants)
-                logger.debug(f"Room has {participant_count} participants.")
-
-                if participant_count == 2:
-                    # Only Luna and one other participant
-                    logger.info("No mentions and only one other participant. Preparing to respond.")
-
-                    gpt_context = [
-                        {"role": "system", "content": "You are Luna, a helpful assistant."},
-                        {"role": "user", "content": user_message}
-                    ]
-
-                    try:
-                        gpt_reply = await get_gpt_response(gpt_context)
-                        logger.info(f"GPT reply => {gpt_reply}")
-                    except Exception as e:
-                        logger.exception("Error calling GPT:")
-                        gpt_reply = f"[Error: {e}]"
-
-                    await post_gpt_reply(room.room_id, gpt_reply)
-                else:
-                    logger.debug("More than two participants in the room. No automatic response triggered.")
-            except AttributeError:
-                logger.error("Room object does not have 'users' attribute.")
-            except Exception as e:
-                logger.exception(f"Error processing participant count: {e}")
-
-    else:
-        logger.debug("Message already processed. No further action taken.")
-
-async def on_room_message_dep_double_responding(room, event):
-    """
-    Handles incoming room messages by saving them to a CSV file,
-    ensuring no duplicate entries based on 'event_id', and processing mentions
-    to generate and post GPT responses.
-    """
-    if not isinstance(event, RoomMessageText):
-        return  # Ignore non-text messages
-
-    user_message = event.body or ""
-
-    message_record = {
-        "room_id": room.room_id,
-        "event_id": event.event_id,
-        "sender": event.sender,
-        "timestamp": event.server_timestamp,
-        "body": user_message
-    }
-
-    try:
-        if os.path.exists(MESSAGES_CSV):
-            try:
-                existing_df = pd.read_csv(MESSAGES_CSV)
-                logger.debug(f"Loaded existing CSV with {len(existing_df)} records.")
-            except pd.errors.EmptyDataError:
-                # CSV exists but is empty; initialize with headers
-                existing_df = pd.DataFrame(columns=["room_id", "event_id", "sender", "timestamp", "body"])
-                logger.warning(f"{MESSAGES_CSV} is empty. Initializing with headers.")
-
-            # Check for duplicate 'event_id'
-            if event.event_id not in existing_df['event_id'].values:
-                # Append the new message without writing headers
-                df_new = pd.DataFrame([message_record])
-                df_new.to_csv(MESSAGES_CSV, mode='a', header=False, index=False)
-                logger.info(f"Appended new message {event.event_id} to {MESSAGES_CSV}.")
-            else:
-                logger.info(f"Duplicate message {event.event_id} found. Skipping append.")
-        else:
-            # CSV doesn't exist; create it with headers and write the first message
-            df_new = pd.DataFrame([message_record])
-            df_new.to_csv(MESSAGES_CSV, mode='w', header=True, index=False)
-            logger.info(f"Created {MESSAGES_CSV} and wrote the first message {event.event_id}.")
-    except Exception as e:
-        logger.exception(f"Failed to save message {event.event_id}: {e}")
-
-    # --------------------------
-    #  Step B: Parse mentions & GPT dispatch
-    # --------------------------
-    logger.info("Handling on_room_message with multi-mention iteration approach.")
-
-    content = event.source.get("content", {})
-    mentions_field = content.get("m.mentions", {})
-    logger.debug(f"m.mentions => {mentions_field}")
-
-    mentioned_ids = mentions_field.get("user_ids", [])
-    if not mentioned_ids:
-        logger.debug("No user_ids in m.mentions => no mention recognized.")
-        return
-
-    logger.info(f"Mentioned user_ids => {mentioned_ids}")
-
-    # Example triggers based on message content
-    if "invite me" in user_message.lower():
-        result = await invite_user_to_room("@somebody:localhost", room.room_id)
-        logger.info(f"Invite result => {result}")
-
-    if "rooms?" in user_message.lower():
-        rooms_data = await list_rooms()
-        logger.info(f"Rooms => {rooms_data}")
-
-    # GPT reply per mention
-    for mention_id in mentioned_ids:
-        logger.info(f"Processing mention for user => {mention_id}")
-
-        gpt_context = [
-            {"role": "system", "content": f"You are a helpful bot responding to a mention of {mention_id}."},
-            {"role": "user", "content": user_message}
-        ]
-
-        try:
-            gpt_reply = await get_gpt_response(gpt_context)
-            logger.info(f"GPT reply (for mention {mention_id}) => {gpt_reply}")
-        except Exception as e:
-            logger.exception("Error calling GPT:")
-            gpt_reply = f"[Error: {e}]"
-
-        await post_gpt_reply(room.room_id, gpt_reply)
-
-async def on_room_message_dep(room, event):
-    """
-    1) Saves the new message to `luna_messages.csv`, ensuring no duplicates.
-    2) Checks mentions in m.mentions["user_ids"] and, if present,
-       calls GPT once per user ID, posting replies to the room.
-    """
-
-    from nio import RoomMessageText
-    if not isinstance(event, RoomMessageText):
-        return  # ignore non-text events
-
-    # --------------------------
-    #  Step A: Write to local datastore
-    # --------------------------
-    user_message = event.body or ""
-    new_record = [{
-        "room_id": room.room_id,
-        "event_id": event.event_id,
-        "sender": event.sender,
-        "timestamp": event.server_timestamp,
-        "body": user_message
-    }]
-
-    df_new = pd.DataFrame(new_record, columns=["room_id", "event_id", "sender", "timestamp", "body"])
-
-    try:
-        if os.path.exists(MESSAGES_CSV):
-            existing_df = pd.read_csv(MESSAGES_CSV)
-            before_count = len(existing_df)
-
-            combined_df = pd.concat([existing_df, df_new], ignore_index=True)
-            # Drop duplicates on (room_id, event_id) to avoid duplicates
-            combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
-            after_count = len(combined_df)
-
-            combined_df.to_csv(MESSAGES_CSV, index=False)
-
-            if after_count == before_count:
-                logger.info(
-                    f"Duplicate message detected (event_id={event.event_id}), "
-                    "no new row appended to luna_messages.csv."
-                )
-            else:
-                logger.debug(
-                    f"Added {after_count - before_count} new message(s) to {MESSAGES_CSV}. "
-                    f"New total: {after_count}"
-                )
-        else:
-            df_new.to_csv(MESSAGES_CSV, index=False)
-            logger.debug(
-                f"No existing CSV found; created {MESSAGES_CSV} with 1 record (event_id={event.event_id})."
-            )
-    except Exception as e:
-        logger.exception(f"Failed to write message (event_id={event.event_id}) to {MESSAGES_CSV}: {e}")
-
-    # --------------------------
-    #  Step B: Parse mentions & GPT dispatch
-    # --------------------------
-    logger.info("Handling on_room_message with multi-mention iteration approach.")
-
-    room_id = room.room_id
-    logger.debug(f"User message => '{user_message}' (room_id={room_id})")
-
-    content = event.source.get("content", {})
-    mentions_field = content.get("m.mentions", {})
-    logger.debug(f"m.mentions => {mentions_field}")
-
-    mentioned_ids = mentions_field.get("user_ids", [])
-    if not mentioned_ids:
-        logger.debug("No user_ids in m.mentions => no mention recognized.")
-        return
-
-    logger.info(f"Mentioned user_ids => {mentioned_ids}")
-
-    # Example triggers
-    if "!invite me" in user_message.lower():
-        result = await invite_user_to_room("@somebody:localhost", room_id)
-        logger.info(f"Invite result => {result}")
-
-    if "!rooms" in user_message.lower():
-        rooms_data = await list_rooms()
-        logger.info(f"Rooms => {rooms_data}")
-
-    # GPT reply per mention
-    for mention_id in mentioned_ids:
-        logger.info(f"Processing mention for user => {mention_id}")
-
-        gpt_context = [
-            {"role": "system", "content": f"You are a helpful bot responding to a mention of {mention_id}."},
-            {"role": "user", "content": user_message}
-        ]
-
-        try:
-            gpt_reply = await get_gpt_response(gpt_context)
-            logger.info(f"GPT reply (for mention {mention_id}) => {gpt_reply}")
-        except Exception as e:
-            logger.exception("Error calling GPT:")
-            gpt_reply = f"[Error: {e}]"
-
-        await post_gpt_reply(room_id, gpt_reply)
 === src/luna_functions.py ===
 """
 luna_functions.py
@@ -2996,13 +3004,64 @@ logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 # GLOBALS
 # ──────────────────────────────────────────────────────────
 DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
-TOKEN_FILE = "data/director_token.json"   # Where we store/reuse the access token
+TOKEN_FILE = "data/tokens.json"   # Where we store/reuse the access token
 SYNC_TOKEN_FILE = "data/sync_token.json"  # Where we store the last sync token
 MESSAGES_CSV = "data/luna_messages.csv"   # We'll store all messages in this CSV
 
 # Global context dictionary (if needed by your logic)
 room_context = {}
 MAX_CONTEXT_LENGTH = 100  # Limit to the last 100 messages per room
+
+
+import logging
+from nio import AsyncClient, LoginResponse
+
+logger = logging.getLogger(__name__)
+
+async def load_or_login_client_v2(
+    homeserver_url: str,
+    user_id: str,
+    password: str,
+    device_name: str = "BotDevice"
+) -> AsyncClient:
+    """
+    load_or_login_client_ephemeral
+
+    A simplified function that logs in a Matrix user via password each time,
+    returning a ready-to-use AsyncClient. No tokens are stored or reused.
+
+    Args:
+      homeserver_url: Your Synapse server address, e.g. "http://localhost:8008"
+      user_id: A full Matrix user ID (e.g. "@inky:localhost") or localpart if you prefer
+      password: The account's password.
+      device_name: A label for the login session.
+
+    Returns:
+      An AsyncClient logged in as `user_id`. If login fails, raises Exception.
+    """
+
+    # If the caller passed only the local part (like "inky"), you might want to ensure:
+    #   if not user_id.startswith("@"):
+    #       user_id = f"@{user_id}:localhost"
+    # But that depends on your usage.
+
+    logger.info(f"[load_or_login_client_v2] [{user_id}] Attempting password login...")
+
+    # 1) Construct the client
+    client = AsyncClient(homeserver=homeserver_url, user=user_id)
+
+    # 2) Attempt the password login
+    resp = await client.login(password=password, device_name=device_name)
+
+    # 3) Check result
+    if isinstance(resp, LoginResponse):
+        logger.info(f"[{user_id}] Password login succeeded. user_id={client.user_id}")
+        return client
+    else:
+        logger.error(f"[{user_id}] Password login failed => {resp}")
+        raise Exception(f"Password login failed for {user_id}: {resp}")
+
+
 
 # ──────────────────────────────────────────────────────────
 # TOKEN-BASED LOGIN
@@ -3013,6 +3072,10 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
     If valid, reuse it. If invalid (or absent), do a normal password login and store
     the resulting token. Returns an AsyncClient ready to use.
     """
+
+    # since DIRECTOR_CLIENT is a global variable in this module, we need to protect that
+    # memory space within python by re-declaring it here. otherwise the script would simply create a local
+    # which would have unintended consequences
     global DIRECTOR_CLIENT
 
     full_user_id = f"@{username}:localhost"  # Adjust the domain if needed
@@ -3065,29 +3128,25 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         # 6. Password login failed: raise an exception or handle it as desired
         logger.error(f"Password login failed: {resp}")
         raise Exception("Password login failed. Check credentials or homeserver settings.")
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+    
 # ──────────────────────────────────────────────────────────
 # CREATE USER LOGIC
 # ──────────────────────────────────────────────────────────
 async def create_user(username: str, password: str, is_admin: bool = False) -> str:
     """
     The single Luna function to create a user.
-    1) Loads the admin token from director_token.json.
+    1) Loads the admin token from tokens.json.
     2) Calls add_user_via_admin_api(...) from luna_functions.py.
     3) Returns a success/error message.
     """
     # 1) Load admin token
     HOMESERVER_URL = "http://localhost:8008"  # or read from config
     try:
-        with open("data/director_token.json", "r") as f:
+        with open("data/tokens.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
-        err_msg = f"Error loading admin token from director_token.json: {e}"
+        err_msg = f"Error loading admin token from tokens.json: {e}"
         logger.error(err_msg)
         return err_msg
 
@@ -3444,114 +3503,6 @@ async def _fetch_room_history_paged(
 
     return all_events
 
-async def fetch_all_messages_once(
-    client, 
-    room_ids: list[str] = None, 
-    page_size: int = 100
-) -> None:
-    """
-    Fetch *all* historical messages from the given room_ids (or all joined rooms if None),
-    then write them to a CSV, including a human-readable 'date' column in the first position.
-    """
-    if not room_ids:
-        room_ids = list(client.rooms.keys())
-        logger.info(f"No room_ids specified. Using all joined rooms: {room_ids}")
-
-    all_records = []
-    for rid in room_ids:
-        logger.info(f"Fetching *all* messages for room: {rid}")
-        room_history = await _fetch_room_history_paged(client, rid, page_size=page_size)
-        all_records.extend(room_history)
-
-    if not all_records:
-        logger.warning("No messages fetched. CSV file will not be updated.")
-        return
-
-    # Build the DataFrame with a new column 'date' in the first column
-    df = pd.DataFrame(
-        all_records, 
-        columns=["date", "room_id", "event_id", "sender", "timestamp", "body"]  # order matters
-    )
-    logger.info(f"Fetched total {len(df)} messages across {len(room_ids)} room(s).")
-
-    if os.path.exists(MESSAGES_CSV):
-        try:
-            existing_df = pd.read_csv(MESSAGES_CSV)
-            logger.debug(f"Existing CSV loaded with {len(existing_df)} records.")
-        except pd.errors.EmptyDataError:
-            # Handle empty CSV by creating an empty DataFrame with the correct columns
-            existing_df = pd.DataFrame(columns=["date", "room_id", "event_id", "sender", "timestamp", "body"])
-            logger.warning(f"{MESSAGES_CSV} is empty. Creating a new DataFrame with columns.")
-
-        combined_df = pd.concat([existing_df, df], ignore_index=True)
-        combined_df.drop_duplicates(subset=["room_id", "event_id"], keep="last", inplace=True)
-        combined_df.to_csv(MESSAGES_CSV, index=False)
-        logger.info(f"Appended new records to existing {MESSAGES_CSV}. New total: {len(combined_df)}")
-    else:
-        # If CSV doesn't exist, create it with the new records
-        df.to_csv(MESSAGES_CSV, index=False)
-        logger.info(f"Wrote all records to new CSV {MESSAGES_CSV}.")
-
-
-async def _fetch_room_history_paged(
-    client, 
-    room_id: str, 
-    page_size: int
-) -> list[dict]:
-    """
-    Helper to page backwards in time until no more messages or we hit the server's earliest.
-    For each event, create a 'date' field in ISO format from the server timestamp.
-    """
-    from nio import RoomMessageText
-    all_events = []
-    end_token = None
-
-    while True:
-        try:
-            response = await client.room_messages(
-                room_id=room_id,
-                start=end_token,
-                limit=page_size,
-                direction="b"
-            )
-            if not isinstance(response, RoomMessagesResponse):
-                logger.warning(f"Got a non-success response: {response}")
-                break
-
-            chunk = response.chunk
-            if not chunk:
-                logger.info(f"No more chunk for {room_id}, done paging.")
-                break
-
-            for ev in chunk:
-                if isinstance(ev, RoomMessageText):
-                    # Convert 'server_timestamp' (ms) => human-readable UTC time
-                    # e.g. '2025-01-11 21:29:33'
-                    dt_utc = datetime.datetime.utcfromtimestamp(ev.server_timestamp / 1000.0)
-                    dt_str = dt_utc.strftime("%Y-%m-%d %H:%M:%S")
-
-                    all_events.append({
-                        "date": dt_str,                   # new field
-                        "room_id": room_id,
-                        "event_id": ev.event_id,
-                        "sender": ev.sender,
-                        "timestamp": ev.server_timestamp, # keep the original numeric
-                        "body": ev.body
-                    })
-
-            end_token = response.end
-            if not end_token:
-                logger.info(f"Got empty 'end' token for {room_id}, done paging.")
-                break
-
-            logger.debug(f"Fetched {len(chunk)} messages this page for room={room_id}, new end={end_token}")
-            await asyncio.sleep(0.25)
-
-        except Exception as e:
-            logger.exception(f"Error in room_messages paging for {room_id}: {e}")
-            break
-
-    return all_events
 
 # ──────────────────────────────────────────────────────────
 # LIST USERS
@@ -3563,11 +3514,11 @@ async def list_users() -> list[dict]:
     """
     homeserver_url = "http://localhost:8008"  # adjust if needed
     try:
-        with open("data/director_token.json", "r") as f:
+        with open("data/tokens.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
-        logger.error(f"Unable to load admin token from director_token.json: {e}")
+        logger.error(f"Unable to load admin token from tokens.json: {e}")
         return []
 
     url = f"{homeserver_url}/_synapse/admin/v2/users"

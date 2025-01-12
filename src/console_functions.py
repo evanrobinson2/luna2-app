@@ -195,12 +195,6 @@ def cmd_purge_and_seed(args, loop):
     """
     Usage: purge_and_seed
 
-    1) Prompt user to shut down Synapse (type 'confirm' when done).
-    2) Remove 'homeserver.db' + local store files (CSV, sync_token.json, director_token.json).
-    3) Prompt user to start server again (type 'confirm').
-    4) Re-register admin/lunabot accounts on the freshly started server.
-    5) Prompt user to confirm if they'd like to restart Luna, which calls cmd_restart.
-
     This is a destructive operation. Press any key to continue.
     """
     print ("SYSTEM> DOES NOTHING NOW. 'rm /Users/evanrobinson/Documents/Luna2/matrix/homeserver.db'")
@@ -321,9 +315,14 @@ def cmd_create_user(args, loop):
       create_user alice supersecret
       create_user bob mypass --admin
 
-    Parses console arguments, then calls `luna.create_user(...)`.
-    The actual user creation is handled entirely in Luna.
+    Parses console arguments, then calls create_and_login_bot(...).
+    This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
+    import logging
+    from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
+
+    logger = logging.getLogger(__name__)
+
     parts = args.strip().split()
     if len(parts) < 2:
         print("Usage: create_user <username> <password> [--admin]")
@@ -331,28 +330,26 @@ def cmd_create_user(args, loop):
 
     username, password = parts[:2]
     is_admin = False
-
-    # If the third argument is "--admin", set admin flag
     if len(parts) > 2 and parts[2].lower() == "--admin":
         is_admin = True
 
-    # Schedule the async call to Luna's create_user(...)
-    future = asyncio.run_coroutine_threadsafe(
-    luna_functions.create_user(username, password, is_admin),
-        loop
-    )
+    # Wrap in an async function so we can run it on the event loop:
+    async def create_and_login():
+        return await create_and_login_bot(username, password, is_admin)
+
+    future = asyncio.run_coroutine_threadsafe(create_and_login(), loop)
 
     def on_done(fut):
         try:
             result = fut.result()
-            print(result)  # e.g. "Created user @alice:localhost (admin=True)." or an error message
+            # For example: "Successfully created & logged in bot => @alice:localhost"
+            print(f"SYSTEM: {result}")
         except Exception as e:
             print(f"Error while creating user '{username}': {e}")
             logger.exception("Exception in cmd_create_user callback.")
 
     future.add_done_callback(on_done)
-
-    print(f"SYSTEM: Asking Luna to create user '{username}' (admin={is_admin})...")
+    print(f"SYSTEM: Creating & logging in user '{username}' (admin={is_admin})...")
 
 
 def cmd_show_shutdown(args, loop):
@@ -612,8 +609,6 @@ def cmd_delete_bot(args, loop):
 
     future.add_done_callback(on_done)
     
-    
-# Suppose in luna_functions_create_inspired_bot.py you have:
 def cmd_create_room(args, loop):
     """
     Usage: create_room "<roomName>" [--private]
@@ -642,15 +637,26 @@ def cmd_create_room(args, loop):
 
 def cmd_create_inspired_bot(args, loop):
     """
-    A simple wrapper function that delegates to the real cmd_create_inspired_bot()
-    in luna_functions_create_inspired_bot.py.
+    Usage: summon <inspiration_text>
+
+    Example:
+      summon "A witty, fashion-forward cat who loves disco"
+
+    This console command prompts GPT to generate a new bot persona
+    (localpart, displayname, system_prompt, password, traits).
+    The resulting persona is stored in data/luna_personalities.json,
+    and the bot is created + logged in to Matrix, then added
+    to the in-memory BOTS dict.
+
+    Internally, this delegates to create_inspired_bot(...) in
+    luna_functions_create_inspired_bot.py.
     """
-    print("Attempting to create an inspired bot")
+    # the sub function handles this: print("Attempting to create an inspired bot")
 
     # Import inside the function to avoid potential circular imports
-    from src.luna_command_extensions.luna_functions_create_inspired_bot import cmd_create_inspired_bot
+    from src.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
     # Call the imported function
-    return cmd_create_inspired_bot(args, loop)
+    return create_inspired_bot(args, loop)
 
 
 ########################################################

@@ -35,13 +35,64 @@ logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 # GLOBALS
 # ──────────────────────────────────────────────────────────
 DIRECTOR_CLIENT: AsyncClient = None  # The client object used across callbacks
-TOKEN_FILE = "data/director_token.json"   # Where we store/reuse the access token
+TOKEN_FILE = "data/tokens.json"   # Where we store/reuse the access token
 SYNC_TOKEN_FILE = "data/sync_token.json"  # Where we store the last sync token
 MESSAGES_CSV = "data/luna_messages.csv"   # We'll store all messages in this CSV
 
 # Global context dictionary (if needed by your logic)
 room_context = {}
 MAX_CONTEXT_LENGTH = 100  # Limit to the last 100 messages per room
+
+
+import logging
+from nio import AsyncClient, LoginResponse
+
+logger = logging.getLogger(__name__)
+
+async def load_or_login_client_v2(
+    homeserver_url: str,
+    user_id: str,
+    password: str,
+    device_name: str = "BotDevice"
+) -> AsyncClient:
+    """
+    load_or_login_client_ephemeral
+
+    A simplified function that logs in a Matrix user via password each time,
+    returning a ready-to-use AsyncClient. No tokens are stored or reused.
+
+    Args:
+      homeserver_url: Your Synapse server address, e.g. "http://localhost:8008"
+      user_id: A full Matrix user ID (e.g. "@inky:localhost") or localpart if you prefer
+      password: The account's password.
+      device_name: A label for the login session.
+
+    Returns:
+      An AsyncClient logged in as `user_id`. If login fails, raises Exception.
+    """
+
+    # If the caller passed only the local part (like "inky"), you might want to ensure:
+    #   if not user_id.startswith("@"):
+    #       user_id = f"@{user_id}:localhost"
+    # But that depends on your usage.
+
+    logger.info(f"[load_or_login_client_v2] [{user_id}] Attempting password login...")
+
+    # 1) Construct the client
+    client = AsyncClient(homeserver=homeserver_url, user=user_id)
+
+    # 2) Attempt the password login
+    resp = await client.login(password=password, device_name=device_name)
+
+    # 3) Check result
+    if isinstance(resp, LoginResponse):
+        logger.info(f"[{user_id}] Password login succeeded. user_id={client.user_id}")
+        return client
+    else:
+        logger.error(f"[{user_id}] Password login failed => {resp}")
+        raise Exception(f"Password login failed for {user_id}: {resp}")
+
+
 
 # ──────────────────────────────────────────────────────────
 # TOKEN-BASED LOGIN
@@ -52,6 +103,10 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
     If valid, reuse it. If invalid (or absent), do a normal password login and store
     the resulting token. Returns an AsyncClient ready to use.
     """
+
+    # since DIRECTOR_CLIENT is a global variable in this module, we need to protect that
+    # memory space within python by re-declaring it here. otherwise the script would simply create a local
+    # which would have unintended consequences
     global DIRECTOR_CLIENT
 
     full_user_id = f"@{username}:localhost"  # Adjust the domain if needed
@@ -104,29 +159,25 @@ async def load_or_login_client(homeserver_url: str, username: str, password: str
         # 6. Password login failed: raise an exception or handle it as desired
         logger.error(f"Password login failed: {resp}")
         raise Exception("Password login failed. Check credentials or homeserver settings.")
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+    
 # ──────────────────────────────────────────────────────────
 # CREATE USER LOGIC
 # ──────────────────────────────────────────────────────────
 async def create_user(username: str, password: str, is_admin: bool = False) -> str:
     """
     The single Luna function to create a user.
-    1) Loads the admin token from director_token.json.
+    1) Loads the admin token from tokens.json.
     2) Calls add_user_via_admin_api(...) from luna_functions.py.
     3) Returns a success/error message.
     """
     # 1) Load admin token
     HOMESERVER_URL = "http://localhost:8008"  # or read from config
     try:
-        with open("data/director_token.json", "r") as f:
+        with open("data/tokens.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
-        err_msg = f"Error loading admin token from director_token.json: {e}"
+        err_msg = f"Error loading admin token from tokens.json: {e}"
         logger.error(err_msg)
         return err_msg
 
@@ -494,11 +545,11 @@ async def list_users() -> list[dict]:
     """
     homeserver_url = "http://localhost:8008"  # adjust if needed
     try:
-        with open("data/director_token.json", "r") as f:
+        with open("data/tokens.json", "r") as f:
             data = json.load(f)
         admin_token = data["access_token"]
     except Exception as e:
-        logger.error(f"Unable to load admin token from director_token.json: {e}")
+        logger.error(f"Unable to load admin token from tokens.json: {e}")
         return []
 
     url = f"{homeserver_url}/_synapse/admin/v2/users"
