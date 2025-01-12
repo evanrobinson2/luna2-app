@@ -17,7 +17,7 @@ from src.luna_command_extensions.ascii_art import show_ascii_banner
 from src.luna_command_extensions.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
-from src.luna_functions_create_room import create_room
+from src.luna_command_extensions.create_room import create_room
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ def cmd_log(args, loop):
 
     Displays the log file path and helpful note about logs.
     """
-    LOGFILE_PATH = "server.log"  # or read from a config
+    LOGFILE_PATH = "data/server.log"  # or read from a config
     print(f"SYSTEM: Log file is located at: {LOGFILE_PATH}\n"
           "SYSTEM: Check that file for all logs, since console output is minimized or disabled.")
 
@@ -140,37 +140,6 @@ def cmd_clear(args, loop):
     else:
         os.system('clear')
     logger.info("Console screen cleared.")
-
-def cmd_autojoin(args, loop):
-    """
-    Usage: autojoin <enable|disable>
-
-    If <enable> or <disable> is given, toggles automatic joining of new invited rooms.
-    If no argument is provided, shows the current auto-join status.
-    If an invalid argument is given, displays usage and also shows the current status.
-    """
-    from src.luna_functions import set_auto_join, get_auto_join_enabled
-
-    choice = args.strip().lower()
-
-    # (A) No argument => show current status
-    if not choice:
-        current = "ENABLED" if get_auto_join_enabled() else "DISABLED"
-        print(f"SYSTEM: Auto-join is currently {current}.")
-        return
-
-    # (B) Check for valid arguments
-    if choice not in ("enable", "disable"):
-        current = "ENABLED" if get_auto_join_enabled() else "DISABLED"
-        print("SYSTEM: Usage: autojoin <enable|disable>")
-        print(f"SYSTEM: Auto-join is currently {current}.")
-        return
-
-    # (C) If valid, set auto-join state and confirm
-    enable_flag = (choice == "enable")
-    set_auto_join(enable_flag)
-    state_word = "ENABLED" if enable_flag else "DISABLED"
-    print(f"SYSTEM: Auto-join is now {state_word}.")
 
 def cmd_rotate_logs(args, loop):
     """
@@ -837,7 +806,7 @@ def cmd_create_inspired_bot(args, loop):
     print("Attempting to create an inspired bot")
 
     # Import inside the function to avoid potential circular imports
-    from src.luna_functions_create_inspired_bot import cmd_create_inspired_bot
+    from src.luna_command_extensions.luna_functions_create_inspired_bot import cmd_create_inspired_bot
     # Call the imported function
     return cmd_create_inspired_bot(args, loop)
 
@@ -852,7 +821,6 @@ COMMAND_ROUTER = {
     "exit": cmd_exit,
     "restart": cmd_restart,
     "log": cmd_log,
-    "autojoin": cmd_autojoin,
     "rotate_logs": cmd_rotate_logs,
     "check_matrix": cmd_check_limit,
     "show_shutdown":cmd_show_shutdown,

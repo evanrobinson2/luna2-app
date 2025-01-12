@@ -41,7 +41,7 @@ from nio import RoomMessageText
 
 
 
-MESSAGES_CSV = "data/luna_messages.csv"
+MESSAGES_CSV = "luna_messages.csv"
 
 
 # Configure logging to write to 'luna.log' only
@@ -63,7 +63,7 @@ if not logger.hasHandlers():
 # Prevent logs from being propagated to the root logger
 logger.propagate = False
 
-MESSAGES_CSV = "data/luna_messages.csv"
+MESSAGES_CSV = "luna_messages.csv"
 
 # Import external functions from src.luna_functions
 from src.luna_functions import invite_user_to_room, list_rooms, post_gpt_reply
