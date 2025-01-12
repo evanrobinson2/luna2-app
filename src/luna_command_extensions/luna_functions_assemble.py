@@ -6,7 +6,7 @@ import datetime
 import asyncio
 from src.ai_functions import get_gpt_response
 from src.luna_functions import create_user, invite_user_to_room, getClient
-from luna_command_extensions.luna_functions_create_room import create_room
+from src.luna_functions_create_room import create_room
 from src.luna_personas import create_bot
 
 logger = logging.getLogger(__name__)

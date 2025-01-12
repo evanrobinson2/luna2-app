@@ -14,7 +14,7 @@ from . import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
 from src.luna_command_extensions.ascii_art import show_ascii_banner
-from src.luna_functions_assemble import cmd_assemble
+from src.luna_command_extensions.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from src.luna_functions_create_room import create_room
