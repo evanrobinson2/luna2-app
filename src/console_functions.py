@@ -18,7 +18,6 @@ from src.luna_command_extensions.luna_functions_assemble import cmd_assemble
 from src.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from src.luna_functions_create_room import create_room
-from src.luna_command_extensions.console_functions_cmd_summarize_room import cmd_summarize_room
 
 logger = logging.getLogger(__name__)
 
@@ -396,7 +395,7 @@ def cmd_show_shutdown(args, loop):
 
     Prints the current value of SHOULD_SHUT_DOWN (a boolean).
     """
-    from cmd_shutdown import SHOULD_SHUT_DOWN
+    from src.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
     print(f"SYSTEM: SHOULD_SHUT_DOWN is currently set to {SHOULD_SHUT_DOWN}.")
 
 
@@ -876,7 +875,6 @@ COMMAND_ROUTER = {
 
     "invite_user": cmd_invite_user,
     "add_user_to_channel":cmd_add_user,
-    "summarize_room": cmd_summarize_room,
     "summon_random":cmd_create_inspired_bot,
     "assemble": cmd_assemble
 }
