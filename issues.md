@@ -22,3 +22,6 @@ RuntimeError: Event loop stopped before Future completed.
 2025-01-12 15:33:28,595 [ERROR] asyncio: Unclosed connector
 connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x11de93f50>, 42509.1350415)])']
 connector: <aiohttp.connector.TCPConnector object at 0x11de76350>
+
+ISSUE - spawn_squad needs to be tested
+ISSUE - Orphaned users can accumulate on the server.

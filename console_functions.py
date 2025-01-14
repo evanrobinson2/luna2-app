@@ -932,8 +932,7 @@ COMMAND_ROUTER = {
     "channels": cmd_list_rooms,
     "server": cmd_list_server,
     "add_user_to_channel":cmd_add_user,
-    "summon":cmd_create_inspired_bot,
-    "summon_meta": cmd_summon_long_prompt,
-    "spawn_squad": cmd_spawn_squad
-
+    # "summon":cmd_create_inspired_bot,
+    "spawn": cmd_spawn_squad,
+    # "summon_v2": cmd_summon_long_prompt
 }

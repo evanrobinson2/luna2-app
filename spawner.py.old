@@ -1,5 +1,3 @@
-# spawner.py
-
 import json
 import asyncio
 import logging
@@ -10,34 +8,23 @@ from luna.ai_functions import get_gpt_response
 
 logger = logging.getLogger(__name__)
 
-# Simple ANSI color codes for old-school vibe:
-ANSI_YELLOW = "\033[93m"
-ANSI_GREEN = "\033[92m"
-ANSI_CYAN = "\033[96m"
-ANSI_MAGENTA = "\033[95m"
-ANSI_RED = "\033[91m"
-ANSI_WHITE = "\033[97m"
-ANSI_RESET = "\033[0m"
-
-
 def cmd_spawn_squad(args, loop):
     """
-    The real logic for spawn_squad.
+    The real logic for spawn_squad. 
     Called by console_functions.py or whichever file includes the “command router.”
 
     Usage: spawn_squad <numBots> "<theme or style>"
 
     Example:
       spawn_squad 3 "A jazzy trio of improvisational bots"
-
-    This version displays a more colorful, “BBS-like” console output
-    when describing the spawned personas and their JSON details.
     """
 
+    print("[DEBUG] Entering cmd_spawn_squad with args =", repr(args))
     logger.debug("cmd_spawn_squad => Received args=%r", args)
 
     # 1) Parse the arguments
     tokens = shlex.split(args.strip())
+    print(f"[DEBUG] Parsed tokens => {tokens}")
     logger.debug("Parsed tokens => %s", tokens)
 
     if len(tokens) < 2:
@@ -46,7 +33,6 @@ def cmd_spawn_squad(args, loop):
         logger.warning(msg)
         return
 
-    # Try to parse the count as an integer
     try:
         count = int(tokens[0])
     except ValueError:
@@ -55,7 +41,6 @@ def cmd_spawn_squad(args, loop):
         logger.warning(msg)
         return
 
-    # We only allow 1–5 bots
     if count < 1 or count > 5:
         msg = "SYSTEM: Allowed range is 1 to 5 bots."
         print(msg)
@@ -64,34 +49,34 @@ def cmd_spawn_squad(args, loop):
 
     # Reconstruct the theme from all tokens after the first
     theme = " ".join(tokens[1:])
+    print(f"[DEBUG] Using theme => '{theme}'")
     logger.debug("Spawn_squad => count=%d, theme=%r", count, theme)
 
-    # 2) Build the GPT system instructions & user message.
-    #    We now require 'biography' and 'backstory' keys as well.
+    # 2) Build the GPT system instructions & user message
     system_instructions = (
         "You are an assistant that outputs ONLY valid JSON. "
         "No markdown, no code fences, no extra commentary. "
-        f"Generate an array of exactly {count} persona objects. "
-        "Each object must have keys: localpart, displayname, biography, backstory, "
-        "system_prompt, password, traits. "
+        "Generate an array of exactly {count} persona objects. "
+        "Each object must have keys: localpart, displayname, system_prompt, password, traits. "
         "No other keys. "
         "The 'traits' key is a JSON object with arbitrary key/values. "
-        "Be sure that the system prompt instructs the bot to behave at all times in character."
-        "Incorporate as much of the character's identity into the system prompt as possible"
-    )
+    ).format(count=count)
 
     user_message = (
         f"Please create {count} persona(s) for the theme: '{theme}'. "
         "Return ONLY valid JSON (an array, no outer text)."
     )
 
+    print(f"[DEBUG] system_instructions => {system_instructions}")
+    print(f"[DEBUG] user_message => {user_message}")
     logger.debug("system_instructions=%r", system_instructions)
     logger.debug("user_message=%r", user_message)
 
     async def do_spawn():
+        print("[DEBUG] do_spawn => Starting GPT call ...")
         logger.debug("do_spawn => Starting GPT call (count=%d)", count)
 
-        # 3) Call GPT to get JSON for the requested # of personas
+        # 3) Actually call GPT to get JSON for the requested # of personas
         gpt_response = await get_gpt_response(
             messages=[
                 {"role": "system", "content": system_instructions},
@@ -101,16 +86,17 @@ def cmd_spawn_squad(args, loop):
             temperature=0.7,
             max_tokens=1000
         )
-
+        print(f"[DEBUG] GPT responded with => {gpt_response[:200]!r}... (truncated)")
         logger.debug("GPT raw response => %r", gpt_response)
 
-        # 4) Parse JSON
+        # 4) Attempt to parse the JSON
         try:
             persona_array = json.loads(gpt_response)
+            print(f"Created {persona_array}")
+            logger.debug("Parsed persona_array => %s", persona_array)
         except json.JSONDecodeError as e:
-            err_msg = f"SYSTEM: GPT returned invalid JSON => {e}"
-            print(err_msg)
-            logger.error("%s -- full GPT response => %s", err_msg, gpt_response)
+            print(f"SYSTEM: GPT returned invalid JSON => {e}")
+            logger.error("Invalid JSON from GPT => %s", gpt_response)
             return
 
         if not isinstance(persona_array, list):
@@ -120,63 +106,32 @@ def cmd_spawn_squad(args, loop):
             return
 
         if len(persona_array) != count:
-            msg = (
-                f"SYSTEM: GPT returned a list of length "
-                f"{len(persona_array)}, expected {count}. Aborting."
-            )
+            msg = ("SYSTEM: GPT returned a list of length "
+                   f"{len(persona_array)}, expected {count}. Aborting.")
             print(msg)
             logger.warning(msg)
             return
 
-        # 5) Summon each persona
+        # 5) For each persona, call create_and_login_bot to spawn
         successes = 0
-
         for i, persona in enumerate(persona_array):
+            print(f"[DEBUG] Spawning persona index {i} => {persona}")
             logger.debug("Persona[%d] => %s", i, persona)
 
-            # Check for required keys
-            required_keys = [
-                "localpart",
-                "displayname",
-                "biography",
-                "backstory",
-                "system_prompt",
-                "password",
-                "traits",
-            ]
-
+            # Validate required keys
             missing_key = None
-            for rk in required_keys:
-                if rk not in persona:
-                    missing_key = rk
+            for key in ["localpart", "displayname", "system_prompt", "password", "traits"]:
+                if key not in persona:
+                    missing_key = key
                     break
+
             if missing_key:
                 msg = f"SYSTEM: Missing key '{missing_key}' in GPT object {i}. Skipping."
                 print(msg)
                 logger.warning(msg)
                 continue
 
-            # Display a fancy "character sheet" in BBS style
-            persona_label = f"{ANSI_GREEN}Persona #{i+1} of {count}{ANSI_RESET}"
-
-            print(f"\n{ANSI_MAGENTA}{'=' * 60}{ANSI_RESET}")
-            print(f"{ANSI_YELLOW} Summoning {persona_label} for your {theme} squad...{ANSI_RESET}")
-            print(f"{ANSI_MAGENTA}{'=' * 60}{ANSI_RESET}")
-
-            # We'll display the entire JSON so we don't rely on a specific schema.
-            # For color + indentation, let's do a pretty print but highlight keys.
-            # We'll build lines by hand:
-            for k, v in persona.items():
-                # Show keys in CYAN, values in WHITE
-                # If v is a dict, we can pretty-dump it
-                if isinstance(v, dict):
-                    dict_str = json.dumps(v, indent=2)
-                    print(f"{ANSI_CYAN}  {k}{ANSI_RESET} = {ANSI_WHITE}{dict_str}{ANSI_RESET}")
-                else:
-                    # Just convert to string
-                    print(f"{ANSI_CYAN}  {k}{ANSI_RESET} = {ANSI_WHITE}{v}{ANSI_RESET}")
-
-            # Actually spawn the user
+            # Build the Matrix user ID
             full_bot_id = f"@{persona['localpart']}:localhost"
             password = persona["password"]
             displayname = persona["displayname"]
@@ -185,7 +140,9 @@ def cmd_spawn_squad(args, loop):
 
             async def single_spawn():
                 from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
+                print(f"[DEBUG] -> single_spawn => about to create '{full_bot_id}'")
                 logger.debug("single_spawn => Creating user_id=%r", full_bot_id)
+
                 result_msg = await create_and_login_bot(
                     bot_id=full_bot_id,
                     password=password,
@@ -195,45 +152,36 @@ def cmd_spawn_squad(args, loop):
                     creator_user_id="@lunabot:localhost",
                     is_admin=False
                 )
+                print(f"[DEBUG] -> single_spawn => returned result={result_msg!r}")
+                logger.debug("single_spawn => result=%r", result_msg)
                 return result_msg
 
+            # BLOCKING approach: directly await single_spawn
+            # so each persona is created in a strictly sequential manner
             spawn_result = await single_spawn()
 
-            # Check if creation was successful
             if "Successfully created" in spawn_result:
                 successes += 1
-                print(
-                    f"{ANSI_GREEN}SUCCESS:{ANSI_RESET} {spawn_result}"
-                )
-            else:
-                print(
-                    f"{ANSI_RED}FAILED:{ANSI_RESET} {spawn_result}"
-                )
 
-        # 6) Summary
-        print()
-        summary_msg = (
-            f"SYSTEM: Attempted to spawn {count} persona(s). "
-            f"{successes} succeeded, {count - successes} failed. Done."
-        )
-        print(f"{ANSI_CYAN}{summary_msg}{ANSI_RESET}")
+            print(f"SYSTEM: {spawn_result}")
+            logger.info("Spawn result => %s", spawn_result)
+
+        # 6) Print a final summary
+        summary_msg = (f"SYSTEM: Attempted to spawn {count} bots, {successes} succeeded. Done.")
+        print(summary_msg)
         logger.info(summary_msg)
 
-    # Announce to user we're about to do it
-    print(
-        f"{ANSI_YELLOW}SYSTEM:{ANSI_RESET} Summoning a squad of {count} persona(s) "
-        f"for theme: '{theme}'... stand by."
-    )
+    # 7) We do a blocking run of do_spawn on the given loop
+    print(f"SYSTEM: Summoning a squad of {count} persona(s) for theme: '{theme}'... stand by.")
     logger.info("cmd_spawn_squad => scheduling do_spawn (count=%d, theme=%r)", count, theme)
 
-    # 7) We do a blocking run of do_spawn on the given loop
     future = asyncio.run_coroutine_threadsafe(do_spawn(), loop)
 
-    # Block until do_spawn() completes
+    # Instead of returning immediately, we BLOCK on that future so you see everything in order
     try:
-        future.result()
+        result = future.result()  # This blocks until do_spawn() completes
+        print("[DEBUG] do_spawn() completed =>", result)
+        logger.debug("do_spawn completed => result=%r", result)
     except Exception as e:
-        print(
-            f"{ANSI_RED}SYSTEM: spawn_squad encountered an error => {e}{ANSI_RESET}"
-        )
+        print(f"SYSTEM: spawn_squad encountered an error => {e}")
         logger.exception("spawn_squad encountered an exception =>", exc_info=e)

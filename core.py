@@ -28,7 +28,7 @@ from luna.bot_messages_store2 import load_messages
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 from luna.luna_functions import load_or_login_client, load_or_login_client_v2 # The “director” login + ephemeral bot login functions
-
+from luna.luna_command_extensions.luna_message_handler import handle_luna_message
 logger = logging.getLogger(__name__)
 
 # Global containers
@@ -143,10 +143,7 @@ async def run_bot_sync(bot_client: AsyncClient, localpart: str):
 # ------------------------------------------------------------------
 
 def make_message_callback(bot_client, localpart):
-    """
-    Return a dedicated callback function that references 
-    exactly this bot's client and localpart.
-    """
+    """Return a function that references exactly these arguments."""
     async def on_message(room, event):
         await handle_bot_room_message(bot_client, localpart, room, event)
     return on_message
@@ -160,7 +157,6 @@ def make_member_callback(bot_client, localpart):
     async def on_member(room, event):
         await handle_bot_member_event(bot_client, localpart, room, event)
     return on_member
-
 
 async def main_logic():
     """
@@ -179,12 +175,16 @@ async def main_logic():
         password="12345"
     )
     logger.info("Luna client login complete.")
-
-    # For Luna, we can either do the same approach or inline a small lambda:
-    luna_client.add_event_callback(
-        lambda r, e: handle_bot_room_message(luna_client, "lunabot", r, e),
+    
+    # Then in main_logic, after logging in Luna:
+    for localpart, bot_client in BOTS.items():
+        bot_client.add_event_callback(
+        # By giving default arguments `_lp=localpart` and `_bc=bot_client`,
+        # we ensure each lambda captures these values uniquely per iteration.
+        lambda room, event, _lp=localpart, _bc=bot_client: handle_bot_room_message(_bc, _lp, room, event),
         RoomMessageText
     )
+
     luna_client.add_event_callback(
         lambda r, e: handle_bot_invite(luna_client, "lunabot", r, e),
         InviteMemberEvent
@@ -202,6 +202,7 @@ async def main_logic():
     bot_tasks = []
     for localpart, bot_client in BOTS.items():
         try:
+        # Register each callback via a distinct helper
             bot_client.add_event_callback(
                 make_message_callback(bot_client, localpart),
                 RoomMessageText
@@ -214,11 +215,11 @@ async def main_logic():
                 make_member_callback(bot_client, localpart),
                 RoomMemberEvent
             )
-            logger.info(f"Registered handlers for bot '{localpart}'")
 
-            # Start its sync loop in a new Task
             task = asyncio.create_task(run_bot_sync(bot_client, localpart))
             bot_tasks.append(task)
+
+            logger.info(f"Set up bot '{localpart}' successfully.")
 
         except Exception as e:
             logger.exception(f"Error setting up bot '{localpart}': {e}")
@@ -241,6 +242,8 @@ async def main_logic():
         t.cancel()
 
     logger.debug("main_logic done, returning.")
+
+
 
 
 def luna_main():
@@ -286,3 +289,7 @@ def get_bots() -> dict:
     the dictionary without directly importing 'BOTS'.
     """
     return BOTS
+
+def load_system_prompt():
+    with open("data/luna_system_prompt.md", "r", encoding="utf-8") as f:
+        return f.read()
