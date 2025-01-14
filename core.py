@@ -23,13 +23,11 @@ from nio import (
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
+from luna.bot_messages_store2 import load_messages
 
-# Our console apparatus & shutdown signals
-from luna.console_apparatus import console_loop
+from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
-
-# The “director” login + ephemeral bot login functions
-from luna.luna_functions import load_or_login_client, load_or_login_client_v2
+from luna.luna_functions import load_or_login_client, load_or_login_client_v2 # The “director” login + ephemeral bot login functions
 
 logger = logging.getLogger(__name__)
 
@@ -254,7 +252,7 @@ def luna_main():
     configure_logging()
     logger.debug("Logging configured. Creating event loop.")
 
-    ensure_messages_table()
+    load_messages()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -280,49 +278,6 @@ def luna_main():
         logger.debug("Preparing to close the loop.")
         loop.close()
         logger.info("Loop closed. Exiting.")
-
-
-def ensure_messages_table():
-    """
-    Creates (if not exists) a 'messages' table in data/luna.db
-    with columns matching your new logic:
-
-      - room_id TEXT NOT NULL
-      - event_id TEXT PRIMARY KEY
-      - sender TEXT
-      - timestamp INTEGER
-      - body TEXT
-      - responded_by TEXT
-      - is_outbound INTEGER NOT NULL DEFAULT 0
-
-    No further indexes are strictly required for this minimal usage,
-    but you can add them if you foresee many queries by room_id, etc.
-    """
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS messages (
-        room_id TEXT NOT NULL,
-        event_id TEXT PRIMARY KEY,
-        sender TEXT,
-        timestamp INTEGER,
-        body TEXT,
-        responded_by TEXT,
-        is_outbound INTEGER NOT NULL DEFAULT 0
-    )
-    """
-    logger.info("[ensure_messages_table] Trying to connect with database.")
-    try:
-        conn = sqlite3.connect(DATABASE_PATH)
-        c = conn.cursor()
-
-        # Create the table if it doesn’t exist
-        c.execute(create_table_sql)
-        conn.commit()
-
-        logger.info("[ensure_messages_table] SQLite table 'messages' ensured in data/luna.db.")
-    except Exception as e:
-        logger.exception(f"[ensure_messages_table] Error creating or verifying 'messages' table: {e}")
-    finally:
-        conn.close()
 
 def get_bots() -> dict:
     """

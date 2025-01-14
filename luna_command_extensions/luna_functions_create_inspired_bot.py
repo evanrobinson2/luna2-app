@@ -3,8 +3,8 @@ import asyncio
 import logging
 
 # Adjust imports for your project structure
-from ai_functions import get_gpt_response
-from luna_command_extensions.create_and_login_bot import create_and_login_bot
+from luna.ai_functions import get_gpt_response_dep
+from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def create_inspired_bot(args, loop):
 
     # 1) Ask GPT for the persona
     fut = asyncio.run_coroutine_threadsafe(
-        get_gpt_response(
+        get_gpt_response_dep(
             context=[
                 {"role": "system", "content": system_instructions},
                 {"role": "user", "content": user_prompt},

@@ -4,6 +4,8 @@ import logging
 import subprocess
 import shlex
 import asyncio
+from luna.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
+
 import aiohttp
 from datetime import datetime
 import textwrap # or however you import from the same package
@@ -159,15 +161,28 @@ def cmd_rotate_logs(args, loop):
     Usage: rotate_logs
 
     Renames 'server.log' to a timestamped file (e.g. server-20250105-193045.log),
-    then reinitializes the logger so the new logs go into the fresh file.
+    then reinitializes the logger so new logs go into a fresh file.
     """
     logger.info("Rotating logs...")
 
-    # 1) Rotate the current file
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_file = "data/logs/server.log"
-    rotated_file = f"data/logs/archive/server-{timestamp}.log"
+    from datetime import datetime
+    import os
+    import logging
 
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    log_file = "data/logs/server.log"
+    archive_dir = "data/logs/archive"
+    rotated_file = f"{archive_dir}/server-{timestamp}.log"
+
+    # 1) Ensure the archive directory exists
+    try:
+        os.makedirs(archive_dir, exist_ok=True)
+    except Exception as e:
+        print(f"SYSTEM: Error creating archive directory '{archive_dir}': {e}")
+        return
+
+    # 2) Rotate the current file
     if os.path.exists(log_file):
         try:
             os.rename(log_file, rotated_file)
@@ -178,7 +193,7 @@ def cmd_rotate_logs(args, loop):
     else:
         print("SYSTEM: No server.log found to rotate.")
 
-    # 2) Create a fresh server.log
+    # 3) Create a fresh server.log
     try:
         with open(log_file, "w") as f:
             pass
@@ -186,18 +201,19 @@ def cmd_rotate_logs(args, loop):
     except Exception as e:
         print(f"SYSTEM: Error creating new server.log: {e}")
 
-    # 3) Re-init logging so future logs go into the new file
+    # 4) Re-init logging so future logs go into the new file
     #    (Close the old handler, create a new FileHandler, attach it, etc.)
-
     root_logger = logging.getLogger()
+
     # Remove old file handlers
     for handler in list(root_logger.handlers):
         if isinstance(handler, logging.FileHandler):
             root_logger.removeHandler(handler)
             handler.close()
+
     # Create a new file handler for "server.log"
     new_handler = logging.FileHandler(log_file)
-    new_handler.setLevel(logging.DEBUG)  # match your preferred level
+    new_handler.setLevel(logging.DEBUG)  # adjust as preferred
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     new_handler.setFormatter(formatter)
     root_logger.addHandler(new_handler)
@@ -633,7 +649,6 @@ def cmd_create_room(args, loop):
 
     future.add_done_callback(on_done)
 
-
 def cmd_create_inspired_bot(args, loop):
     """
     Usage: summon <inspiration_text>
@@ -648,14 +663,30 @@ def cmd_create_inspired_bot(args, loop):
     to the in-memory BOTS dict.
 
     Internally, this delegates to create_inspired_bot(...) in
-    luna_functions_create_inspired_bot.py.
+    luna_functions_create_inspired_bot.py, but we schedule it on the
+    existing asyncio loop (loop) with run_coroutine_threadsafe.
     """
-    # the sub function handles this: print("Attempting to create an inspired bot")
 
-    # Import inside the function to avoid potential circular imports
-    from luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
-    # Call the imported function
-    return create_inspired_bot(args, loop)
+
+    # 1) Wrap our target function in a coroutine
+    async def do_create_inspired_bot():
+        return create_inspired_bot(args, loop)
+
+    # 2) Schedule it on the event loop
+    future = asyncio.run_coroutine_threadsafe(do_create_inspired_bot(), loop)
+
+    # 3) Define a callback to handle success/failure
+    def on_done(fut):
+        try:
+            result = fut.result()
+            print(f"SYSTEM: {result}")
+        except Exception as e:
+            print(f"SYSTEM: Error creating inspired bot => {e}")
+            logger.exception("Exception in cmd_create_inspired_bot callback.")
+
+    future.add_done_callback(on_done)
+
+    print("SYSTEM: Attempting to create an inspired bot. Please wait...")
 
 def cmd_get_bot_system_prompt(args, loop):
     """
@@ -772,6 +803,109 @@ def cmd_who_is(args, loop):
         print(f"  Notes        : {notes}")
     print()
 
+def cmd_summon_long_prompt(args, loop):
+    """
+    Usage: summon_long_prompt "<giant blueprint text>"
+
+    We'll feed that blueprint to GPT with a small system instruction telling
+    it to create a well-formed persona definition, which we then parse + spawn.
+    """
+
+    import shlex
+    tokens = shlex.split(args, posix=True)
+    if not tokens:
+        print("Usage: summon_long_prompt \"<blueprint text>\"")
+        return
+
+    blueprint_text = tokens[0]  # Or re-join tokens if you allow multiple quoted sections
+
+    async def do_summon():
+        from luna.ai_functions import get_gpt_response  # or your new GPT call
+        # 1) Build the short instruction
+        system_inst = (
+            "You will receive a 'blueprint' text that describes how a new persona should behave.\n"
+            "You must return a JSON object with the following keys:\n"
+            "  localpart (string), displayname (string), system_prompt (string), traits (object)\n"
+            "No extra keys, no markdown.\n"
+            "If user does not specify a localpart, create one from the blueprint.\n"
+            "If user does not specify a displayname, guess it or do something generic.\n"
+            "Be as versose and dirctive as possible in your creation of the system prompt.\n"
+            "Instruct the bot to be absolutely willing to talk about prior messages and conversation history.\n"
+        )
+
+        # 2) GPT conversation array
+        conversation = [
+            {"role": "system", "content": system_inst},
+            {
+                "role": "user",
+                "content": (
+                    f"Below is the blueprint. Please parse it and produce your JSON:\n\n"
+                    f"{blueprint_text}"
+                ),
+            },
+        ]
+
+        # 3) Make GPT call
+        gpt_reply = await get_gpt_response(
+            messages=conversation,
+            model="gpt-4",
+            temperature=0.7,
+            max_tokens=500
+        )
+
+        # 4) Parse JSON, handle errors
+        import json
+        try:
+            persona_data = json.loads(gpt_reply)
+        except json.JSONDecodeError as e:
+            return f"GPT returned invalid JSON => {e}\n\n{gpt_reply}"
+
+        # 5) Validate required keys
+        for needed in ["localpart", "displayname", "system_prompt", "traits"]:
+            if needed not in persona_data:
+                return f"Missing required field '{needed}' in GPT output => {persona_data}"
+
+        # 6) Summon the bot
+        from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
+        new_bot_id = f"@{persona_data['localpart']}:localhost"
+        password = "somePassword123"  # or randomly generate
+
+        result_msg = await create_and_login_bot(
+            bot_id=new_bot_id,
+            password=password,
+            displayname=persona_data["displayname"],
+            system_prompt=persona_data["system_prompt"],
+            traits=persona_data["traits"]
+        )
+        return result_msg
+
+    future = asyncio.run_coroutine_threadsafe(do_summon(), loop)
+
+    def on_done(fut):
+        try:
+            outcome = fut.result()
+            print(f"SYSTEM: {outcome}")
+        except Exception as e:
+            print(f"SYSTEM: Summon error => {e}")
+
+    future.add_done_callback(on_done)
+    print("SYSTEM: Summoning a bot from your blueprint... please wait.")
+
+def cmd_spawn_squad(args, loop):
+    """
+    Usage: spawn_squad <numBots> "<theme or style>"
+
+    Example:
+      spawn_squad 3 "A jazzy trio of improvisational bots"
+    """
+    # Import inside the function to avoid circular imports or to keep it minimal:
+    from luna.spawner import cmd_spawn_squad as spawner_impl
+
+    # Just delegate all logic:
+    spawner_impl(args, loop)
+
+
+
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
 ########################################################
@@ -785,7 +919,10 @@ COMMAND_ROUTER = {
     "rotate_logs": cmd_rotate_logs,
     "check_matrix": cmd_check_limit,
     "show_shutdown":cmd_show_shutdown,
-    
+    "who_is":cmd_who_is,
+    "whois_director": cmd_who,
+    "get_system_prompt_for": cmd_get_bot_system_prompt,
+    "set_system_prompt_for": cmd_set_bot_system_prompt,
     "clear": cmd_clear,
     "purge_and_seed": cmd_purge_and_seed,
     "banner": cmd_banner,
@@ -796,8 +933,7 @@ COMMAND_ROUTER = {
     "server": cmd_list_server,
     "add_user_to_channel":cmd_add_user,
     "summon":cmd_create_inspired_bot,
-    "who_is":cmd_who_is,
-    "whois_director": cmd_who,
-    "get_system_prompt_for": cmd_get_bot_system_prompt,
-    "set_system_prompt_for": cmd_set_bot_system_prompt
+    "summon_meta": cmd_summon_long_prompt,
+    "spawn_squad": cmd_spawn_squad
+
 }

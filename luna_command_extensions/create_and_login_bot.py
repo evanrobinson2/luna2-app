@@ -11,14 +11,14 @@ import asyncio
 from nio import RoomMessageText, InviteMemberEvent, RoomMemberEvent
 
 # Adjust these imports to match your new layout:
-import luna_personas
-from luna_functions import (
+import luna.luna_personas
+from luna.luna_functions import (
     create_user,
     load_or_login_client_v2
 )
-from luna_command_extensions.bot_message_handler import handle_bot_room_message
-from luna_command_extensions.bot_member_event_handler import handle_bot_member_event
-from luna_command_extensions.bot_invite_handler import handle_bot_invite
+from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
+from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
+from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def create_and_login_bot(
 
     # 2) Create persona in personalities.json
     try:
-        luna_personas.create_bot(
+        luna.luna_personas.create_bot(
             bot_id=bot_id,
             password=password,
             displayname=displayname,
@@ -109,7 +109,7 @@ async def create_and_login_bot(
 
     # 6) Start a sync loop for this bot & store references in global BOTS + BOT_TASKS
     try:
-        from core import BOTS, BOT_TASKS, run_bot_sync
+        from luna.core import BOTS, BOT_TASKS, run_bot_sync
         BOTS[localpart] = client
         sync_task = asyncio.create_task(run_bot_sync(client, localpart))
         BOT_TASKS.append(sync_task)
