@@ -1,4 +1,4 @@
-from src.console_functions import COMMAND_ROUTER
+from console_functions import COMMAND_ROUTER
 import logging
 import textwrap
 logger = logging.getLogger(__name__)

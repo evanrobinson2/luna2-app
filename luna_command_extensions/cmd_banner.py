@@ -1,6 +1,6 @@
 # cmd_banner.py
 import logging
-from src.luna_command_extensions.ascii_art import show_ascii_banner
+from luna_command_extensions.ascii_art import show_ascii_banner
 logger = logging.getLogger(__name__)
 
 

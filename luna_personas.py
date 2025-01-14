@@ -10,6 +10,7 @@ def _load_personalities() -> dict:
     Internal helper to load the entire JSON dictionary from disk.
     Returns {} if file not found or invalid.
     """
+    
     if not os.path.exists(PERSONALITIES_FILE):
         return {}
     try:
@@ -151,3 +152,37 @@ def delete_bot_persona(bot_id: str) -> None:
     del data[bot_id]  # remove that entry
     _save_personalities(data)
     # no return needed; it either succeeds or raises an exception
+
+
+def get_system_prompt_by_localpart(localpart: str) -> str | None:
+    """
+    Returns the system_prompt for the bot whose localpart is `localpart`,
+    or None if that bot does not exist.
+
+    :param localpart: The localpart of the bot user (e.g. "inky").
+    :return: The system_prompt string, or None if not found.
+    """
+    bot_id = f"@{localpart}:localhost"
+    persona = read_bot(bot_id)
+    if not persona:
+        return None
+    return persona.get("system_prompt")
+
+
+def set_system_prompt_by_localpart(localpart: str, new_prompt: str) -> dict | None:
+    """
+    Updates the system_prompt for the bot whose localpart is `localpart`.
+    Returns the updated persona dict, or None if the bot doesn't exist.
+
+    :param localpart: The localpart of the bot user (e.g. "inky").
+    :param new_prompt: The new system_prompt text to set.
+    :return: The updated bot data dict, or None if not found.
+    """
+    bot_id = f"@{localpart}:localhost"
+    existing = read_bot(bot_id)
+    if not existing:
+        return None  # bot doesn't exist
+
+    # Update with the sanitized prompt
+    updated = update_bot(bot_id, {"system_prompt": new_prompt})
+    return updated

@@ -2,8 +2,6 @@
 
 import pyfiglet
 import random
-import time
-import sys
 
 def show_ascii_banner(text: str):
     """

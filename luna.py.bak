@@ -15,6 +15,8 @@ import logging
 import threading
 from src.console_apparatus import console_loop
 from src.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
+from src.luna_command_extensions.bot_invite_handler import handle_bot_invite
+from src.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from src.luna_functions import load_or_login_client_v2
 #
 # Trying to replace this with a new one
@@ -82,37 +84,87 @@ async def main_logic():
     logger = logging.getLogger(__name__)
     logger.debug("Entering main_logic function...")
 
-    # 1. Acquire client
+    # 1. Acquire client (Luna's own client)
     client: AsyncClient = await load_or_login_client(
         homeserver_url="http://localhost:8008",
         username="lunabot",
         password="12345"
     )
 
-    # 2. Register callbacks
-    # client.add_event_callback(on_room_message, RoomMessageText)
+    # 2. Register callbacks on Luna's client
     client.add_event_callback(on_room_message, RoomMessageText)
     client.add_event_callback(on_invite_event, InviteMemberEvent)
 
+    # 3. Load and log in all existing bots from personalities.json
     await login_bots()
-    
-    # Right after: await login_bots()
     logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
 
-
-    # 3. Repeatedly sync in short intervals, checking the shutdown flag
-    logger.debug("Starting short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
-    while not SHOULD_SHUT_DOWN:
-        # A single sync that times out after (say) 5 seconds
+    # 4. For each bot, register message/invite handlers, then spin up a sync task
+    bot_tasks = []
+    for localpart, bot_client in BOTS.items():
         try:
+            # Register message callback
+            bot_client.add_event_callback(
+                lambda r, e: handle_bot_room_message(bot_client, localpart, r, e),
+                RoomMessageText
+            )
+            logger.info(f"Registered message handler for bot '{localpart}'")
+
+            # Register invite callback
+            bot_client.add_event_callback(
+                lambda r, e: handle_bot_invite(bot_client, localpart, r, e),
+                InviteMemberEvent
+            )
+            logger.info(f"Registered invite handler for bot '{localpart}'")
+
+            # Create an asyncio Task for this bot's sync loop
+            bot_task = asyncio.create_task(run_bot_sync(bot_client, localpart))
+            bot_tasks.append(bot_task)
+
+        except Exception as e:
+            logger.exception(f"Failed to set up bot '{localpart}': {e}")
+
+    # 5. Meanwhile, Luna's own sync loop
+    logger.debug("Starting Luna's main short sync loop; will exit when SHOULD_SHUT_DOWN = True.")
+    while not SHOULD_SHUT_DOWN:
+        try:
+            # A single sync for Luna that times out after 5 seconds
             await client.sync(timeout=5000)
         except Exception as e:
-            logger.exception(f"Error in client.sync: {e}")
+            logger.exception(f"Error in Luna's own client.sync: {e}")
 
-    # If we reach here, user triggered a shutdown or an error occurred
-    logger.info("main_logic loop exiting. Closing client connection...")
+    # 6. Shutting down: stop Luna's sync, stop bots’ sync tasks, close connection
+    logger.info("main_logic loop exiting. Closing Luna's client connection...")
     await client.close()
-    logger.debug("Client closed. main_logic() is returning.")
+    logger.debug("Luna's client closed.")
+
+    # Optionally, you might also cancel each bot’s task here
+    for task in bot_tasks:
+        task.cancel()
+    # You could then await them, e.g. in a try/except to absorb cancellation
+    # for task in bot_tasks:
+    #     try:
+    #         await task
+    #     except asyncio.CancelledError:
+    #         pass
+
+    logger.debug("main_logic() is returning.")
+
+# Helper: a simple sync loop for each bot
+async def run_bot_sync(bot_client, localpart):
+    from src.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
+    logger = logging.getLogger(__name__)
+
+    # This loop runs until SHOULD_SHUT_DOWN is set to True
+    while not SHOULD_SHUT_DOWN:
+        try:
+            await bot_client.sync(timeout=5000)
+        except Exception as e:
+            logger.exception(f"Bot '{localpart}' encountered a sync error: {e}")
+            await asyncio.sleep(2)  # a small backoff
+        else:
+            # If everything went fine, yield control briefly
+            await asyncio.sleep(0)
 
 def luna():
     """

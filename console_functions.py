@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import subprocess
+import shlex
 import asyncio
 import aiohttp
 from datetime import datetime
@@ -9,14 +10,15 @@ import textwrap # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
-from src.luna_command_extensions.cmd_shutdown import request_shutdown
-from . import luna_personas
-from . import luna_functions
+from luna.luna_command_extensions.cmd_shutdown import request_shutdown
+from luna import luna_personas
+from luna import luna_functions
 from nio.api import RoomVisibility
-from src.luna_command_extensions.ascii_art import show_ascii_banner
-from src.luna_functions import DIRECTOR_CLIENT
+from luna.luna_command_extensions.ascii_art import show_ascii_banner
+from luna.luna_functions import DIRECTOR_CLIENT
 import asyncio
-from src.luna_command_extensions.create_room import create_room
+from luna.luna_command_extensions.create_room import create_room
+from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
 
 logger = logging.getLogger(__name__)
 
@@ -104,11 +106,23 @@ def cmd_log(args, loop):
     """
     Usage: log
 
-    Displays the log file path and helpful note about logs.
+    Displays the log file path by inspecting the logging configuration
+    to find a FileHandler. If found, we print that file’s path; if not,
+    we mention that no file-based logging is detected.
     """
-    LOGFILE_PATH = "data/server.log"  # or read from a config
-    print(f"SYSTEM: Log file is located at: {LOGFILE_PATH}\n"
-          "SYSTEM: Check that file for all logs, since console output is minimized or disabled.")
+    logger = logging.getLogger()  # The root logger
+    file_handler_found = False
+
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            log_path = getattr(handler, "baseFilename", None)
+            if log_path:
+                print(f"SYSTEM: Log file is located at: {log_path}")
+                file_handler_found = True
+                break
+    
+    if not file_handler_found:
+        print("SYSTEM: No file-based logger was found. Logs may be console-only.")
 
 def cmd_who(args, loop):
     """
@@ -122,7 +136,7 @@ def cmd_who(args, loop):
     # but let's pretend we do that inline for demonstration:
 
     # Mock example:
-    from src.luna_functions import DIRECTOR_CLIENT
+    from luna_functions import DIRECTOR_CLIENT
     if DIRECTOR_CLIENT:
         print(f"SYSTEM: Director is => {DIRECTOR_CLIENT.user}")
     else:
@@ -281,21 +295,6 @@ def cmd_fetch_all(args, loop):
         logger.exception(f"Error in fetch_all: {e}")
         print(f"SYSTEM: Error in fetch_all: {e}")
 
-
-def cmd_fetch_new(args, loop):
-    """
-    Usage: fetch_new
-
-    Incremental fetch: only retrieves events since the last sync token,
-    appending them to the CSV.
-    """
-    logger.info("Console received 'fetch_new' command. Blocking until done...")
-
-    future = asyncio.run_coroutine_threadsafe(
-        luna_functions.fetch_all_new_messages(),
-        loop
-    )
-
     def on_done(fut):
         try:
             fut.result()
@@ -319,7 +318,7 @@ def cmd_create_user(args, loop):
     This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
     import logging
-    from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
+    from luna_command_extensions.create_and_login_bot import create_and_login_bot
 
     logger = logging.getLogger(__name__)
 
@@ -358,7 +357,7 @@ def cmd_show_shutdown(args, loop):
 
     Prints the current value of SHOULD_SHUT_DOWN (a boolean).
     """
-    from src.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
+    from luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
     print(f"SYSTEM: SHOULD_SHUT_DOWN is currently set to {SHOULD_SHUT_DOWN}.")
 
 
@@ -594,7 +593,7 @@ def cmd_delete_bot(args, loop):
         return
 
     # Step B: Delete user from Synapse
-    from src.luna_functions import delete_matrix_user
+    from luna_functions import delete_matrix_user
     future = asyncio.run_coroutine_threadsafe(
         delete_matrix_user(localpart),
         loop
@@ -654,10 +653,124 @@ def cmd_create_inspired_bot(args, loop):
     # the sub function handles this: print("Attempting to create an inspired bot")
 
     # Import inside the function to avoid potential circular imports
-    from src.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
+    from luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
     # Call the imported function
     return create_inspired_bot(args, loop)
 
+def cmd_get_bot_system_prompt(args, loop):
+    """
+    Usage: get_bot_sp <bot_localpart>
+
+    Example:
+      get_bot_sp inky
+
+    Retrieves the current system_prompt for a bot with the given localpart,
+    e.g. "inky" => bot ID "@inky:localhost".
+    Prints it to the console or a warning if not found.
+    """
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("Usage: get_bot_sp <bot_localpart>")
+        return
+
+    localpart = parts[0]
+
+    # Just call get_system_prompt_by_localpart right away
+    system_prompt = get_system_prompt_by_localpart(localpart)
+    if system_prompt is None:
+        print(f"SYSTEM: No bot found for localpart='{localpart}'.")
+    else:
+        print(f"SYSTEM: The system_prompt for '{localpart}' =>\n\n{system_prompt}")
+
+def cmd_set_bot_system_prompt(args, loop):
+    """
+    Usage: set_bot_sp <bot_localpart> "<new system prompt>"
+
+    Example:
+      set_bot_sp inky "You are Inky, the fastest ghost in Pac-Man!"
+
+    Sets (overwrites) the system_prompt for the given localpart.
+    Must wrap the new prompt in quotes if it contains spaces.
+    """
+    # We'll parse args with shlex so we can capture quoted text properly
+    try:
+        tokens = shlex.split(args.strip())
+    except ValueError as e:
+        print(f"SYSTEM: Error parsing arguments => {e}")
+        return
+
+    if len(tokens) < 2:
+        print("Usage: set_bot_sp <bot_localpart> \"<new system prompt>\"")
+        return
+
+    localpart = tokens[0]
+    new_prompt = tokens[1]  # This might be already unquoted by shlex
+
+    # If there's leftover beyond tokens[1], we might want to re-join them,
+    # or your usage pattern might always require quotes around new_prompt.
+    # For a minimal approach, assume the user has put the entire prompt in quotes:
+    #   set_bot_sp inky "Hello world, I'm your ghost"
+    # then tokens should be ["inky", "Hello world, I'm your ghost"].
+
+    updated_persona = set_system_prompt_by_localpart(localpart, new_prompt)
+    if updated_persona is None:
+        print(f"SYSTEM: No bot found for localpart='{localpart}'.")
+    else:
+        # Confirm success
+        print(f"SYSTEM: Updated system_prompt for '{localpart}' =>\n\n{new_prompt}")
+
+def cmd_who_is(args, loop):
+    """
+    Usage: who_is <localpart>
+
+    Retrieves and displays persona info from personalities.json
+    for the bot with that <localpart>.
+    Also checks if the bot is currently in BOTS (logged in),
+    and prints the actual user ID if found.
+
+    Example:
+      who_is inky
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("Usage: who_is <localpart>")
+        return
+
+    localpart = parts[0]
+
+    # 1) Build the full user ID
+    full_user_id = f"@{localpart}:localhost"
+
+    # 2) Attempt to read the persona from personalities.json
+    persona = luna_personas.read_bot(full_user_id)
+    if not persona:
+        print(f"SYSTEM: No persona found for '{full_user_id}' in personalities.json.")
+        # You might also show if the bot is in BOTS but no persona on disk
+        # or you can just exit here.
+        # We'll just exit for clarity.
+        return
+
+    # 3) Print out persona fields
+    displayname    = persona.get("displayname", "(no display name)")
+    system_prompt  = persona.get("system_prompt", "(no system prompt)")
+    password       = persona.get("password", "(unknown)")
+    creator_user   = persona.get("creator_user_id", "(none)")
+    created_at     = persona.get("created_at", "(unknown date)")
+    notes          = persona.get("notes", "")
+    traits         = persona.get("traits", {})
+
+    print(f"\nSYSTEM: Persona for bot => {full_user_id}")
+    print(f"  Display Name : {displayname}")
+    print(f"  Creator      : {creator_user}")
+    print(f"  Created At   : {created_at}")
+    print(f"  Password     : {password}")
+    print(f"  SystemPrompt : {system_prompt[:60]}{'...' if len(system_prompt) > 60 else ''}")
+    print(f"  Traits       : {json.dumps(traits, indent=2)}")
+
+    if notes:
+        print(f"  Notes        : {notes}")
+    print()
 
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
@@ -672,17 +785,19 @@ COMMAND_ROUTER = {
     "rotate_logs": cmd_rotate_logs,
     "check_matrix": cmd_check_limit,
     "show_shutdown":cmd_show_shutdown,
-    "who": cmd_who,
+    
     "clear": cmd_clear,
     "purge_and_seed": cmd_purge_and_seed,
     "banner": cmd_banner,
     "create_room": cmd_create_room,
     "fetch_all": cmd_fetch_all,
-    "fetch_new": cmd_fetch_new,
-    "list_users": cmd_list_users,
-    "list_channels": cmd_list_rooms,
-    "list_server": cmd_list_server,
+    "users": cmd_list_users,
+    "channels": cmd_list_rooms,
     "server": cmd_list_server,
     "add_user_to_channel":cmd_add_user,
-    "summon":cmd_create_inspired_bot
+    "summon":cmd_create_inspired_bot,
+    "who_is":cmd_who_is,
+    "whois_director": cmd_who,
+    "get_system_prompt_for": cmd_get_bot_system_prompt,
+    "set_system_prompt_for": cmd_set_bot_system_prompt
 }

@@ -3,7 +3,7 @@ import shlex  # <-- We’ll use this to parse user arguments correctly
 
 logger = logging.getLogger(__name__)
 
-from src.luna_functions import getClient
+from luna.luna_functions import getClient
 from nio import RoomCreateResponse
 from nio.api import RoomVisibility
 

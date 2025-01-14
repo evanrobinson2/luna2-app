@@ -3,8 +3,8 @@ import asyncio
 import logging
 
 # Adjust imports for your project structure
-from src.ai_functions import get_gpt_response
-from src.luna_command_extensions.create_and_login_bot import create_and_login_bot
+from ai_functions import get_gpt_response
+from luna_command_extensions.create_and_login_bot import create_and_login_bot
 
 logger = logging.getLogger(__name__)
 

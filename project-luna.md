@@ -1444,7 +1444,7 @@ from nio import AsyncClient
 from asyncio import CancelledError
 import json
 from src.luna_command_extensions.cmd_shutdown import request_shutdown
-from . import luna_personas
+ import luna_personas
 from . import luna_functions
 from nio.api import RoomVisibility
 from src.luna_command_extensions.ascii_art import show_ascii_banner

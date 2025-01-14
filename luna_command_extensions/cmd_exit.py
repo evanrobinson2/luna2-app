@@ -1,4 +1,4 @@
-from src.luna_command_extensions.cmd_shutdown import request_shutdown
+from luna_command_extensions.cmd_shutdown import request_shutdown
 import logging
 
 logger = logging.getLogger(__name__)

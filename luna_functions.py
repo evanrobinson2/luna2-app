@@ -7,8 +7,6 @@ Contains:
 - Message & invite callbacks
 - Utility to load/save sync token
 """
-from src import ai_functions
-
 import asyncio
 import aiohttp
 import logging
@@ -27,7 +25,7 @@ from nio import (
     LocalProtocolError
 )
 from nio.responses import ErrorResponse, SyncResponse, RoomMessagesResponse
-from src.luna_personas import _load_personalities
+from luna.luna_personas import _load_personalities
 logger = logging.getLogger(__name__)
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
 
@@ -365,35 +363,7 @@ async def post_gpt_reply(room_id: str, gpt_reply: str) -> None:
         logger.info(f"Posted GPT reply to room {room_id}")
     except Exception as e:
         logger.exception(f"Failed to send GPT reply: {e}")
-
-
-# ──────────────────────────────────────────────────────────
-# The specialized dispatch function is replaced with the import below
-# We rely on that file (luna_functions_handledispatch.py) to handle routing
-# but it calls back into this file for actual matrix actions.
-# ──────────────────────────────────────────────────────────
-# covered by another import from src.luna_functions_handledispatch import on_room_message
-
-
-# ──────────────────────────────────────────────────────────
-# ON INVITE EVENT
-# ──────────────────────────────────────────────────────────
-async def on_invite_event(room, event):
-    """
-    Called whenever the client is invited to a room.
-    """
-
-    global DIRECTOR_CLIENT
-    if not DIRECTOR_CLIENT:
-        logger.warning("No DIRECTOR_CLIENT set. Cannot handle invites.")
-        return
-
-    logger.info(f"Received invite to {room.room_id}, joining now.")
-    try:
-        await DIRECTOR_CLIENT.join(room.room_id)
-    except LocalProtocolError as e:
-        logger.error(f"Error joining room {room.room_id}: {e}")
-
+        
 # ──────────────────────────────────────────────────────────
 # CHECK RATE LIMIT
 # ──────────────────────────────────────────────────────────
@@ -596,7 +566,7 @@ async def invite_user_to_room(user_id: str, room_id_or_alias: str) -> str:
       - The user_id must be local to this server.
       - The admin must already be in the room with permission to invite.
     """
-    from src.luna_functions import DIRECTOR_CLIENT, getClient  # or your actual import path
+    from luna.luna_functions import DIRECTOR_CLIENT, getClient  # or your actual import path
 
     # Ensure we have a valid client with admin credentials
     client = getClient()  # or use DIRECTOR_CLIENT directly
@@ -633,39 +603,6 @@ async def invite_user_to_room(user_id: str, room_id_or_alias: str) -> str:
     except Exception as e:
         logger.exception(f"Exception while forcing {user_id} into {room_id_or_alias}: {e}")
         return f"Exception forcibly joining {user_id} => {e}"
-
-# ──────────────────────────────────────────────────────────
-# DELETE MATRIX USER
-# ──────────────────────────────────────────────────────────
-async def delete_matrix_user(localpart: str) -> str:
-    """
-    Deletes a user from Synapse using the admin API.
-    ...
-    """
-    from src.luna_functions import get_admin_token  # or however you load it
-    admin_token = get_admin_token()
-
-    user_id = f"@{localpart}:localhost"
-    url = f"http://localhost:8008/_synapse/admin/v2/users/{user_id}"
-    headers = {"Authorization": f"Bearer {admin_token}"}
-
-    import aiohttp
-    import logging
-    logger = logging.getLogger(__name__)
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.delete(url, headers=headers) as resp:
-                if resp.status == 200:
-                    return f"Deleted Matrix user {user_id} successfully."
-                elif resp.status == 404:
-                    return f"Matrix user {user_id} not found. Possibly already deleted."
-                else:
-                    text = await resp.text()
-                    return f"Error {resp.status} deleting user {user_id}: {text}"
-    except Exception as e:
-        logger.exception(f"Error in delete_matrix_user({user_id}): {e}")
-        return f"Exception deleting user {user_id}: {e}"
 
 def getClient():
     return DIRECTOR_CLIENT

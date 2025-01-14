@@ -29,4 +29,4 @@ unalias python 2>/dev/null
 
 # 4) Start Luna
 echo "Starting Luna..."
-python luna.py
+python run_luna.py

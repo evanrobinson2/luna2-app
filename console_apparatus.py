@@ -6,12 +6,12 @@ from datetime import datetime
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import ANSI  # <-- IMPORTANT for colored prompt
-from src.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
-from src.luna_command_extensions.check_synapse_status import checkSynapseStatus
-from src.luna_command_extensions.ascii_art import show_ascii_banner
+from luna.luna_command_extensions.cmd_shutdown import SHOULD_SHUT_DOWN
+from luna.luna_command_extensions.check_synapse_status import checkSynapseStatus
+from luna.luna_command_extensions.ascii_art import show_ascii_banner
 
 # Assuming console_functions.py is in the same package directory.
-from . import console_functions
+from luna import console_functions
 
 logger = logging.getLogger(__name__)
 

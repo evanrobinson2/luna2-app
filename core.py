@@ -1,0 +1,333 @@
+"""
+core.py
+
+Houses everything that was in luna.py plus your main logic,
+login routines, references to other pieces (handlers, console, etc.).
+"""
+
+import asyncio
+import sys
+import json
+import os
+import logging
+import sqlite3
+import threading
+from nio import (
+    RoomMessageText,
+    InviteMemberEvent,
+    RoomMemberEvent,
+    AsyncClient
+)
+
+# If these handlers are in separate files, adjust imports accordingly:
+from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
+from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
+from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
+
+# Our console apparatus & shutdown signals
+from luna.console_apparatus import console_loop
+from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
+
+# The “director” login + ephemeral bot login functions
+from luna.luna_functions import load_or_login_client, load_or_login_client_v2
+
+logger = logging.getLogger(__name__)
+
+# Global containers
+BOTS = {}        # localpart -> AsyncClient (for bots)
+BOT_TASKS = []   # list of asyncio Tasks for each bot’s sync loop
+MAIN_LOOP = None # The main event loop
+DATABASE_PATH = "data/luna.db"
+
+def configure_logging():
+    """
+    Configure Python logging to show debug in console
+    and store everything in 'data/logs/server.log'.
+    """
+    global logger
+    logger = logging.getLogger(__name__)
+    logging.getLogger("nio.responses").setLevel(logging.CRITICAL)
+    logger.debug("Entering configure_logging function...")
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)  # Overall log level
+    logger.debug("Set root logger level to DEBUG.")
+
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logger.debug("Formatter for logs created.")
+
+    os.makedirs("data/logs", exist_ok=True)
+    log_file_path = "data/logs/server.log"
+    file_handler = logging.FileHandler(log_file_path, mode="a")  # append
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+    logger.debug(
+        f"Added file handler to root logger. Logging to '{log_file_path}' at DEBUG level."
+    )
+    logger.debug("Exiting configure_logging function.")
+
+def start_console_thread(loop: asyncio.AbstractEventLoop):
+    """
+    Launch the console input loop in a background thread,
+    so user commands (e.g. create_user) can be processed
+    while the main event loop runs.
+    """
+    logger.debug("Entering start_console_thread function.")
+    try:
+        thread = threading.Thread(
+            target=lambda: console_loop(loop),
+            daemon=True
+        )
+        thread.start()
+        logger.info("Console thread started successfully.")
+    except Exception as e:
+        logger.exception(f"Failed to start console thread: {e}")
+    logger.debug("Exiting start_console_thread function.")
+
+async def login_bots():
+    """
+    Reads 'data/luna_personalities.json', ephemeral-logs each bot,
+    and stores the resulting AsyncClient in global BOTS dict.
+
+    Does NOT attach event callbacks or start sync tasks here—
+    that happens in main_logic.
+    """
+    personalities_file = "data/luna_personalities.json"
+    if not os.path.exists(personalities_file):
+        logger.error(f"[login_bots] No {personalities_file} found.")
+        return
+
+    with open(personalities_file, "r") as f:
+        personalities_data = json.load(f)
+
+    homeserver_url = "http://localhost:8008"
+    for user_id, persona in personalities_data.items():
+        localpart = user_id.split(":")[0].replace("@", "")
+        password = persona.get("password", "")
+        if not password:
+            logger.warning(f"[login_bots] Skipping {user_id} => no password found.")
+            continue
+
+        try:
+            logger.info(f"[login_bots] Logging in bot => {user_id} (localpart={localpart})")
+            client = await load_or_login_client_v2(
+                homeserver_url=homeserver_url,
+                user_id=user_id,
+                password=password,
+                device_name=f"{localpart}_device"
+            )
+            BOTS[localpart] = client
+        except Exception as e:
+            logger.exception(f"[login_bots] Failed to login bot '{user_id}': {e}")
+
+    logger.info(f"[login_bots] Completed ephemeral login for {len(BOTS)} bot(s).")
+
+async def run_bot_sync(bot_client: AsyncClient, localpart: str):
+    """
+    Simple sync loop for each bot, runs until SHOULD_SHUT_DOWN is True.
+    """
+    while not SHOULD_SHUT_DOWN:
+        try:
+            await bot_client.sync(timeout=5000)
+        except Exception as e:
+            logger.exception(
+                f"[run_bot_sync] Bot '{localpart}' had sync error: {e}"
+            )
+            await asyncio.sleep(2)  # brief backoff
+        else:
+            # If no error, give control to other tasks
+            await asyncio.sleep(0)
+
+
+# ------------------------------------------------------------------
+# HELPER FUNCTIONS FOR CALLBACKS
+# ------------------------------------------------------------------
+
+def make_message_callback(bot_client, localpart):
+    """
+    Return a dedicated callback function that references 
+    exactly this bot's client and localpart.
+    """
+    async def on_message(room, event):
+        await handle_bot_room_message(bot_client, localpart, room, event)
+    return on_message
+
+def make_invite_callback(bot_client, localpart):
+    async def on_invite(room, event):
+        await handle_bot_invite(bot_client, localpart, room, event)
+    return on_invite
+
+def make_member_callback(bot_client, localpart):
+    async def on_member(room, event):
+        await handle_bot_member_event(bot_client, localpart, room, event)
+    return on_member
+
+
+async def main_logic():
+    """
+    The main async function:
+      1) Login Luna (director).
+      2) Login all bot personas from disk.
+      3) Attach event callbacks for each bot, spawn each sync loop.
+      4) Luna's short sync loop runs until SHOULD_SHUT_DOWN.
+    """
+    logger.debug("Starting main_logic...")
+
+    # A) Log in Luna
+    luna_client = await load_or_login_client(
+        homeserver_url="http://localhost:8008",
+        username="lunabot",
+        password="12345"
+    )
+    logger.info("Luna client login complete.")
+
+    # For Luna, we can either do the same approach or inline a small lambda:
+    luna_client.add_event_callback(
+        lambda r, e: handle_bot_room_message(luna_client, "lunabot", r, e),
+        RoomMessageText
+    )
+    luna_client.add_event_callback(
+        lambda r, e: handle_bot_invite(luna_client, "lunabot", r, e),
+        InviteMemberEvent
+    )
+    luna_client.add_event_callback(
+        lambda r, e: handle_bot_member_event(luna_client, "lunabot", r, e),
+        RoomMemberEvent
+    )
+
+    # B) Log in existing bots
+    await login_bots()
+    logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
+
+    # For each bot, attach callbacks (using helpers) and start a sync loop
+    bot_tasks = []
+    for localpart, bot_client in BOTS.items():
+        try:
+            bot_client.add_event_callback(
+                make_message_callback(bot_client, localpart),
+                RoomMessageText
+            )
+            bot_client.add_event_callback(
+                make_invite_callback(bot_client, localpart),
+                InviteMemberEvent
+            )
+            bot_client.add_event_callback(
+                make_member_callback(bot_client, localpart),
+                RoomMemberEvent
+            )
+            logger.info(f"Registered handlers for bot '{localpart}'")
+
+            # Start its sync loop in a new Task
+            task = asyncio.create_task(run_bot_sync(bot_client, localpart))
+            bot_tasks.append(task)
+
+        except Exception as e:
+            logger.exception(f"Error setting up bot '{localpart}': {e}")
+
+    # C) Luna's own short sync loop until shutdown
+    logger.debug("Entering Luna's main sync loop.")
+    while not SHOULD_SHUT_DOWN:
+        try:
+            await luna_client.sync(timeout=5000)
+        except Exception as e:
+            logger.exception(f"Luna encountered sync error => {e}")
+
+    # D) Cleanup
+    logger.info("Shutting down. Closing Luna's client...")
+    await luna_client.close()
+    logger.debug("Luna client closed.")
+
+    # Cancel each bot's task
+    for t in bot_tasks:
+        t.cancel()
+
+    logger.debug("main_logic done, returning.")
+
+
+def luna_main():
+    """
+    Replaces the old 'luna()' function.
+    Sets up logging, creates an event loop,
+    starts the console in a thread, then runs main_logic.
+    """
+    configure_logging()
+    logger.debug("Logging configured. Creating event loop.")
+
+    ensure_messages_table()
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    logger.debug("New event loop set as default.")
+
+    # Init shutdown
+    init_shutdown(loop)
+    global MAIN_LOOP
+    MAIN_LOOP = loop
+
+    # Start the console
+    start_console_thread(loop)
+
+    # Run main logic
+    try:
+        logger.info("Starting main_logic until shutdown.")
+        loop.run_until_complete(main_logic())
+    except KeyboardInterrupt:
+        logger.warning("KeyboardInterrupt => shutting down.")
+    except Exception as e:
+        logger.exception(f"Unexpected error in main_logic => {e}")
+    finally:
+        logger.debug("Preparing to close the loop.")
+        loop.close()
+        logger.info("Loop closed. Exiting.")
+
+
+def ensure_messages_table():
+    """
+    Creates (if not exists) a 'messages' table in data/luna.db
+    with columns matching your new logic:
+
+      - room_id TEXT NOT NULL
+      - event_id TEXT PRIMARY KEY
+      - sender TEXT
+      - timestamp INTEGER
+      - body TEXT
+      - responded_by TEXT
+      - is_outbound INTEGER NOT NULL DEFAULT 0
+
+    No further indexes are strictly required for this minimal usage,
+    but you can add them if you foresee many queries by room_id, etc.
+    """
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS messages (
+        room_id TEXT NOT NULL,
+        event_id TEXT PRIMARY KEY,
+        sender TEXT,
+        timestamp INTEGER,
+        body TEXT,
+        responded_by TEXT,
+        is_outbound INTEGER NOT NULL DEFAULT 0
+    )
+    """
+    logger.info("[ensure_messages_table] Trying to connect with database.")
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        c = conn.cursor()
+
+        # Create the table if it doesn’t exist
+        c.execute(create_table_sql)
+        conn.commit()
+
+        logger.info("[ensure_messages_table] SQLite table 'messages' ensured in data/luna.db.")
+    except Exception as e:
+        logger.exception(f"[ensure_messages_table] Error creating or verifying 'messages' table: {e}")
+    finally:
+        conn.close()
+
+def get_bots() -> dict:
+    """
+    Returns the global dictionary of BOTS.
+    Useful for other modules that need to inspect or manipulate
+    the dictionary without directly importing 'BOTS'.
+    """
+    return BOTS

@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)  # Adjust as needed
 logging.getLogger("nio.responses").setLevel(logging.CRITICAL)  # Suppress noisy nio responses
 
 # Load environment variables from a .env file
-load_dotenv("/Users/evanrobinson/Documents/Luna2/luna/src/.env")
+load_dotenv()
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # Load the API key from the environment
