@@ -146,106 +146,6 @@ async def get_gpt_response_dep(
         return "[Error: Unable to generate response.]"
 
 === bot_messages_store.py ===
-import os
-import json
-import logging
-
-logger = logging.getLogger(__name__)
-
-BOT_MESSAGES_FILE = "data/bot_messages.json"
-
-# We’ll keep the in-memory list here once loaded
-_bot_messages = []  # each entry is {bot_localpart, room_id, event_id, timestamp, sender, body, ...}
-
-
-def load_messages() -> None:
-    """
-    Loads the entire message list from BOT_MESSAGES_FILE into
-    the global _bot_messages list in memory.
-    If the file doesn’t exist or is invalid, we start with an empty list.
-    """
-    global _bot_messages
-
-    if not os.path.exists(BOT_MESSAGES_FILE):
-        logger.warning(f"{BOT_MESSAGES_FILE} not found. Starting with empty messages list.")
-        _bot_messages = []
-        return
-
-    try:
-        with open(BOT_MESSAGES_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                _bot_messages = data
-            else:
-                logger.warning(f"{BOT_MESSAGES_FILE} does not contain a list. Starting empty.")
-                _bot_messages = []
-    except Exception as e:
-        logger.exception(f"Error loading {BOT_MESSAGES_FILE}: {e}")
-        _bot_messages = []
-
-
-def save_messages() -> None:
-    """
-    Saves the current in-memory _bot_messages list to BOT_MESSAGES_FILE.
-    """
-    global _bot_messages
-
-    try:
-        with open(BOT_MESSAGES_FILE, "w", encoding="utf-8") as f:
-            json.dump(_bot_messages, f, indent=2, ensure_ascii=False)
-        logger.info(f"Saved {_bot_messages.__len__()} messages to {BOT_MESSAGES_FILE}.")
-    except Exception as e:
-        logger.exception(f"Error saving to {BOT_MESSAGES_FILE}: {e}")
-
-
-def append_message(
-    bot_localpart: str,
-    room_id: str,
-    event_id: str,
-    sender: str,
-    timestamp: int,
-    body: str
-) -> None:
-    """
-    Appends a single new record to the in-memory list, then saves to disk.
-
-    :param bot_localpart: e.g. "lunabot", "blended_malt", ...
-    :param room_id: e.g. "!abc123:localhost"
-    :param event_id: e.g. "$someUniqueEventId"
-    :param sender: e.g. "@user:localhost"
-    :param timestamp: e.g. 1736651234567
-    :param body: message text
-    """
-    global _bot_messages
-
-    record = {
-        "bot_localpart": bot_localpart,
-        "room_id": room_id,
-        "event_id": event_id,
-        "sender": sender,
-        "timestamp": timestamp,
-        "body": body
-    }
-
-    _bot_messages.append(record)
-    # Optionally check for duplicates if desired
-    # Or you might want to do a "drop_duplicates" approach
-    save_messages()
-
-
-def get_messages_for_bot(bot_localpart: str):
-    """
-    Returns a new list of all messages in memory for the specified bot,
-    sorted by ascending timestamp (or descending, as you prefer).
-    """
-    # Filter in-memory
-    relevant = [m for m in _bot_messages if m["bot_localpart"] == bot_localpart]
-
-    # Sort by timestamp ascending
-    relevant.sort(key=lambda x: x["timestamp"])
-    return relevant
-
-=== bot_messages_store2.py ===
 #!/usr/bin/env python3
 """
 bot_messages_store2.py
@@ -556,7 +456,6 @@ import logging
 import subprocess
 import shlex
 import asyncio
-from luna.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
 import textwrap
 import json
 import aiohttp
@@ -564,15 +463,16 @@ from datetime import datetime
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
-from luna.luna_command_extensions.cmd_shutdown import request_shutdown
 from luna import luna_personas
 from luna import luna_functions
 from nio.api import RoomVisibility
-from luna.luna_command_extensions.ascii_art import show_ascii_banner
 from luna.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from luna.luna_command_extensions.create_room import create_room
+from luna.luna_command_extensions.cmd_remove_room import cmd_remove_room
 from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
+from luna.luna_command_extensions.cmd_shutdown import request_shutdown
+from luna.luna_command_extensions.ascii_art import show_ascii_banner
 
 logger = logging.getLogger(__name__)
 
@@ -886,7 +786,7 @@ def cmd_create_user(args, loop):
     This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
     import logging
-    from luna_command_extensions.create_and_login_bot import create_and_login_bot
+    from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
     logger = logging.getLogger(__name__)
 
@@ -1032,100 +932,85 @@ def _print_users_table(users_info: list[dict]):
         row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
         print(row)
 
-def cmd_add_user(args, loop):
+def cmd_invite_user(args, loop):
     """
-    Usage: add_user <user_id> <room_id_or_alias>
+    Usage: invite_user <user_id> <room_id_or_alias>
 
     Example:
-      add_user @bob:localhost !testRoom:localhost
-      add_user @spyclops:localhost #mychannel:localhost
+      invite_user @bob:localhost !testRoom:localhost
+      invite_user @spyclops:localhost #mychannel:localhost
 
-    This console command force-joins a user to the given room or alias,
-    bypassing normal invite acceptance. It calls the Synapse Admin API
-    `POST /_synapse/admin/v1/join/<room_id_or_alias>` with a JSON body:
-    {
-      "user_id": "@bob:localhost"
-    }
-
-    Requires that the user running this command (Luna's director)
-    is an admin on the homeserver and already has power to invite in the room.
+    Sends a normal invite to the specified user_id, so they can accept
+    and join the given room or room alias. This requires that the user
+    executing this command (Luna's director) has sufficient power level
+    in the room to invite new participants.
     """
 
     parts = args.strip().split()
     if len(parts) < 2:
-        print("SYSTEM: Usage: add_user <user_id> <room_id_or_alias>")
+        print("SYSTEM: Usage: invite_user <user_id> <room_id_or_alias>")
         return
 
     user_id = parts[0]
     room_id_or_alias = parts[1]
 
-    async def do_force_join(user: str, room: str) -> str:
-        """
-        Asynchronous subroutine to forcibly join 'user' to 'room'
-        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
-        """
-        client = luna_functions.getClient()
-        if not client:
-            return "Error: No DIRECTOR_CLIENT set."
+import logging
+import asyncio
+import aiohttp
+import time
+from luna import luna_functions
 
-        admin_token = client.access_token
-        if not admin_token:
-            return "Error: No admin token is present in DIRECTOR_CLIENT."
+logger = logging.getLogger(__name__)
 
-        # The base homeserver URL (e.g., "http://localhost:8008")
-        homeserver_url = client.homeserver
-
-        # Synapse Admin API endpoint for forcing a user into a room:
-        # POST /_synapse/admin/v1/join/<room_id_or_alias>
-        # JSON body: { "user_id": "@someone:localhost" }
-        endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room}"
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {"user_id": user}
-
-        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(endpoint, headers=headers, json=payload) as resp:
-                    if resp.status in (200, 201):
-                        return f"Forcibly joined {user} to {room}."
-                    else:
-                        text = await resp.text()
-                        return f"Error {resp.status} forcibly joining {user} => {text}"
-        except Exception as e:
-            logger.exception("Exception in do_force_join:")
-            return f"Exception forcibly joining user => {e}"
-
-    # Schedule our async forced-join subroutine on the existing event loop:
-    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id_or_alias), loop)
-
-    def on_done(fut):
-        try:
-            result_msg = fut.result()
-            print(f"SYSTEM: {result_msg}")
-        except Exception as e:
-            logger.exception(f"Exception in cmd_add_user callback: {e}")
-            print(f"SYSTEM: Error forcibly adding user: {e}")
-
-    future.add_done_callback(on_done)
-    print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
-
-def cmd_list_server(args, loop):
+async def do_invite_user(user: str, room: str) -> str:
     """
-    Usage: cmd_list_server
-
-    Example:
-      list_server
-
-    Steps:
-    1) Lists the server's rooms along with summary information
-    2) Lists the server's users    
+    Asynchronous subroutine to invite 'user' to 'room' (which might be
+    a raw room ID like "!abc123:localhost" or possibly a name or alias).
+    1) Forces a short sync to ensure the client sees the correct power levels.
+    2) Invokes client.room_invite(...).
+    3) If M_FORBIDDEN occurs, we provide a more detailed message.
     """
-    
-    cmd_list_rooms(args, loop)
-    print("\n")
-    cmd_list_users(args, loop)
-    
+
+    client = luna_functions.getClient()
+    if not client:
+        return "Error: No DIRECTOR_CLIENT set."
+
+    # 1) Force a short sync so our client state is up-to-date:
+    try:
+        # Run a blocking sync in the current thread
+        sync_future = asyncio.run_coroutine_threadsafe(
+            client.sync(timeout=1000),  # 1-second sync
+            luna_functions.MAIN_LOOP  # or your existing loop reference
+        )
+        sync_future.result()
+        logger.debug("[do_invite_user] Sync completed before invite.")
+    except Exception as sync_e:
+        logger.exception("Sync error before inviting user:")
+        return f"Error syncing before invite => {sync_e}"
+    try:
+        resp = await client.room_invite(room, user)
+        logger.debug(f"[do_invite_user] room_invite returned => {resp}")
+
+        if resp and hasattr(resp, "status_code"):
+            code = resp.status_code
+            if code in (200, 202):
+                return f"Invited {user} to {room}."
+            else:
+                # If we see 403 or 401, typically it's M_FORBIDDEN or not enough power
+                if code == 403:  
+                    return (
+                        f"Error inviting {user} => M_FORBIDDEN. "
+                        "Possible cause: insufficient power level or not recognized in the room. "
+                        "Ensure you (the inviter) are joined & have the right power level."
+                    )
+                return f"Error inviting {user} => {code} (Check logs for details.)"
+        else:
+            # If resp is None or not recognized
+            return "Invite returned an unexpected or null response."
+    except Exception as e:
+        logger.exception("[do_invite_user] Exception in room_invite:")
+        # If e is a matrix-nio error (e.g., RoomInviteError), we can handle it specifically
+        return f"Exception inviting user => {e}" 
 
 def cmd_delete_bot(args, loop):
     """
@@ -1200,45 +1085,6 @@ def cmd_create_room(args, loop):
             print(f"SYSTEM: Error creating room => {e}")
 
     future.add_done_callback(on_done)
-
-def cmd_create_inspired_bot(args, loop):
-    """
-    Usage: summon <inspiration_text>
-
-    Example:
-      summon "A witty, fashion-forward cat who loves disco"
-
-    This console command prompts GPT to generate a new bot persona
-    (localpart, displayname, system_prompt, password, traits).
-    The resulting persona is stored in data/luna_personalities.json,
-    and the bot is created + logged in to Matrix, then added
-    to the in-memory BOTS dict.
-
-    Internally, this delegates to create_inspired_bot(...) in
-    luna_functions_create_inspired_bot.py, but we schedule it on the
-    existing asyncio loop (loop) with run_coroutine_threadsafe.
-    """
-
-
-    # 1) Wrap our target function in a coroutine
-    async def do_create_inspired_bot():
-        return create_inspired_bot(args, loop)
-
-    # 2) Schedule it on the event loop
-    future = asyncio.run_coroutine_threadsafe(do_create_inspired_bot(), loop)
-
-    # 3) Define a callback to handle success/failure
-    def on_done(fut):
-        try:
-            result = fut.result()
-            print(f"SYSTEM: {result}")
-        except Exception as e:
-            print(f"SYSTEM: Error creating inspired bot => {e}")
-            logger.exception("Exception in cmd_create_inspired_bot callback.")
-
-    future.add_done_callback(on_done)
-
-    print("SYSTEM: Attempting to create an inspired bot. Please wait...")
 
 def cmd_get_bot_system_prompt(args, loop):
     """
@@ -1452,7 +1298,7 @@ def cmd_spawn_squad(args, loop):
     Usage: spawn <numBots> "<theme or style>"
 
     Example:
-      spawn 3 "A jazzy trio of improvisational bots"
+      spawn_squad 3 "A jazzy trio of improvisational bots"
     """
     # Import inside the function to avoid circular imports or to keep it minimal:
     from luna.luna_command_extensions.spawner import cmd_spawn_squad as spawner_impl
@@ -1460,7 +1306,71 @@ def cmd_spawn_squad(args, loop):
     # Just delegate all logic:
     spawner_impl(args, loop)
 
+def cmd_run_json_script(args, loop):
+    """
+    Usage: run_script <script_file>
 
+    Reads a JSON-based script from <script_file>, then parses and executes it.
+    The script can contain actions like:
+      - create_room
+      - create_user
+      - add_user_to_channel
+      ... etc.
+
+    Example:
+      run_script my_script.json
+
+    The command will load 'my_script.json' from disk, parse it,
+    then execute the actions in order, printing logs along the way.
+    """
+    import os
+    import logging
+    import json
+    from luna.luna_command_extensions.parse_and_execute import parse_and_execute
+
+    logger = logging.getLogger(__name__)
+    logger.debug("[cmd_run_json_script] Called with args='%s'", args)
+
+    # 1) Parse console arguments
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("Usage: run_script <script_file>")
+        return
+
+    script_file = parts[0]
+    logger.debug("User provided script_file='%s'", script_file)
+
+    # 2) Check if the file exists
+    if not os.path.exists(script_file):
+        msg = f"[cmd_run_json_script] File not found: {script_file}"
+        logger.error(msg)
+        print(f"SYSTEM: {msg}")
+        return
+
+    # 3) Read the file contents
+    try:
+        with open(script_file, "r", encoding="utf-8") as f:
+            script_str = f.read()
+        logger.debug("[cmd_run_json_script] Successfully read %d bytes from '%s'.",
+                     len(script_str), script_file)
+    except Exception as e:
+        logger.exception("[cmd_run_json_script] Failed to read file '%s': %s", script_file, e)
+        print(f"SYSTEM: Error reading file '{script_file}': {e}")
+        return
+
+    # 4) Execute the script
+    print(f"SYSTEM: Executing script from '{script_file}'...")
+    logger.debug("[cmd_run_json_script] Invoking parse_and_execute(...)")
+    try:
+        parse_and_execute(script_str, loop)
+        logger.debug("[cmd_run_json_script] parse_and_execute completed.")
+    except Exception as e:
+        logger.exception("[cmd_run_json_script] parse_and_execute threw an exception: %s", e)
+        print(f"SYSTEM: Error executing script: {e}")
+        return
+
+    # 5) Confirm success
+    print("SYSTEM: Script execution command finished.")
 
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
@@ -1469,28 +1379,29 @@ def cmd_spawn_squad(args, loop):
 COMMAND_ROUTER = {
     # System or meta-commands
     "help": cmd_help,
-    "exit": cmd_exit,
     "restart": cmd_restart,
-    "log": cmd_log,
+    "exit": cmd_exit,
+    
+    "logfile": cmd_log,
     "rotate_logs": cmd_rotate_logs,
-    "check_matrix": cmd_check_limit,
-    "show_shutdown":cmd_show_shutdown,
+    
+    "clear": cmd_clear,
+    "purge_and_seed": cmd_purge_and_seed, # stub-only
+    
+    "create_room": cmd_create_room,
+    "remove_room" : cmd_remove_room,
+    "list_rooms": cmd_list_rooms,
+    "fetch_all": cmd_fetch_all,
+
+    "list_users": cmd_list_users,
     "whois":cmd_who_is,
     "whois_director": cmd_who,
     "get_system_prompt_for": cmd_get_bot_system_prompt,
     "set_system_prompt_for": cmd_set_bot_system_prompt,
-    "clear": cmd_clear,
-    "purge_and_seed": cmd_purge_and_seed,
-    "banner": cmd_banner,
-    "create_room": cmd_create_room,
-    "fetch_all": cmd_fetch_all,
-    "users": cmd_list_users,
-    "channels": cmd_list_rooms,
-    "server": cmd_list_server,
-    "add_user_to_channel":cmd_add_user,
-    # "summon":cmd_create_inspired_bot,
+
+    "invite": cmd_invite_user,
     "spawn": cmd_spawn_squad,
-    # "summon_v2": cmd_summon_long_prompt
+    "run_script": cmd_run_json_script,
 }
 === context_helper.py ===
 """
@@ -1505,7 +1416,7 @@ from typing import Dict, Any, List
 
 # Adjust these imports as needed for your project
 from luna.luna_personas import get_system_prompt_by_localpart
-from luna import bot_messages_store2
+from luna import bot_messages_store
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -1513,13 +1424,14 @@ logger.setLevel(logging.DEBUG)
 def build_context(
     bot_localpart: str,
     room_id: str,
-    config: Dict[str, Any] | None = None
+    config: Dict[str, Any] | None = None,
+    message_history_length: int = 10
 ) -> List[Dict[str, str]]:
     """
     Builds a GPT-style conversation array for `bot_localpart` in `room_id`.
     Steps:
       1) Load the system prompt from personalities (if missing, fallback).
-      2) Retrieve up to N messages from bot_messages_store2 for that bot + room.
+      2) Retrieve up to N messages from bot_messages_store for that bot + room.
       3) Convert them to GPT roles: "assistant" if from the bot, "user" otherwise.
       4) Return a list of dicts e.g.:
          [
@@ -1536,7 +1448,7 @@ def build_context(
         config = {}
         logger.debug("[build_context] No config provided, using empty dict.")
 
-    max_history = config.get("max_history", 10)
+    max_history = config.get("max_history", message_history_length)
     logger.debug("[build_context] Will fetch up to %d messages from store.", max_history)
 
     # 1) Grab the system prompt
@@ -1552,7 +1464,7 @@ def build_context(
                      bot_localpart, len(system_prompt))
 
     # 2) Fetch the last N messages from the store for this bot & room
-    all_msgs = bot_messages_store2.get_messages_for_bot(bot_localpart)
+    all_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
     logger.debug("[build_context] The store returned %d total msgs for bot=%r.", len(all_msgs), bot_localpart)
 
     # Filter them by room
@@ -1625,12 +1537,14 @@ from nio import (
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
+from luna.luna_command_extensions.luna_message_handler import handle_luna_message
+
 from luna.bot_messages_store2 import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 from luna.luna_functions import load_or_login_client, load_or_login_client_v2 # The “director” login + ephemeral bot login functions
-from luna.luna_command_extensions.luna_message_handler import handle_luna_message
+
 logger = logging.getLogger(__name__)
 
 # Global containers
@@ -1698,7 +1612,7 @@ async def login_bots():
         logger.error(f"[login_bots] No {personalities_file} found.")
         return
 
-    with open(personalities_file, "r") as f:
+    with open(personalities_file, "r", encoding="utf-8") as f:
         personalities_data = json.load(f)
 
     homeserver_url = "http://localhost:8008"
@@ -1739,23 +1653,31 @@ async def run_bot_sync(bot_client: AsyncClient, localpart: str):
             # If no error, give control to other tasks
             await asyncio.sleep(0)
 
-
 # ------------------------------------------------------------------
-# HELPER FUNCTIONS FOR CALLBACKS
+# HELPER CALLBACK FUNCTIONS
 # ------------------------------------------------------------------
 
 def make_message_callback(bot_client, localpart):
-    """Return a function that references exactly these arguments."""
+    """
+    Returns a function that references exactly these arguments,
+    intended for handling normal room messages for a non-Luna bot.
+    """
     async def on_message(room, event):
         await handle_bot_room_message(bot_client, localpart, room, event)
     return on_message
 
 def make_invite_callback(bot_client, localpart):
+    """
+    Returns a function to handle invites for a non-Luna bot.
+    """
     async def on_invite(room, event):
         await handle_bot_invite(bot_client, localpart, room, event)
     return on_invite
 
 def make_member_callback(bot_client, localpart):
+    """
+    Returns a function to handle membership changes for a non-Luna bot.
+    """
     async def on_member(room, event):
         await handle_bot_member_event(bot_client, localpart, room, event)
     return on_member
@@ -1770,41 +1692,42 @@ async def main_logic():
     """
     logger.debug("Starting main_logic...")
 
-    # A) Log in Luna
+    # A) Log in Luna (the "director" user)
     luna_client = await load_or_login_client(
         homeserver_url="http://localhost:8008",
         username="lunabot",
         password="12345"
     )
     logger.info("Luna client login complete.")
-    
-    # Then in main_logic, after logging in Luna:
-    for localpart, bot_client in BOTS.items():
-        bot_client.add_event_callback(
-        # By giving default arguments `_lp=localpart` and `_bc=bot_client`,
-        # we ensure each lambda captures these values uniquely per iteration.
-        lambda room, event, _lp=localpart, _bc=bot_client: handle_bot_room_message(_bc, _lp, room, event),
+
+    # -- 1) Attach Luna's event callbacks --
+    # For messages:
+    luna_client.add_event_callback(
+        lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 
+    # For invites (the same invite handler you'd use for normal bots, or a specialized one):
     luna_client.add_event_callback(
-        lambda r, e: handle_bot_invite(luna_client, "lunabot", r, e),
+        lambda room, event: handle_bot_invite(luna_client, "lunabot", room, event),
         InviteMemberEvent
     )
+
+    # For membership changes (same or specialized):
     luna_client.add_event_callback(
-        lambda r, e: handle_bot_member_event(luna_client, "lunabot", r, e),
+        lambda room, event: handle_bot_member_event(luna_client, "lunabot", room, event),
         RoomMemberEvent
     )
 
-    # B) Log in existing bots
+    # B) Log in existing bots from disk
     await login_bots()
     logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
 
-    # For each bot, attach callbacks (using helpers) and start a sync loop
+    # -- 2) For each loaded bot, attach event callbacks and start a sync loop
     bot_tasks = []
     for localpart, bot_client in BOTS.items():
         try:
-        # Register each callback via a distinct helper
+            # Register each callback via a distinct helper
             bot_client.add_event_callback(
                 make_message_callback(bot_client, localpart),
                 RoomMessageText
@@ -1818,6 +1741,7 @@ async def main_logic():
                 RoomMemberEvent
             )
 
+            # Start its sync loop
             task = asyncio.create_task(run_bot_sync(bot_client, localpart))
             bot_tasks.append(task)
 
@@ -1839,14 +1763,11 @@ async def main_logic():
     await luna_client.close()
     logger.debug("Luna client closed.")
 
-    # Cancel each bot's task
+    # Cancel each bot's sync task
     for t in bot_tasks:
         t.cancel()
 
     logger.debug("main_logic done, returning.")
-
-
-
 
 def luna_main():
     """
@@ -1857,14 +1778,16 @@ def luna_main():
     configure_logging()
     logger.debug("Logging configured. Creating event loop.")
 
+    # Load stored messages from disk (optional part of your code)
     load_messages()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     logger.debug("New event loop set as default.")
 
-    # Init shutdown
+    # Init the shutdown mechanism
     init_shutdown(loop)
+
     global MAIN_LOOP
     MAIN_LOOP = loop
 
@@ -1893,65 +1816,12 @@ def get_bots() -> dict:
     return BOTS
 
 def load_system_prompt():
+    """
+    (Optional) If you need to load a special system prompt for Luna from file.
+    """
     with open("data/luna_system_prompt.md", "r", encoding="utf-8") as f:
         return f.read()
-=== data_deprecated_on_2024.01.13/director_token.json ===
-{"user_id": "@lunabot:localhost", "access_token": "syt_bHVuYWJvdA_YJGbFgNtVanaxNTobyRy_0qvesD", "device_id": "NUCDSRAKMB"}
-=== data_deprecated_on_2024.01.13/luna_messages.csv ===
-room_id,event_id,sender,timestamp,body,responded_by
-!OBacxAuPnRsRfxSrnF:localhost,$gIpnXOJi6mATxHKP4nSOGc8BpMHv0WFZ6BMyzpMv8bg,@evan:localhost,1736648174066,Hi @luna!,
-!OBacxAuPnRsRfxSrnF:localhost,$bZz7xQyRpuvb7NneH1KIUEhAzKKV-xOOZYB8nPA7QMc,@evan:localhost,1736649041452,jknsdf,
-!OBacxAuPnRsRfxSrnF:localhost,$sWRJsaJZxUnH6yc6v-ViA0BWb1cu2XvacGJvveadXok,@evan:localhost,1736649042651,kjnsdflk,
-!OBacxAuPnRsRfxSrnF:localhost,$cxgdM3kkP6We0PeInf5PyerQLKcA4NVFo9-PHMavmzs,@evan:localhost,1736649044461,New message,
-!OBacxAuPnRsRfxSrnF:localhost,$V49kDXswctNMIXnrNo6u3LAYpE8wR1dgPrd8V3Qo0Eo,@evan:localhost,1736649048302,New message here!!,
-!OBacxAuPnRsRfxSrnF:localhost,$GZgvjkOfWtK65LaApqazhGylX_FSr5tM38lLq43tOmk,@evan:localhost,1736649269201,what about channel messages?!?!,
-!OBacxAuPnRsRfxSrnF:localhost,$zRN5b0sZYtF20M1cwAGw_Ekmc6tz-230NwDruBV1aEw,@evan:localhost,1736649466639,"I have a new message for you Luna, 937pm",
-!OBacxAuPnRsRfxSrnF:localhost,$o2sYGGwO91Lclhtz1NZ45LsSiEkMjJGNJDR6BydODsA,@evan:localhost,1736686498624,Luna?,
-!XBwtDVQGRLVcaKcUbm:localhost,$gKwWI7CKxm4rwBZwP-4Rt53J_qOTtW2FWMCISKwrJe8,@evan:localhost,1736686487051,luna?,
-!XBwtDVQGRLVcaKcUbm:localhost,$rt6Mqt-SSeR_EWY-nu4JGuqxq4dupxDOu8X0l4BiBHE,@wild_horse:localhost,1736722757659,Hello! I'm 'wild_horse'. You said: Hello lunabot ...,
-!AdQHUmAdpfqWIWULNM:localhost,$_W862haG04YOPcx7lThtubJ3e99qS7FLFhrL15Bz6IA,@evan:localhost,1736656544329,clownsavior: areyou here too?,
-!AdQHUmAdpfqWIWULNM:localhost,$-HwTtehxpxjx728rwX_ovogZ11ElbwrfkhT9jYxWkTE,@evan:localhost,1736656621853,lunabot: what's up,
-!XBwtDVQGRLVcaKcUbm:localhost,$DvsxNAmqUUD1ouQKE6EtNzZY_rtYYvWnniMX1dIlYkg,@lunabot:localhost,1736653710161,Hello! How can I assist you today?,
-!XBwtDVQGRLVcaKcUbm:localhost,$C3w5uDvqF_0XWlE_C6CT7XFCxoPhUyxUssNAbNIa1Q4,@lunabot:localhost,1736653747269,Hello! How can I assist you today?,
-!XBwtDVQGRLVcaKcUbm:localhost,$OnTOndZ1xIhnQZmM7OaxjFAGMWZ34fRHCbRfHtzeNC0,@lunabot:localhost,1736655505606,Hello! How can I assist you today?,
-!kzXdTMnUUelFEFHQIX:localhost,$9SZ-fxB5GPxe42G6bBXbz-C9bZejKPwSTPulkL5RWpU,@evan:localhost,1736727488926,lunabot: you son of a bitch,
-!kzXdTMnUUelFEFHQIX:localhost,$CgXxah3w8C2StJsTi2sY6v1QwpuqQDJmPuaVc9_Yxes,@lunabot:localhost,1736727488944,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: you son of a bitch...',
-!kzXdTMnUUelFEFHQIX:localhost,$2OaP0NhdKW-2eJrxG0h0JUH1WoeoArNkZR1KFhj2zp4,@evan:localhost,1736727656571,hi there,
-!kzXdTMnUUelFEFHQIX:localhost,$APUz_jXGguZuiNHPhht0bGaxBA0VPbqo-FRINHAYgZE,@lunabot:localhost,1736727658077,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: you son of a bitch...',
-!kzXdTMnUUelFEFHQIX:localhost,$LKztiHlyznOndUrfnqi-YEYRFgh7O1RoSGjcpWfir4Y,@evan:localhost,1736727666477,hello,
-!kzXdTMnUUelFEFHQIX:localhost,$f127j16963kuZOa4l5qOyZXvCvhNQVrWlbZodC3PxyU,@lunabot:localhost,1736727745941,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: you son of a bitch...',
-!kzXdTMnUUelFEFHQIX:localhost,$QCz--AhFlRsAf1aDwcftN7spMH9iryc6FI7oStzpEG4,@lunabot:localhost,1736727939488,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: you son of a bitch...',
-!AdQHUmAdpfqWIWULNM:localhost,$cMrNZWfUEiWgmODoQTRl_mI08aZJOiboG0xz5yXbgGk,@evan:localhost,1736656627673,luna,
-!AdQHUmAdpfqWIWULNM:localhost,$Uz47IiCa86W5NSi28Rqo6JnyQKt_NCP4vbGS1QtH7_I,@evan:localhost,1736723326210,@luna,
-!AdQHUmAdpfqWIWULNM:localhost,$GCS_KATOTaMrmw_JkbMEnMYM1sQgiEvo6hLMHTs5EwI,@lunabot:localhost,1736727477726,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: are you here? what's your realname?...',
-!AdQHUmAdpfqWIWULNM:localhost,$7qwpB0Wn0gcxDtTNGjbqX-khEyB5CX-bJFIxXrZBHrw,@lunabot:localhost,1736727477758,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: what's up...',
-!AdQHUmAdpfqWIWULNM:localhost,$p0XUGUTNer9DweIDDnd2wcAfm_9KFJWfZKB3oZcAwxY,@lunabot:localhost,1736727657997,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: are you here? what's your realname?...',
-!AdQHUmAdpfqWIWULNM:localhost,$lrErg31AJUhPcX69IfnbW4_KjA-V_l60sVB0JoNKqzQ,@lunabot:localhost,1736727658030,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: what's up...',
-!AdQHUmAdpfqWIWULNM:localhost,$sd81Vflytp7aLV2eVe5yotSseZdfngmMSF86ZBVz2rw,@lunabot:localhost,1736727745851,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: are you here? what's your realname?...',
-!AdQHUmAdpfqWIWULNM:localhost,$CPC3iQWFrKZlfwgJh079kDBuD6lM2ydNvKJqPwrlRw0,@lunabot:localhost,1736727745892,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: what's up...',
-!AdQHUmAdpfqWIWULNM:localhost,$wcn0GmPavgoekBrVrjCRDPfa3yLt9mN0XcV-7tCmlsU,@lunabot:localhost,1736727939472,Hello from 'lunabot' in a group chat! You mentioned me. I see your message: 'lunabot: what's up...',
-!AdQHUmAdpfqWIWULNM:localhost,$ovK3G3jEWlzcN-HMOv-ZsBhABNF040qI1Qz7CIMaNNg,@lunabot:localhost,1736728033026,Hello from 'lunabot' in a group chat! I see you mentioned me: 'lunabot: what's up...',
-!kzXdTMnUUelFEFHQIX:localhost,$YR8hFtgifzE4tHHKaCpc92geRzQZhunNDjEi-UfZZPQ,@wild_horse:localhost,1736727477782,Hello from 'wild_horse' in a group chat! You mentioned me. I see your message: 'wild_horse you are wild wild wild...',
-!kzXdTMnUUelFEFHQIX:localhost,$Chklp_a0oTQziJ49zakMw6J3uCmACNsXhFOFhFv9tIc,@wild_horse:localhost,1736727477833,Hello from 'wild_horse' in a group chat! You mentioned me. I see your message: '@wild_horses are wild!!! wild_horse ...',
-!kzXdTMnUUelFEFHQIX:localhost,$CRYxiMIONRHvWsjNEhE0aCItdlmA2nO25ZT9aeg3rso,@wild_horse:localhost,1736727657978,Hello from 'wild_horse' in a group chat! You mentioned me. I see your message: 'wild_horse you are wild wild wild...',
-!kzXdTMnUUelFEFHQIX:localhost,$HhgebtSzqeKbcgCflWQvdOybby0dINZe1yKkiaqWNbM,@wild_horse:localhost,1736727657998,Hello from 'wild_horse' in a group chat! You mentioned me. I see your message: '@wild_horses are wild!!! wild_horse ...',
-!wksSOEXmjceGUTMkdv:localhost,$Pg0S_dXu1WS6iNeQA-2Sh7V5cauUGpbJvtH98q6pUUQ,@evan:localhost,1736725221087,stfu,
-!wksSOEXmjceGUTMkdv:localhost,$pg4s7-ZR9dCZPG7whyM5YFdVexoZcAGja1-CZVWg_o4,@lunabot:localhost,1736728033055,Hi from 'lunabot' (DM). You said: 'stfu...',
-!GdZPFSkNndJpkFvaIZ:localhost,$HgnT3GJok44Gfpc_cyYwFo9C6P6AhSyFRneUD1MdTpQ,@evan:localhost,1736729164400,hello,
-!GdZPFSkNndJpkFvaIZ:localhost,$R5DpP7tJiHJ8bH1-4vqO87d3gzTJKh5E01G4D6XeNYI,@lunabot:localhost,1736729164455,Hi from 'lunabot' (DM). You said: 'hello...',
-!GdZPFSkNndJpkFvaIZ:localhost,$7olrjsfnLwU7bLVYACOOnmwgWkSpJpbwKKyZ_-ZxxV4,@evan:localhost,1736733347715,blended_malt: how have you been,
-!GdZPFSkNndJpkFvaIZ:localhost,$jyM_X4P-ASsRtzxMceL7wgagctVWsINTlmIR-gi4jlc,@evan:localhost,1736734821661,lunabot: tell me something new,lunabot
-!GdZPFSkNndJpkFvaIZ:localhost,$Eya5rbwuyGA6TeXbDGwVVZax9W4wJtBG6QUw77psBtk,@lunabot:localhost,1736734821707,Hello from 'lunabot' in a group chat! I see you mentioned me: lunabot: tell me something new...,
-!GdZPFSkNndJpkFvaIZ:localhost,$VLtk4zpufrLYubZJYYxZTcnJ-2ddsr2ZyAnnK3eTun0,@evan:localhost,1736734828805,blended_malt: what's your name,
-!GdZPFSkNndJpkFvaIZ:localhost,$hTejFrFSUTT2N-ezsyvbAE72bSD0Mhh-3mNZaLADXjE,@evan:localhost,1736735621578,blended_malt: please assist,
-!GdZPFSkNndJpkFvaIZ:localhost,$4jdu5e8gyZHH0rF-BRVEF-zbg5UYioeq-1HTGmtgIyE,@evan:localhost,1736735630221,@lunabot?,
-!GdZPFSkNndJpkFvaIZ:localhost,$Jt4GGRlJQpFqw-IUBMVM_mxCttr8NWati7wa0As8evo,@evan:localhost,1736735633214,lunabot: ?,
-!UmMRFBIczWWQPHigCQ:localhost,$hopN_lHpMskWylbp9KGt7egiYEcTMzYyrrr613kfmsE,@evan:localhost,1736735651592,hi there,
 
-=== data_deprecated_on_2024.01.13/sync_token.json ===
-{"sync_token": "s166_3368_20_50_132_1_1_11_0_1"}
-=== data_deprecated_on_2024.01.13/tokens.json ===
-{"user_id": "@lunabot:localhost", "access_token": "syt_bHVuYWJvdA_dbwhPHCpRMtCzPzWWqjn_2REla9", "device_id": "HFVAGHSLPO"}
 === issues.md ===
 #### ISSUES
 
@@ -2700,6 +2570,93 @@ def cmd_help(args, loop):
         if description_wrapped:
             print(f"  {description_wrapped}")
         print()  # blank line after each command
+=== luna_command_extensions/cmd_remove_room.py ===
+import logging
+import asyncio
+import aiohttp
+from luna import luna_functions
+
+logger = logging.getLogger(__name__)
+
+def cmd_remove_room(args, loop):
+    """
+    Usage: remove_room <room_id>
+
+    Example:
+      remove_room !abc123:localhost
+
+    This console command removes the room from the homeserver
+    entirely using the Synapse Admin API:
+      DELETE /_synapse/admin/v2/rooms/<roomID>
+
+    Must be an admin user. This does not remove messages in a graceful
+    manner—those events become orphaned. But the room
+    is fully deleted from Synapse’s perspective, and future attempts
+    to join or invite this room ID will fail.
+
+    If you want to only forget the room from your perspective,
+    do a normal "forget" in a Matrix client. This command is destructive.
+    """
+
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("SYSTEM: Usage: remove_room <room_id>")
+        return
+
+    room_id = parts[0]
+
+    # The asynchronous subroutine:
+    async def _do_remove_room(rid: str) -> str:
+        """
+        Actually calls the DELETE /_synapse/admin/v2/rooms/{roomId} endpoint.
+        Must have admin privileges. 
+        Sends an empty JSON body with Content-Type: application/json to avoid
+        "Content not JSON" errors.
+        """
+        client = luna_functions.getClient()
+        if not client:
+            return "[Error] No DIRECTOR_CLIENT set or not logged in."
+
+        admin_token = client.access_token
+        if not admin_token:
+            return "[Error] No admin token in DIRECTOR_CLIENT (need to be a Synapse admin)."
+
+        homeserver_url = client.homeserver
+        endpoint = f"{homeserver_url}/_synapse/admin/v2/rooms/{rid}"
+
+        headers = {
+            "Authorization": f"Bearer {admin_token}",
+            "Content-Type": "application/json"
+        }
+
+        logger.debug(f"[_do_remove_room] Attempting to DELETE room => {endpoint}")
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.delete(endpoint, headers=headers, json={}) as resp:
+                    if resp.status in (200, 202):
+                        return f"Successfully removed room => {rid}"
+                    else:
+                        text = await resp.text()
+                        return f"Error removing room {rid}: {resp.status} => {text}"
+        except Exception as e:
+            logger.exception("[_do_remove_room] Exception calling admin API:")
+            return f"Exception removing room => {e}"
+
+    # The blocking wrapper:
+    def do_remove_room_sync(rid: str) -> str:
+        """
+        Schedules _do_remove_room(...) on the event loop, then blocks until
+        it finishes by calling future.result().
+        """
+        future = asyncio.run_coroutine_threadsafe(_do_remove_room(rid), loop)
+        return future.result()
+
+    print(f"SYSTEM: Removing room '{room_id}' from server (blocking)... Please wait.")
+    # Actually run the removal, blocking until it's done
+    result_msg = do_remove_room_sync(room_id)
+    print(f"SYSTEM: {result_msg}")
+
 === luna_command_extensions/cmd_shutdown.py ===
 # shutdown_helper.py
 
@@ -3000,117 +2957,6 @@ async def create_room(args_string: str) -> str:
         logger.exception("Caught an exception while creating room %r:", room_name)
         return f"Exception while creating room => {e}"
 
-=== luna_command_extensions/luna_functions_create_inspired_bot.py ===
-import json
-import asyncio
-import logging
-
-# Adjust imports for your project structure
-from luna.ai_functions import get_gpt_response_dep
-from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
-
-logger = logging.getLogger(__name__)
-
-def create_inspired_bot(args, loop):
-    """
-    Usage:
-      create_bot_inspired <inspiration_text>
-
-    GPT must return JSON with:
-      {
-        "localpart": "...",
-        "displayname": "...",
-        "system_prompt": "...",
-        "password": "...",
-        "traits": {...}
-      }
-    """
-    RED = "\x1b[31m"
-    GREEN = "\x1b[32m"
-    YELLOW = "\x1b[33m"
-    CYAN = "\x1b[36m"
-    BOLD = "\x1b[1m"
-    RESET = "\x1b[0m"
-
-    if not args.strip():
-        print(f"{RED}SYSTEM: No inspiration provided. Please give a short string describing the persona idea.{RESET}")
-        return
-
-    print(f"{YELLOW}Attempting to create an inspired bot...{RESET}")
-
-    system_instructions = (
-        "You are a helpful assistant that must respond ONLY with a single valid JSON object. "
-        "The JSON object must contain exactly: localpart, displayname, system_prompt, password, and traits. "
-        "The 'traits' field is a JSON object with zero or more key-value pairs. "
-        "No extra keys. Do not wrap your response in Markdown or code fences. "
-        "Do not provide any explanation—only raw JSON."
-    )
-    user_prompt = f"Create a persona from this inspiration: '{args}'. Return as raw JSON."
-
-    # 1) Ask GPT for the persona
-    fut = asyncio.run_coroutine_threadsafe(
-        get_gpt_response_dep(
-            context=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": user_prompt},
-            ],
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=300
-        ),
-        loop
-    )
-
-    try:
-        gpt_raw_response = fut.result()
-    except Exception as e:
-        print(f"{RED}SYSTEM: Error calling GPT => {e}{RESET}")
-        return
-
-    # 2) Parse the JSON
-    try:
-        persona_data = json.loads(gpt_raw_response)
-    except json.JSONDecodeError as jde:
-        print(f"{RED}SYSTEM: GPT response is not valid JSON => {jde}{RESET}")
-        return
-
-    # 3) Display the data (optional debugging)
-    print(f"{BOLD}SYSTEM: GPT suggested persona data:{RESET}")
-    for key in ["localpart", "displayname", "system_prompt", "password"]:
-        val = persona_data.get(key)
-        print(f"{CYAN}{key}{RESET} => {val}")
-    print(f"{CYAN}traits{RESET} => {persona_data.get('traits', {})}")
-
-    # 4) Validate required fields
-    missing = [k for k in ("localpart", "displayname", "system_prompt", "password") if not persona_data.get(k)]
-    if missing:
-        print(f"{RED}SYSTEM: Missing fields: {missing}{RESET}")
-        return
-
-    # 5) Call create_and_login_bot in an async context
-    async def do_create_and_login():
-        full_bot_id = f"@{persona_data['localpart']}:localhost"
-        # Synchronously handle the entire persona creation & ephemeral login
-        return await create_and_login_bot(
-            bot_id=full_bot_id,
-            password=persona_data["password"],
-            displayname=persona_data["displayname"],
-            system_prompt=persona_data["system_prompt"],
-            traits=persona_data["traits"],
-            creator_user_id="@lunabot:localhost",  # or the actual user who triggered it
-            is_admin=False
-        )
-
-    fut_create = asyncio.run_coroutine_threadsafe(do_create_and_login(), loop)
-    try:
-        final_msg = fut_create.result()
-        if final_msg.startswith("Successfully created"):
-            print(f"{GREEN}SYSTEM: {final_msg}{RESET}")
-        else:
-            print(f"{RED}SYSTEM: {final_msg}{RESET}")
-    except Exception as e:
-        print(f"{RED}SYSTEM: Failed to create & login => {e}{RESET}")
-
 === luna_command_extensions/luna_message_handler.py ===
 # luna_message_handler.py
 
@@ -3378,6 +3224,399 @@ def load_luna_system_prompt(filepath: str) -> str:
         logger.exception("Could not load system prompt => %s", e)
         return ""
 
+=== luna_command_extensions/parse_and_execute.py ===
+import json
+import logging
+import asyncio
+import re
+import time
+
+logger = logging.getLogger(__name__)
+
+def parse_and_execute(script_str, loop):
+    """
+    A blocking version of parse_and_execute that:
+      1) Creates rooms by name (private or public).
+      2) Parses the console output to grab the actual room ID.
+      3) Stores the (name -> room_id) mapping in a dictionary so that future
+         "invite_user" actions can use the real room ID.
+      4) Waits (or optionally does a forced sync) after creation so that
+         the director has fully joined the room with correct power level
+         before sending invites.
+
+    Example JSON:
+    {
+      "title": "BlockInviteScript",
+      "actions": [
+        {
+          "type": "create_room",
+          "args": {
+            "room_name": "myTreetop",
+            "private": true
+          }
+        },
+        {
+          "type": "invite_user",
+          "args": {
+            "user_id": "@lunabot:localhost",
+            "room_id_or_alias": "myTreetop"
+          }
+        },
+        ...
+      ]
+    }
+    """
+    try:
+        data = json.loads(script_str)
+    except json.JSONDecodeError as e:
+        logger.debug(f"[parse_and_execute] Failed to parse JSON => {e}")
+        print(f"SYSTEM: Error parsing JSON => {e}")
+        return
+
+    script_title = data.get("title", "Untitled")
+    logger.debug(f"[parse_and_execute] Beginning script => {script_title}")
+    print(f"SYSTEM: Running script titled '{script_title}' (blocking)...")
+
+    actions = data.get("actions", [])
+    if not actions:
+        logger.debug("[parse_and_execute] No actions found in script.")
+        print("SYSTEM: No actions to perform. Script is empty.")
+        return
+
+    # We'll import these on demand to avoid circular references
+    from luna.console_functions import cmd_create_room
+    from luna.console_functions import cmd_invite_user
+
+    # 1) We'll keep a small map of "room_name" -> "room_id"
+    #    so if user typed "myTreetop", we can transform that into e.g. "!abc123:localhost".
+    name_to_id_map = {}
+
+    # Regex to capture something like:
+    # "SYSTEM: Created room 'myTreetop' => !abc123:localhost"
+    room_id_pattern = re.compile(
+        r"Created room '(.+)' => (![A-Za-z0-9]+:[A-Za-z0-9\.\-]+)"
+    )
+
+    for i, action_item in enumerate(actions, start=1):
+        action_type = action_item.get("type")
+        args_dict = action_item.get("args", {})
+
+        logger.debug(f"[parse_and_execute] Action #{i}: {action_type}, args={args_dict}")
+        print(f"SYSTEM: [#{i}] Executing '{action_type}' with args={args_dict}...")
+
+        if action_type == "create_room":
+            # e.g. "myTreetop" --private
+            room_name = args_dict.get("room_name", "UntitledRoom")
+            is_private = args_dict.get("private", False)
+
+            if is_private:
+                arg_string = f"\"{room_name}\" --private"
+            else:
+                arg_string = f"\"{room_name}\""
+
+            # We capture the console output by temporarily redirecting stdout,
+            # or we can rely on the user to see "Created room 'X' => !id".
+            # For simplicity, let's just parse the log lines after cmd_create_room finishes.
+            original_stdout_write = None
+            output_lines = []
+
+            def custom_write(s):
+                output_lines.append(s)
+                if original_stdout_write:
+                    original_stdout_write(s)
+
+            import sys
+            if sys.stdout.write != custom_write:  # Only override once
+                original_stdout_write = sys.stdout.write
+                sys.stdout.write = custom_write
+
+            # 1a) Create the room (blocking call)
+            cmd_create_room(arg_string, loop)
+
+            # force a sync here
+            from luna.luna_functions import DIRECTOR_CLIENT
+            future = asyncio.run_coroutine_threadsafe(DIRECTOR_CLIENT.sync(timeout=1000), loop)
+            future.result()
+          
+            # 1b) Restore stdout
+            sys.stdout.write = original_stdout_write
+
+            # 1c) Parse the lines for the created room ID
+            for line in output_lines:
+                match = room_id_pattern.search(line)
+                if match:
+                    captured_name = match.group(1)  # e.g. myTreetop
+                    captured_id = match.group(2)    # e.g. !abc123:localhost
+                    if captured_name == room_name:
+                        name_to_id_map[room_name] = captured_id
+                        print(f"SYSTEM: Mapped '{room_name}' => '{captured_id}'")
+
+            # 1d) Sleep or forced sync to ensure the user is recognized
+            time.sleep(1.0)
+            # Optionally: you could call a forced sync here.
+
+        elif action_type == "invite_user":
+            user_id = args_dict.get("user_id")
+            user_room = args_dict.get("room_id_or_alias")
+
+            # If user_room is in our name_to_id_map, replace it with the real ID
+            if user_room in name_to_id_map:
+                real_id = name_to_id_map[user_room]
+                print(f"SYSTEM: Translating '{user_room}' -> '{real_id}' for invitation.")
+                user_room = real_id
+
+            arg_string = f"{user_id} {user_room}"
+            cmd_invite_user(arg_string, loop)
+            time.sleep(2.0)
+
+        else:
+            logger.debug(f"[parse_and_execute] Unknown action type: {action_type}")
+            print(f"SYSTEM: Unrecognized action '{action_type}'. Skipping.")
+
+    logger.debug("[parse_and_execute] Script completed.")
+    print("SYSTEM: Script execution complete (blocking).")
+
+=== luna_command_extensions/spawner.py ===
+# spawner.py
+
+import json
+import asyncio
+import logging
+import shlex
+
+# Suppose your GPT call is in ai_functions.py
+from luna.ai_functions import get_gpt_response
+
+logger = logging.getLogger(__name__)
+
+# Simple ANSI color codes for old-school vibe:
+ANSI_YELLOW = "\033[93m"
+ANSI_GREEN = "\033[92m"
+ANSI_CYAN = "\033[96m"
+ANSI_MAGENTA = "\033[95m"
+ANSI_RED = "\033[91m"
+ANSI_WHITE = "\033[97m"
+ANSI_RESET = "\033[0m"
+
+
+def cmd_spawn_squad(args, loop):
+    """
+    The real logic for spawn_squad.
+    Called by console_functions.py or whichever file includes the “command router.”
+
+    Usage: spawn_squad <numBots> "<theme or style>"
+
+    Example:
+      spawn_squad 3 "A jazzy trio of improvisational bots"
+
+    This version displays a more colorful, “BBS-like” console output
+    when describing the spawned personas and their JSON details.
+    """
+
+    logger.debug("cmd_spawn_squad => Received args=%r", args)
+
+    # 1) Parse the arguments
+    tokens = shlex.split(args.strip())
+    logger.debug("Parsed tokens => %s", tokens)
+
+    if len(tokens) < 2:
+        msg = "SYSTEM: Usage: spawn_squad <numBots> \"<theme>\""
+        print(msg)
+        logger.warning(msg)
+        return
+
+    # Try to parse the count as an integer
+    try:
+        count = int(tokens[0])
+    except ValueError:
+        msg = "SYSTEM: First arg must be an integer for the number of bots."
+        print(msg)
+        logger.warning(msg)
+        return
+
+    # We only allow 1–5 bots
+    if count < 1 or count > 5:
+        msg = "SYSTEM: Allowed range is 1 to 5 bots."
+        print(msg)
+        logger.warning(msg)
+        return
+
+    # Reconstruct the theme from all tokens after the first
+    theme = " ".join(tokens[1:])
+    logger.debug("Spawn_squad => count=%d, theme=%r", count, theme)
+
+    # 2) Build the GPT system instructions & user message.
+    #    We now require 'biography' and 'backstory' keys as well.
+    system_instructions = (
+        "You are an assistant that outputs ONLY valid JSON. "
+        "No markdown, no code fences, no extra commentary. "
+        f"Generate an array of exactly {count} persona objects. "
+        "Each object must have keys: localpart, displayname, biography, backstory, system_prompt, password, traits."
+        "No other keys. "
+        "The 'traits' key is a JSON object with arbitrary key/values. "
+        "Be sure that the system prompt instructs the bot to behave at all times in character."
+        "Incorporate as much of the character's identity into the system prompt as possible"
+        "In this environment, you can explicitly mention another bot by typing their Matrix user ID in the format @<localpart>:localhost. For example, if a bot’s localpart is diamond_dave, you would mention them as @diamond_dave:localhost. Important: mentioning a bot this way always triggers a response from them. Therefore, avoid frivolous or unnecessary mentions. Only mention another bot when you genuinely need their attention or expertise."
+    )
+
+    user_message = (
+        f"Please create {count} persona(s) for the theme: '{theme}'. "
+        "Return ONLY valid JSON (an array, no outer text). Be sure that the system prompt instructs the bot to behave at all times in character."
+    )
+
+    logger.debug("system_instructions=%r", system_instructions)
+    logger.debug("user_message=%r", user_message)
+
+    async def do_spawn():
+        logger.debug("do_spawn => Starting GPT call (count=%d)", count)
+
+        # 3) Call GPT to get JSON for the requested # of personas
+        gpt_response = await get_gpt_response(
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user",   "content": user_message}
+            ],
+            model="gpt-4",
+            temperature=0.7,
+            max_tokens=1000
+        )
+
+        logger.debug("GPT raw response => %r", gpt_response)
+
+        # 4) Parse JSON
+        try:
+            persona_array = json.loads(gpt_response)
+        except json.JSONDecodeError as e:
+            err_msg = f"SYSTEM: GPT returned invalid JSON => {e}"
+            print(err_msg)
+            logger.error("%s -- full GPT response => %s", err_msg, gpt_response)
+            return
+
+        if not isinstance(persona_array, list):
+            msg = "SYSTEM: GPT did not return a JSON list. Aborting."
+            print(msg)
+            logger.warning(msg)
+            return
+
+        if len(persona_array) != count:
+            msg = (
+                f"SYSTEM: GPT returned a list of length "
+                f"{len(persona_array)}, expected {count}. Aborting."
+            )
+            print(msg)
+            logger.warning(msg)
+            return
+
+        # 5) Summon each persona
+        successes = 0
+
+        for i, persona in enumerate(persona_array):
+            logger.debug("Persona[%d] => %s", i, persona)
+
+            # Check for required keys
+            required_keys = [
+                "localpart",
+                "displayname",
+                "biography",
+                "backstory",
+                "system_prompt",
+                "password",
+                "traits",
+            ]
+
+            missing_key = None
+            for rk in required_keys:
+                if rk not in persona:
+                    missing_key = rk
+                    break
+            if missing_key:
+                msg = f"SYSTEM: Missing key '{missing_key}' in GPT object {i}. Skipping."
+                print(msg)
+                logger.warning(msg)
+                continue
+
+            # Display a fancy "character sheet" in BBS style
+            persona_label = f"{ANSI_GREEN}Persona #{i+1} of {count}{ANSI_RESET}"
+
+            print(f"\n{ANSI_MAGENTA}{'=' * 60}{ANSI_RESET}")
+            print(f"{ANSI_YELLOW} Summoning {persona_label} for your {theme} squad...{ANSI_RESET}")
+            print(f"{ANSI_MAGENTA}{'=' * 60}{ANSI_RESET}")
+
+            # We'll display the entire JSON so we don't rely on a specific schema.
+            # For color + indentation, let's do a pretty print but highlight keys.
+            # We'll build lines by hand:
+            for k, v in persona.items():
+                # Show keys in CYAN, values in WHITE
+                # If v is a dict, we can pretty-dump it
+                if isinstance(v, dict):
+                    dict_str = json.dumps(v, indent=2)
+                    print(f"{ANSI_CYAN}  {k}{ANSI_RESET} = {ANSI_WHITE}{dict_str}{ANSI_RESET}")
+                else:
+                    # Just convert to string
+                    print(f"{ANSI_CYAN}  {k}{ANSI_RESET} = {ANSI_WHITE}{v}{ANSI_RESET}")
+
+            # Actually spawn the user
+            full_bot_id = f"@{persona['localpart']}:localhost"
+            password = persona["password"]
+            displayname = persona["displayname"]
+            system_prompt = persona["system_prompt"]
+            traits = persona["traits"]
+
+            async def single_spawn():
+                from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
+                logger.debug("single_spawn => Creating user_id=%r", full_bot_id)
+                result_msg = await create_and_login_bot(
+                    bot_id=full_bot_id,
+                    password=password,
+                    displayname=displayname,
+                    system_prompt=system_prompt,
+                    traits=traits,
+                    creator_user_id="@lunabot:localhost",
+                    is_admin=False
+                )
+                return result_msg
+
+            spawn_result = await single_spawn()
+
+            # Check if creation was successful
+            if "Successfully created" in spawn_result:
+                successes += 1
+                print(
+                    f"{ANSI_GREEN}SUCCESS:{ANSI_RESET} {spawn_result}"
+                )
+            else:
+                print(
+                    f"{ANSI_RED}FAILED:{ANSI_RESET} {spawn_result}"
+                )
+
+        # 6) Summary
+        print()
+        summary_msg = (
+            f"SYSTEM: Attempted to spawn {count} persona(s). "
+            f"{successes} succeeded, {count - successes} failed. Done."
+        )
+        print(f"{ANSI_CYAN}{summary_msg}{ANSI_RESET}")
+        logger.info(summary_msg)
+
+    # Announce to user we're about to do it
+    print(
+        f"{ANSI_YELLOW}SYSTEM:{ANSI_RESET} Summoning a squad of {count} "
+        f"'{theme}'... stand by."
+    )
+    logger.info("cmd_spawn_squad => scheduling do_spawn (count=%d, theme=%r)", count, theme)
+
+    # 7) We do a blocking run of do_spawn on the given loop
+    future = asyncio.run_coroutine_threadsafe(do_spawn(), loop)
+
+    # Block until do_spawn() completes
+    try:
+        future.result()
+    except Exception as e:
+        print(
+            f"{ANSI_RED}SYSTEM: spawn_squad encountered an error => {e}{ANSI_RESET}"
+        )
+        logger.exception("spawn_squad encountered an exception =>", exc_info=e)
+
 === luna_functions.py ===
 """
 luna_functions.py
@@ -3576,7 +3815,111 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
 # ──────────────────────────────────────────────────────────
 # LIST ROOMS
 # ──────────────────────────────────────────────────────────
+import json
+import logging
+import aiohttp
+
+logger = logging.getLogger(__name__)
+
 async def list_rooms() -> list[dict]:
+    """
+    Fetches all rooms on the Synapse server via the admin API, then for each room,
+    calls a membership API to get participant info. Returns a list of dicts, e.g.:
+       [
+         {
+           "room_id": "!abc123:localhost",
+           "name": "My Great Room",
+           "joined_members_count": 3,
+           "participants": ["@userA:localhost", "@userB:localhost", "@lunabot:localhost"]
+         },
+         ...
+       ]
+
+    Implementation steps:
+      1) Load admin token from data/tokens.json
+      2) GET /_synapse/admin/v1/rooms to list all rooms
+      3) For each room, GET /_synapse/admin/v2/rooms/<roomID>/members
+         to find participants with membership = "join"
+      4) Build the final list of room info, returning it
+    """
+
+    # 1) Load admin token from data/tokens.json
+    homeserver_url = "http://localhost:8008"  # Adjust if needed
+    try:
+        with open("data/tokens.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+        admin_token = data["access_token"]
+    except Exception as e:
+        logger.error(f"Unable to load admin token from tokens.json: {e}")
+        return []
+
+    # 2) Query the list of rooms
+    list_url = f"{homeserver_url}/_synapse/admin/v1/rooms?limit=5000"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    all_rooms_info = []
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # First call: get the top-level list of rooms
+            async with session.get(list_url, headers=headers) as resp:
+                if resp.status == 200:
+                    resp_data = await resp.json()
+                    raw_rooms = resp_data.get("rooms", [])
+                    logger.debug(f"Found {len(raw_rooms)} total rooms on the server.")
+
+                    # 3) For each room, fetch membership
+                    for r in raw_rooms:
+                        room_id = r.get("room_id")
+                        # 'name' might be provided, or use the canonical_alias if present
+                        room_name = r.get("name") or r.get("canonical_alias") or "(unnamed)"
+
+                        # membership call: /_synapse/admin/v2/rooms/<room_id>/members
+                        members_url = f"{homeserver_url}/_synapse/admin/v2/rooms/{room_id}/members"
+                        async with session.get(members_url, headers=headers) as mresp:
+                            if mresp.status == 200:
+                                m_data = await mresp.json()
+                                raw_members = m_data.get("members", [])
+                                # We gather user_ids with membership='join'
+                                participants = []
+                                for mem_item in raw_members:
+                                    if mem_item.get("membership") == "join":
+                                        participants.append(mem_item.get("user_id"))
+
+                                # Build the final info
+                                all_rooms_info.append({
+                                    "room_id": room_id,
+                                    "name": room_name,
+                                    "joined_members_count": len(participants),
+                                    "participants": participants
+                                })
+                            else:
+                                # If membership call fails, we can log and skip
+                                text = await mresp.text()
+                                logger.warning(
+                                    f"Failed to fetch membership for {room_id} => "
+                                    f"HTTP {mresp.status}: {text}"
+                                )
+                                # We still return partial data (no participants)
+                                all_rooms_info.append({
+                                    "room_id": room_id,
+                                    "name": room_name,
+                                    "joined_members_count": r.get("joined_members", 0),
+                                    "participants": []
+                                })
+                else:
+                    # If the main /rooms call fails, log and return empty
+                    text = await resp.text()
+                    logger.error(f"Failed to list rooms (HTTP {resp.status}): {text}")
+                    return []
+    except Exception as e:
+        logger.exception(f"Error calling list_rooms admin API: {e}")
+        return []
+
+    return all_rooms_info
+
+
+async def list_rooms_dep() -> list[dict]:
     """
     Returns a list of rooms that DIRECTOR_CLIENT knows about, 
     including participant names.
@@ -3593,6 +3936,7 @@ async def list_rooms() -> list[dict]:
         logger.warning("list_rooms called, but DIRECTOR_CLIENT is None.")
         return []
 
+    logger.info("[luna_functions] [list_rooms] Entering List Rooms.")
     rooms_info = []
     for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
         room_name = room_obj.display_name or "(unnamed)"

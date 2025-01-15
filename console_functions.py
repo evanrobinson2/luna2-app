@@ -19,7 +19,6 @@ import asyncio
 from luna.luna_command_extensions.create_room import create_room
 from luna.luna_command_extensions.cmd_remove_room import cmd_remove_room
 from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
-from luna.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
 from luna.luna_command_extensions.cmd_shutdown import request_shutdown
 from luna.luna_command_extensions.ascii_art import show_ascii_banner
 
@@ -635,45 +634,6 @@ def cmd_create_room(args, loop):
 
     future.add_done_callback(on_done)
 
-def cmd_create_inspired_bot(args, loop):
-    """
-    Usage: summon <inspiration_text>
-
-    Example:
-      summon "A witty, fashion-forward cat who loves disco"
-
-    This console command prompts GPT to generate a new bot persona
-    (localpart, displayname, system_prompt, password, traits).
-    The resulting persona is stored in data/luna_personalities.json,
-    and the bot is created + logged in to Matrix, then added
-    to the in-memory BOTS dict.
-
-    Internally, this delegates to create_inspired_bot(...) in
-    luna_functions_create_inspired_bot.py, but we schedule it on the
-    existing asyncio loop (loop) with run_coroutine_threadsafe.
-    """
-
-
-    # 1) Wrap our target function in a coroutine
-    async def do_create_inspired_bot():
-        return create_inspired_bot(args, loop)
-
-    # 2) Schedule it on the event loop
-    future = asyncio.run_coroutine_threadsafe(do_create_inspired_bot(), loop)
-
-    # 3) Define a callback to handle success/failure
-    def on_done(fut):
-        try:
-            result = fut.result()
-            print(f"SYSTEM: {result}")
-        except Exception as e:
-            print(f"SYSTEM: Error creating inspired bot => {e}")
-            logger.exception("Exception in cmd_create_inspired_bot callback.")
-
-    future.add_done_callback(on_done)
-
-    print("SYSTEM: Attempting to create an inspired bot. Please wait...")
-
 def cmd_get_bot_system_prompt(args, loop):
     """
     Usage: get_bot_sp <bot_localpart>
@@ -990,7 +950,4 @@ COMMAND_ROUTER = {
     "invite": cmd_invite_user,
     "spawn": cmd_spawn_squad,
     "run_script": cmd_run_json_script,
-
-    # "summon_v2": cmd_summon_long_prompt
-    # "summon":cmd_create_inspired_bot
 }

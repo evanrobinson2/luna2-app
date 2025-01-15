@@ -10,7 +10,7 @@ from typing import Dict, Any, List
 
 # Adjust these imports as needed for your project
 from luna.luna_personas import get_system_prompt_by_localpart
-from luna import bot_messages_store2
+from luna import bot_messages_store
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -18,13 +18,14 @@ logger.setLevel(logging.DEBUG)
 def build_context(
     bot_localpart: str,
     room_id: str,
-    config: Dict[str, Any] | None = None
+    config: Dict[str, Any] | None = None,
+    message_history_length: int = 10
 ) -> List[Dict[str, str]]:
     """
     Builds a GPT-style conversation array for `bot_localpart` in `room_id`.
     Steps:
       1) Load the system prompt from personalities (if missing, fallback).
-      2) Retrieve up to N messages from bot_messages_store2 for that bot + room.
+      2) Retrieve up to N messages from bot_messages_store for that bot + room.
       3) Convert them to GPT roles: "assistant" if from the bot, "user" otherwise.
       4) Return a list of dicts e.g.:
          [
@@ -41,7 +42,7 @@ def build_context(
         config = {}
         logger.debug("[build_context] No config provided, using empty dict.")
 
-    max_history = config.get("max_history", 10)
+    max_history = config.get("max_history", message_history_length)
     logger.debug("[build_context] Will fetch up to %d messages from store.", max_history)
 
     # 1) Grab the system prompt
@@ -57,7 +58,7 @@ def build_context(
                      bot_localpart, len(system_prompt))
 
     # 2) Fetch the last N messages from the store for this bot & room
-    all_msgs = bot_messages_store2.get_messages_for_bot(bot_localpart)
+    all_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
     logger.debug("[build_context] The store returned %d total msgs for bot=%r.", len(all_msgs), bot_localpart)
 
     # Filter them by room
