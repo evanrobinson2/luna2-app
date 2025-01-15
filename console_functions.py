@@ -4,23 +4,24 @@ import logging
 import subprocess
 import shlex
 import asyncio
-from luna.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
-
+import textwrap
+import json
 import aiohttp
 from datetime import datetime
-import textwrap # or however you import from the same package
 from nio import AsyncClient
 from asyncio import CancelledError
 import json
-from luna.luna_command_extensions.cmd_shutdown import request_shutdown
 from luna import luna_personas
 from luna import luna_functions
 from nio.api import RoomVisibility
-from luna.luna_command_extensions.ascii_art import show_ascii_banner
 from luna.luna_functions import DIRECTOR_CLIENT
 import asyncio
 from luna.luna_command_extensions.create_room import create_room
+from luna.luna_command_extensions.cmd_remove_room import cmd_remove_room
 from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
+from luna.luna_command_extensions.luna_functions_create_inspired_bot import create_inspired_bot
+from luna.luna_command_extensions.cmd_shutdown import request_shutdown
+from luna.luna_command_extensions.ascii_art import show_ascii_banner
 
 logger = logging.getLogger(__name__)
 
@@ -334,7 +335,7 @@ def cmd_create_user(args, loop):
     This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
     import logging
-    from luna_command_extensions.create_and_login_bot import create_and_login_bot
+    from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
     logger = logging.getLogger(__name__)
 
@@ -480,100 +481,85 @@ def _print_users_table(users_info: list[dict]):
         row = f"{user_id:25} | {admin_str:5} | {deact_str:5} | {display}"
         print(row)
 
-def cmd_add_user(args, loop):
+def cmd_invite_user(args, loop):
     """
-    Usage: add_user <user_id> <room_id_or_alias>
+    Usage: invite_user <user_id> <room_id_or_alias>
 
     Example:
-      add_user @bob:localhost !testRoom:localhost
-      add_user @spyclops:localhost #mychannel:localhost
+      invite_user @bob:localhost !testRoom:localhost
+      invite_user @spyclops:localhost #mychannel:localhost
 
-    This console command force-joins a user to the given room or alias,
-    bypassing normal invite acceptance. It calls the Synapse Admin API
-    `POST /_synapse/admin/v1/join/<room_id_or_alias>` with a JSON body:
-    {
-      "user_id": "@bob:localhost"
-    }
-
-    Requires that the user running this command (Luna's director)
-    is an admin on the homeserver and already has power to invite in the room.
+    Sends a normal invite to the specified user_id, so they can accept
+    and join the given room or room alias. This requires that the user
+    executing this command (Luna's director) has sufficient power level
+    in the room to invite new participants.
     """
 
     parts = args.strip().split()
     if len(parts) < 2:
-        print("SYSTEM: Usage: add_user <user_id> <room_id_or_alias>")
+        print("SYSTEM: Usage: invite_user <user_id> <room_id_or_alias>")
         return
 
     user_id = parts[0]
     room_id_or_alias = parts[1]
 
-    async def do_force_join(user: str, room: str) -> str:
-        """
-        Asynchronous subroutine to forcibly join 'user' to 'room'
-        via Synapse Admin API, using the same token as DIRECTOR_CLIENT.
-        """
-        client = luna_functions.getClient()
-        if not client:
-            return "Error: No DIRECTOR_CLIENT set."
+import logging
+import asyncio
+import aiohttp
+import time
+from luna import luna_functions
 
-        admin_token = client.access_token
-        if not admin_token:
-            return "Error: No admin token is present in DIRECTOR_CLIENT."
+logger = logging.getLogger(__name__)
 
-        # The base homeserver URL (e.g., "http://localhost:8008")
-        homeserver_url = client.homeserver
-
-        # Synapse Admin API endpoint for forcing a user into a room:
-        # POST /_synapse/admin/v1/join/<room_id_or_alias>
-        # JSON body: { "user_id": "@someone:localhost" }
-        endpoint = f"{homeserver_url}/_synapse/admin/v1/join/{room}"
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        payload = {"user_id": user}
-
-        logger.debug("Forcing %s to join %s via %s", user, room, endpoint)
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(endpoint, headers=headers, json=payload) as resp:
-                    if resp.status in (200, 201):
-                        return f"Forcibly joined {user} to {room}."
-                    else:
-                        text = await resp.text()
-                        return f"Error {resp.status} forcibly joining {user} => {text}"
-        except Exception as e:
-            logger.exception("Exception in do_force_join:")
-            return f"Exception forcibly joining user => {e}"
-
-    # Schedule our async forced-join subroutine on the existing event loop:
-    future = asyncio.run_coroutine_threadsafe(do_force_join(user_id, room_id_or_alias), loop)
-
-    def on_done(fut):
-        try:
-            result_msg = fut.result()
-            print(f"SYSTEM: {result_msg}")
-        except Exception as e:
-            logger.exception(f"Exception in cmd_add_user callback: {e}")
-            print(f"SYSTEM: Error forcibly adding user: {e}")
-
-    future.add_done_callback(on_done)
-    print(f"SYSTEM: Force-joining {user_id} to {room_id_or_alias}... Please wait.")
-
-def cmd_list_server(args, loop):
+async def do_invite_user(user: str, room: str) -> str:
     """
-    Usage: cmd_list_server
-
-    Example:
-      list_server
-
-    Steps:
-    1) Lists the server's rooms along with summary information
-    2) Lists the server's users    
+    Asynchronous subroutine to invite 'user' to 'room' (which might be
+    a raw room ID like "!abc123:localhost" or possibly a name or alias).
+    1) Forces a short sync to ensure the client sees the correct power levels.
+    2) Invokes client.room_invite(...).
+    3) If M_FORBIDDEN occurs, we provide a more detailed message.
     """
-    
-    cmd_list_rooms(args, loop)
-    print("\n")
-    cmd_list_users(args, loop)
-    
+
+    client = luna_functions.getClient()
+    if not client:
+        return "Error: No DIRECTOR_CLIENT set."
+
+    # 1) Force a short sync so our client state is up-to-date:
+    try:
+        # Run a blocking sync in the current thread
+        sync_future = asyncio.run_coroutine_threadsafe(
+            client.sync(timeout=1000),  # 1-second sync
+            luna_functions.MAIN_LOOP  # or your existing loop reference
+        )
+        sync_future.result()
+        logger.debug("[do_invite_user] Sync completed before invite.")
+    except Exception as sync_e:
+        logger.exception("Sync error before inviting user:")
+        return f"Error syncing before invite => {sync_e}"
+    try:
+        resp = await client.room_invite(room, user)
+        logger.debug(f"[do_invite_user] room_invite returned => {resp}")
+
+        if resp and hasattr(resp, "status_code"):
+            code = resp.status_code
+            if code in (200, 202):
+                return f"Invited {user} to {room}."
+            else:
+                # If we see 403 or 401, typically it's M_FORBIDDEN or not enough power
+                if code == 403:  
+                    return (
+                        f"Error inviting {user} => M_FORBIDDEN. "
+                        "Possible cause: insufficient power level or not recognized in the room. "
+                        "Ensure you (the inviter) are joined & have the right power level."
+                    )
+                return f"Error inviting {user} => {code} (Check logs for details.)"
+        else:
+            # If resp is None or not recognized
+            return "Invite returned an unexpected or null response."
+    except Exception as e:
+        logger.exception("[do_invite_user] Exception in room_invite:")
+        # If e is a matrix-nio error (e.g., RoomInviteError), we can handle it specifically
+        return f"Exception inviting user => {e}" 
 
 def cmd_delete_bot(args, loop):
     """
@@ -754,10 +740,9 @@ def cmd_who_is(args, loop):
     """
     Usage: who_is <localpart>
 
-    Retrieves and displays persona info from personalities.json
-    for the bot with that <localpart>.
-    Also checks if the bot is currently in BOTS (logged in),
-    and prints the actual user ID if found.
+    Retrieves and displays persona info from personalities.json for
+    the bot with that <localpart>, in a table with wrapped text for
+    each field's value.
 
     Example:
       who_is inky
@@ -769,38 +754,43 @@ def cmd_who_is(args, loop):
         return
 
     localpart = parts[0]
-
-    # 1) Build the full user ID
     full_user_id = f"@{localpart}:localhost"
 
-    # 2) Attempt to read the persona from personalities.json
+    # Attempt to read the persona from personalities.json
     persona = luna_personas.read_bot(full_user_id)
     if not persona:
         print(f"SYSTEM: No persona found for '{full_user_id}' in personalities.json.")
-        # You might also show if the bot is in BOTS but no persona on disk
-        # or you can just exit here.
-        # We'll just exit for clarity.
         return
 
-    # 3) Print out persona fields
-    displayname    = persona.get("displayname", "(no display name)")
-    system_prompt  = persona.get("system_prompt", "(no system prompt)")
-    password       = persona.get("password", "(unknown)")
-    creator_user   = persona.get("creator_user_id", "(none)")
-    created_at     = persona.get("created_at", "(unknown date)")
-    notes          = persona.get("notes", "")
-    traits         = persona.get("traits", {})
+    # Print header
+    print(f"\nSYSTEM: Persona for bot => {full_user_id}\n")
 
-    print(f"\nSYSTEM: Persona for bot => {full_user_id}")
-    print(f"  Display Name : {displayname}")
-    print(f"  Creator      : {creator_user}")
-    print(f"  Created At   : {created_at}")
-    print(f"  Password     : {password}")
-    print(f"  SystemPrompt : {system_prompt[:60]}{'...' if len(system_prompt) > 60 else ''}")
-    print(f"  Traits       : {json.dumps(traits, indent=2)}")
+    # Determine how wide the left (key) column should be
+    # so everything lines up neatly
+    max_key_len = max(len(k) for k in persona.keys())
 
-    if notes:
-        print(f"  Notes        : {notes}")
+    # Choose a wrapping width for values
+    wrap_width = 60
+
+    # Print each key-value pair in a nicely formatted table
+    for key, raw_value in persona.items():
+        # If the value is a dict or list, JSON-serialize for display
+        if isinstance(raw_value, (dict, list)):
+            value_str = json.dumps(raw_value, indent=2)
+        else:
+            # Otherwise, just convert to string
+            value_str = str(raw_value)
+
+        # Wrap the text at wrap_width characters
+        lines = textwrap.wrap(value_str, width=wrap_width) or ["(empty)"]
+
+        # Print the first line with the key
+        print(f"{key.ljust(max_key_len)} : {lines[0]}")
+        
+        # For any additional lines, align them under the value column
+        for line in lines[1:]:
+            print(" " * (max_key_len + 3) + line)
+
     print()
 
 def cmd_summon_long_prompt(args, loop):
@@ -893,18 +883,82 @@ def cmd_summon_long_prompt(args, loop):
 
 def cmd_spawn_squad(args, loop):
     """
-    Usage: spawn_squad <numBots> "<theme or style>"
+    Usage: spawn <numBots> "<theme or style>"
 
     Example:
       spawn_squad 3 "A jazzy trio of improvisational bots"
     """
     # Import inside the function to avoid circular imports or to keep it minimal:
-    from luna.spawner import cmd_spawn_squad as spawner_impl
+    from luna.luna_command_extensions.spawner import cmd_spawn_squad as spawner_impl
 
     # Just delegate all logic:
     spawner_impl(args, loop)
 
+def cmd_run_json_script(args, loop):
+    """
+    Usage: run_script <script_file>
 
+    Reads a JSON-based script from <script_file>, then parses and executes it.
+    The script can contain actions like:
+      - create_room
+      - create_user
+      - add_user_to_channel
+      ... etc.
+
+    Example:
+      run_script my_script.json
+
+    The command will load 'my_script.json' from disk, parse it,
+    then execute the actions in order, printing logs along the way.
+    """
+    import os
+    import logging
+    import json
+    from luna.luna_command_extensions.parse_and_execute import parse_and_execute
+
+    logger = logging.getLogger(__name__)
+    logger.debug("[cmd_run_json_script] Called with args='%s'", args)
+
+    # 1) Parse console arguments
+    parts = args.strip().split()
+    if len(parts) < 1:
+        print("Usage: run_script <script_file>")
+        return
+
+    script_file = parts[0]
+    logger.debug("User provided script_file='%s'", script_file)
+
+    # 2) Check if the file exists
+    if not os.path.exists(script_file):
+        msg = f"[cmd_run_json_script] File not found: {script_file}"
+        logger.error(msg)
+        print(f"SYSTEM: {msg}")
+        return
+
+    # 3) Read the file contents
+    try:
+        with open(script_file, "r", encoding="utf-8") as f:
+            script_str = f.read()
+        logger.debug("[cmd_run_json_script] Successfully read %d bytes from '%s'.",
+                     len(script_str), script_file)
+    except Exception as e:
+        logger.exception("[cmd_run_json_script] Failed to read file '%s': %s", script_file, e)
+        print(f"SYSTEM: Error reading file '{script_file}': {e}")
+        return
+
+    # 4) Execute the script
+    print(f"SYSTEM: Executing script from '{script_file}'...")
+    logger.debug("[cmd_run_json_script] Invoking parse_and_execute(...)")
+    try:
+        parse_and_execute(script_str, loop)
+        logger.debug("[cmd_run_json_script] parse_and_execute completed.")
+    except Exception as e:
+        logger.exception("[cmd_run_json_script] parse_and_execute threw an exception: %s", e)
+        print(f"SYSTEM: Error executing script: {e}")
+        return
+
+    # 5) Confirm success
+    print("SYSTEM: Script execution command finished.")
 
 ########################################################
 # THE COMMAND ROUTER DICTIONARY
@@ -913,26 +967,30 @@ def cmd_spawn_squad(args, loop):
 COMMAND_ROUTER = {
     # System or meta-commands
     "help": cmd_help,
-    "exit": cmd_exit,
     "restart": cmd_restart,
-    "log": cmd_log,
+    "exit": cmd_exit,
+    
+    "logfile": cmd_log,
     "rotate_logs": cmd_rotate_logs,
-    "check_matrix": cmd_check_limit,
-    "show_shutdown":cmd_show_shutdown,
-    "who_is":cmd_who_is,
+    
+    "clear": cmd_clear,
+    "purge_and_seed": cmd_purge_and_seed, # stub-only
+    
+    "create_room": cmd_create_room,
+    "remove_room" : cmd_remove_room,
+    "list_rooms": cmd_list_rooms,
+    "fetch_all": cmd_fetch_all,
+
+    "list_users": cmd_list_users,
+    "whois":cmd_who_is,
     "whois_director": cmd_who,
     "get_system_prompt_for": cmd_get_bot_system_prompt,
     "set_system_prompt_for": cmd_set_bot_system_prompt,
-    "clear": cmd_clear,
-    "purge_and_seed": cmd_purge_and_seed,
-    "banner": cmd_banner,
-    "create_room": cmd_create_room,
-    "fetch_all": cmd_fetch_all,
-    "users": cmd_list_users,
-    "channels": cmd_list_rooms,
-    "server": cmd_list_server,
-    "add_user_to_channel":cmd_add_user,
-    # "summon":cmd_create_inspired_bot,
+
+    "invite": cmd_invite_user,
     "spawn": cmd_spawn_squad,
+    "run_script": cmd_run_json_script,
+
     # "summon_v2": cmd_summon_long_prompt
+    # "summon":cmd_create_inspired_bot
 }

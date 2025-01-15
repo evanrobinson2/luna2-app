@@ -72,17 +72,17 @@ def cmd_spawn_squad(args, loop):
         "You are an assistant that outputs ONLY valid JSON. "
         "No markdown, no code fences, no extra commentary. "
         f"Generate an array of exactly {count} persona objects. "
-        "Each object must have keys: localpart, displayname, biography, backstory, "
-        "system_prompt, password, traits. "
+        "Each object must have keys: localpart, displayname, biography, backstory, system_prompt, password, traits."
         "No other keys. "
         "The 'traits' key is a JSON object with arbitrary key/values. "
         "Be sure that the system prompt instructs the bot to behave at all times in character."
         "Incorporate as much of the character's identity into the system prompt as possible"
+        "In this environment, you can explicitly mention another bot by typing their Matrix user ID in the format @<localpart>:localhost. For example, if a bot’s localpart is diamond_dave, you would mention them as @diamond_dave:localhost. Important: mentioning a bot this way always triggers a response from them. Therefore, avoid frivolous or unnecessary mentions. Only mention another bot when you genuinely need their attention or expertise."
     )
 
     user_message = (
         f"Please create {count} persona(s) for the theme: '{theme}'. "
-        "Return ONLY valid JSON (an array, no outer text)."
+        "Return ONLY valid JSON (an array, no outer text). Be sure that the system prompt instructs the bot to behave at all times in character."
     )
 
     logger.debug("system_instructions=%r", system_instructions)
@@ -221,8 +221,8 @@ def cmd_spawn_squad(args, loop):
 
     # Announce to user we're about to do it
     print(
-        f"{ANSI_YELLOW}SYSTEM:{ANSI_RESET} Summoning a squad of {count} persona(s) "
-        f"for theme: '{theme}'... stand by."
+        f"{ANSI_YELLOW}SYSTEM:{ANSI_RESET} Summoning a squad of {count} "
+        f"'{theme}'... stand by."
     )
     logger.info("cmd_spawn_squad => scheduling do_spawn (count=%d, theme=%r)", count, theme)
 

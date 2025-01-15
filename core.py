@@ -23,12 +23,14 @@ from nio import (
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
+from luna.luna_command_extensions.luna_message_handler import handle_luna_message
+
 from luna.bot_messages_store2 import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
 from luna.luna_functions import load_or_login_client, load_or_login_client_v2 # The “director” login + ephemeral bot login functions
-from luna.luna_command_extensions.luna_message_handler import handle_luna_message
+
 logger = logging.getLogger(__name__)
 
 # Global containers
@@ -96,7 +98,7 @@ async def login_bots():
         logger.error(f"[login_bots] No {personalities_file} found.")
         return
 
-    with open(personalities_file, "r") as f:
+    with open(personalities_file, "r", encoding="utf-8") as f:
         personalities_data = json.load(f)
 
     homeserver_url = "http://localhost:8008"
@@ -137,23 +139,31 @@ async def run_bot_sync(bot_client: AsyncClient, localpart: str):
             # If no error, give control to other tasks
             await asyncio.sleep(0)
 
-
 # ------------------------------------------------------------------
-# HELPER FUNCTIONS FOR CALLBACKS
+# HELPER CALLBACK FUNCTIONS
 # ------------------------------------------------------------------
 
 def make_message_callback(bot_client, localpart):
-    """Return a function that references exactly these arguments."""
+    """
+    Returns a function that references exactly these arguments,
+    intended for handling normal room messages for a non-Luna bot.
+    """
     async def on_message(room, event):
         await handle_bot_room_message(bot_client, localpart, room, event)
     return on_message
 
 def make_invite_callback(bot_client, localpart):
+    """
+    Returns a function to handle invites for a non-Luna bot.
+    """
     async def on_invite(room, event):
         await handle_bot_invite(bot_client, localpart, room, event)
     return on_invite
 
 def make_member_callback(bot_client, localpart):
+    """
+    Returns a function to handle membership changes for a non-Luna bot.
+    """
     async def on_member(room, event):
         await handle_bot_member_event(bot_client, localpart, room, event)
     return on_member
@@ -168,41 +178,42 @@ async def main_logic():
     """
     logger.debug("Starting main_logic...")
 
-    # A) Log in Luna
+    # A) Log in Luna (the "director" user)
     luna_client = await load_or_login_client(
         homeserver_url="http://localhost:8008",
         username="lunabot",
         password="12345"
     )
     logger.info("Luna client login complete.")
-    
-    # Then in main_logic, after logging in Luna:
-    for localpart, bot_client in BOTS.items():
-        bot_client.add_event_callback(
-        # By giving default arguments `_lp=localpart` and `_bc=bot_client`,
-        # we ensure each lambda captures these values uniquely per iteration.
-        lambda room, event, _lp=localpart, _bc=bot_client: handle_bot_room_message(_bc, _lp, room, event),
+
+    # -- 1) Attach Luna's event callbacks --
+    # For messages:
+    luna_client.add_event_callback(
+        lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 
+    # For invites (the same invite handler you'd use for normal bots, or a specialized one):
     luna_client.add_event_callback(
-        lambda r, e: handle_bot_invite(luna_client, "lunabot", r, e),
+        lambda room, event: handle_bot_invite(luna_client, "lunabot", room, event),
         InviteMemberEvent
     )
+
+    # For membership changes (same or specialized):
     luna_client.add_event_callback(
-        lambda r, e: handle_bot_member_event(luna_client, "lunabot", r, e),
+        lambda room, event: handle_bot_member_event(luna_client, "lunabot", room, event),
         RoomMemberEvent
     )
 
-    # B) Log in existing bots
+    # B) Log in existing bots from disk
     await login_bots()
     logger.debug(f"BOTS loaded => {list(BOTS.keys())}")
 
-    # For each bot, attach callbacks (using helpers) and start a sync loop
+    # -- 2) For each loaded bot, attach event callbacks and start a sync loop
     bot_tasks = []
     for localpart, bot_client in BOTS.items():
         try:
-        # Register each callback via a distinct helper
+            # Register each callback via a distinct helper
             bot_client.add_event_callback(
                 make_message_callback(bot_client, localpart),
                 RoomMessageText
@@ -216,6 +227,7 @@ async def main_logic():
                 RoomMemberEvent
             )
 
+            # Start its sync loop
             task = asyncio.create_task(run_bot_sync(bot_client, localpart))
             bot_tasks.append(task)
 
@@ -237,14 +249,11 @@ async def main_logic():
     await luna_client.close()
     logger.debug("Luna client closed.")
 
-    # Cancel each bot's task
+    # Cancel each bot's sync task
     for t in bot_tasks:
         t.cancel()
 
     logger.debug("main_logic done, returning.")
-
-
-
 
 def luna_main():
     """
@@ -255,14 +264,16 @@ def luna_main():
     configure_logging()
     logger.debug("Logging configured. Creating event loop.")
 
+    # Load stored messages from disk (optional part of your code)
     load_messages()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     logger.debug("New event loop set as default.")
 
-    # Init shutdown
+    # Init the shutdown mechanism
     init_shutdown(loop)
+
     global MAIN_LOOP
     MAIN_LOOP = loop
 
@@ -291,5 +302,8 @@ def get_bots() -> dict:
     return BOTS
 
 def load_system_prompt():
+    """
+    (Optional) If you need to load a special system prompt for Luna from file.
+    """
     with open("data/luna_system_prompt.md", "r", encoding="utf-8") as f:
         return f.read()

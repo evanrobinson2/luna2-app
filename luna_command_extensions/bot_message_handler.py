@@ -2,25 +2,65 @@
 
 import logging
 import time
+import re
+# import urllib.parse  # We won’t use URL-encoding for now
 from nio import RoomMessageText, RoomSendResponse
 
-# Adjust to your project’s structure:
+# Adjust these imports to your project’s structure:
 from luna import bot_messages_store2         # or wherever you store your messages
 import luna.context_helper as context_helper # your GPT context builder
 from luna import ai_functions                # your GPT API logic
 
 logger = logging.getLogger(__name__)
 
+# Regex to capture Matrix-style user mentions like "@username:domain"
+MENTION_REGEX = re.compile(r"(@[A-Za-z0-9_\-\.]+:[A-Za-z0-9_\-\.]+)")
+
+def build_mention_content(original_text: str) -> dict:
+    """
+    Scans the GPT reply for mentions like '@helpfulharry:localhost' and
+    adds an <a href="matrix.to/#/@helpfulharry:localhost"> link in 'formatted_body'.
+    Also populates 'm.mentions' with user_ids for explicit mention detection.
+    
+    We are NOT URL-encoding @ or underscores here—just a simple replacement.
+    """
+
+    # Find all mention strings (user IDs)
+    matches = MENTION_REGEX.findall(original_text)
+    html_text = original_text
+
+    # We'll collect user IDs for 'm.mentions' here
+    user_ids = []
+
+    for mention in matches:
+        user_ids.append(mention)
+        # Example mention: "@helpful_harry:localhost"
+        # We'll make a link like: <a href="https://matrix.to/#/@helpful_harry:localhost">@helpful_harry:localhost</a>
+        url = f"https://matrix.to/#/{mention}"
+
+        # The link text remains the original mention (with '@')
+        html_link = f'<a href="{url}">{mention}</a>'
+
+        # Replace plain mention with the linked mention in the HTML text
+        html_text = html_text.replace(mention, html_link)
+
+    # Construct the final content dict
+    content = {
+        "msgtype": "m.text",
+        "body": original_text,             # plain-text fallback
+        "format": "org.matrix.custom.html",
+        "formatted_body": html_text
+    }
+
+    # If we found any mentions, add them to 'm.mentions'
+    if user_ids:
+        content["m.mentions"] = {"user_ids": user_ids}
+
+    return content
+
 async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     """
     A “mention or DM” style message handler with GPT-based replies + message store.
-
-    Steps:
-      1) Skip non-text or self-messages.
-      2) Check if we have already stored this event_id => avoid duplicates.
-      3) Store inbound message in 'bot_messages_store2'.
-      4) If DM or mention => build GPT context, call GPT, post reply.
-      5) Store outbound GPT reply as well.
     """
 
     # 1) Must be a text event, and must not be from ourselves
@@ -76,7 +116,6 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
 
     # -- BOT INDICATES TYPING START --
     try:
-        # Indicate that we (the bot) are typing for up to 30 seconds
         await bot_client.room_typing(room.room_id, True, timeout=30000)
     except Exception as e:
         logger.warning(f"Could not send 'typing start' indicator => {e}")
@@ -93,11 +132,14 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         max_tokens=300
     )
 
-    # 7) Post GPT reply
+    # 7) Convert GPT reply => mention-aware content (including m.mentions)
+    reply_content = build_mention_content(gpt_reply)
+
+    # 8) Post GPT reply
     resp = await bot_client.room_send(
         room_id=room.room_id,
         message_type="m.room.message",
-        content={"msgtype": "m.text", "body": gpt_reply},
+        content=reply_content,
     )
 
     # -- BOT INDICATES TYPING STOP --
@@ -106,7 +148,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     except Exception as e:
         logger.warning(f"Could not send 'typing stop' indicator => {e}")
 
-    # 8) Store outbound
+    # 9) Store outbound
     if isinstance(resp, RoomSendResponse) and resp.event_id:
         outbound_eid = resp.event_id
         logger.info(

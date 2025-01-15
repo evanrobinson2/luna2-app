@@ -195,7 +195,111 @@ async def create_user(username: str, password: str, is_admin: bool = False) -> s
 # ──────────────────────────────────────────────────────────
 # LIST ROOMS
 # ──────────────────────────────────────────────────────────
+import json
+import logging
+import aiohttp
+
+logger = logging.getLogger(__name__)
+
 async def list_rooms() -> list[dict]:
+    """
+    Fetches all rooms on the Synapse server via the admin API, then for each room,
+    calls a membership API to get participant info. Returns a list of dicts, e.g.:
+       [
+         {
+           "room_id": "!abc123:localhost",
+           "name": "My Great Room",
+           "joined_members_count": 3,
+           "participants": ["@userA:localhost", "@userB:localhost", "@lunabot:localhost"]
+         },
+         ...
+       ]
+
+    Implementation steps:
+      1) Load admin token from data/tokens.json
+      2) GET /_synapse/admin/v1/rooms to list all rooms
+      3) For each room, GET /_synapse/admin/v2/rooms/<roomID>/members
+         to find participants with membership = "join"
+      4) Build the final list of room info, returning it
+    """
+
+    # 1) Load admin token from data/tokens.json
+    homeserver_url = "http://localhost:8008"  # Adjust if needed
+    try:
+        with open("data/tokens.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+        admin_token = data["access_token"]
+    except Exception as e:
+        logger.error(f"Unable to load admin token from tokens.json: {e}")
+        return []
+
+    # 2) Query the list of rooms
+    list_url = f"{homeserver_url}/_synapse/admin/v1/rooms?limit=5000"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    all_rooms_info = []
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # First call: get the top-level list of rooms
+            async with session.get(list_url, headers=headers) as resp:
+                if resp.status == 200:
+                    resp_data = await resp.json()
+                    raw_rooms = resp_data.get("rooms", [])
+                    logger.debug(f"Found {len(raw_rooms)} total rooms on the server.")
+
+                    # 3) For each room, fetch membership
+                    for r in raw_rooms:
+                        room_id = r.get("room_id")
+                        # 'name' might be provided, or use the canonical_alias if present
+                        room_name = r.get("name") or r.get("canonical_alias") or "(unnamed)"
+
+                        # membership call: /_synapse/admin/v2/rooms/<room_id>/members
+                        members_url = f"{homeserver_url}/_synapse/admin/v2/rooms/{room_id}/members"
+                        async with session.get(members_url, headers=headers) as mresp:
+                            if mresp.status == 200:
+                                m_data = await mresp.json()
+                                raw_members = m_data.get("members", [])
+                                # We gather user_ids with membership='join'
+                                participants = []
+                                for mem_item in raw_members:
+                                    if mem_item.get("membership") == "join":
+                                        participants.append(mem_item.get("user_id"))
+
+                                # Build the final info
+                                all_rooms_info.append({
+                                    "room_id": room_id,
+                                    "name": room_name,
+                                    "joined_members_count": len(participants),
+                                    "participants": participants
+                                })
+                            else:
+                                # If membership call fails, we can log and skip
+                                text = await mresp.text()
+                                logger.warning(
+                                    f"Failed to fetch membership for {room_id} => "
+                                    f"HTTP {mresp.status}: {text}"
+                                )
+                                # We still return partial data (no participants)
+                                all_rooms_info.append({
+                                    "room_id": room_id,
+                                    "name": room_name,
+                                    "joined_members_count": r.get("joined_members", 0),
+                                    "participants": []
+                                })
+                else:
+                    # If the main /rooms call fails, log and return empty
+                    text = await resp.text()
+                    logger.error(f"Failed to list rooms (HTTP {resp.status}): {text}")
+                    return []
+    except Exception as e:
+        logger.exception(f"Error calling list_rooms admin API: {e}")
+        return []
+
+    return all_rooms_info
+
+
+async def list_rooms_dep() -> list[dict]:
     """
     Returns a list of rooms that DIRECTOR_CLIENT knows about, 
     including participant names.
@@ -212,6 +316,7 @@ async def list_rooms() -> list[dict]:
         logger.warning("list_rooms called, but DIRECTOR_CLIENT is None.")
         return []
 
+    logger.info("[luna_functions] [list_rooms] Entering List Rooms.")
     rooms_info = []
     for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
         room_name = room_obj.display_name or "(unnamed)"
