@@ -2,6 +2,11 @@
 import os
 import json
 import datetime
+import yaml
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 PERSONALITIES_FILE = "data/luna_personalities.json"
 
@@ -154,20 +159,50 @@ def delete_bot_persona(bot_id: str) -> None:
     # no return needed; it either succeeds or raises an exception
 
 
+def load_luna_config() -> dict:
+    """
+    Loads the config from data/config/config.yaml and returns it as a dict.
+    Expected structure (example):
+    
+    bots:
+      luna:
+        system_prompt: |
+          You are Luna, the advanced AI director...
+    """
+    config_path = "data/config/config.yaml"
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
 def get_system_prompt_by_localpart(localpart: str) -> str | None:
     """
     Returns the system_prompt for the bot whose localpart is `localpart`,
-    or None if that bot does not exist.
-
-    :param localpart: The localpart of the bot user (e.g. "inky").
-    :return: The system_prompt string, or None if not found.
+    or None if that bot does not exist or has no system prompt.
     """
-    bot_id = f"@{localpart}:localhost"
-    persona = read_bot(bot_id)
-    if not persona:
-        return None
-    return persona.get("system_prompt")
 
+    bot_id = f"@{localpart}:localhost"
+
+    # 1) Try reading a persona for the given bot.
+    persona = read_bot(bot_id)
+    if persona:
+        return persona.get("system_prompt")
+
+    # 2) If no persona found but this is lunabot, read from config.yaml
+    if localpart == "lunabot":
+        logger.debug("No persona found in read_bot for lunabot => loading from config.yaml")
+        cfg = load_luna_config()
+        # Adapt key lookups to your actual YAML structure:
+        # e.g.  cfg['bots']['luna']['system_prompt'] if your file is structured that way.
+        try:
+            system_prompt = cfg["bots"]["luna"]["system_prompt"]
+            return system_prompt
+        except KeyError:
+            logger.warning("No 'bots.luna.system_prompt' found in config.yaml.")
+            return None
+
+    # 3) Otherwise, no system prompt available
+    return None
 
 def set_system_prompt_by_localpart(localpart: str, new_prompt: str) -> dict | None:
     """

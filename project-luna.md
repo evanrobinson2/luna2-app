@@ -1505,16 +1505,18 @@ COMMAND_ROUTER = {
 """
 context_helper.py
 
-A module to build conversation context for GPT. 
-Includes extensive logging to understand how we form the messages array.
+A module to build conversation context for GPT,
+now including all messages in the channel (both user and bot),
+but EXCLUDING command lines that start with '!'.
+Sets a larger default history size (e.g., 20).
 """
 
 import logging
 from typing import Dict, Any, List
 
-# Adjust these imports as needed for your project
 from luna.luna_personas import get_system_prompt_by_localpart
 from luna import bot_messages_store
+from luna.luna_command_extensions.command_router import GLOBAL_PARAMS  # or wherever GLOBAL_PARAMS is stored
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -1523,21 +1525,22 @@ def build_context(
     bot_localpart: str,
     room_id: str,
     config: Dict[str, Any] | None = None,
-    message_history_length: int = 10
+    message_history_length: int = 20
 ) -> List[Dict[str, str]]:
     """
     Builds a GPT-style conversation array for `bot_localpart` in `room_id`.
     Steps:
-      1) Load the system prompt from personalities (if missing, fallback).
-      2) Retrieve up to N messages from bot_messages_store for that bot + room.
-      3) Convert them to GPT roles: "assistant" if from the bot, "user" otherwise.
-      4) Return a list of dicts e.g.:
+      1) Load the base system prompt from personalities (if missing, fallback).
+      2) Append any 'luna_context_appendix' param (if set) to the system prompt.
+      3) Retrieve up to N (default=20) messages from bot_messages_store for that bot + room.
+         *We skip any that start with '!' (command messages).*
+      4) Convert them to GPT roles: "assistant" if from the bot, "user" otherwise.
+      5) Return a list of dicts e.g.:
          [
            {"role": "system", "content": "System instructions..."},
-           {"role": "user",   "content": "User said..."},
-           {"role": "assistant", "content": "Bot replied..."}
+           {"role": "user", "content": "..."},
+           {"role": "assistant", "content": "..."}
          ]
-    With extra-verbose logging so you can see precisely how the context is built.
     """
 
     logger.info("[build_context] Called for bot_localpart=%r, room_id=%r", bot_localpart, room_id)
@@ -1549,7 +1552,7 @@ def build_context(
     max_history = config.get("max_history", message_history_length)
     logger.debug("[build_context] Will fetch up to %d messages from store.", max_history)
 
-    # 1) Grab the system prompt
+    # 1) Grab the base system prompt
     system_prompt = get_system_prompt_by_localpart(bot_localpart)
     if not system_prompt:
         system_prompt = (
@@ -1558,35 +1561,48 @@ def build_context(
         )
         logger.warning("[build_context] No persona found for %r; using fallback prompt.", bot_localpart)
     else:
-        logger.debug("[build_context] Found system_prompt for %r (length=%d).", 
+        logger.debug("[build_context] Found system_prompt for %r (length=%d).",
                      bot_localpart, len(system_prompt))
 
-    # 2) Fetch the last N messages from the store for this bot & room
+    if bot_localpart == 'lunabot':
+        # 2) Append the 'luna_context_appendix' if present
+        extra_context = GLOBAL_PARAMS.get("luna_context_appendix", "").strip()
+        if extra_context:
+            logger.debug("[build_context] Appending luna_context_appendix (length=%d) to system prompt.",
+                        len(extra_context))
+            system_prompt = f"{system_prompt}\n\n{extra_context}"
+
+    # 3) Fetch messages from the store for (bot_localpart, room_id)
     all_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
     logger.debug("[build_context] The store returned %d total msgs for bot=%r.", len(all_msgs), bot_localpart)
 
-    # Filter them by room
-    relevant_msgs = [m for m in all_msgs if m["room_id"] == room_id]
-    logger.debug("[build_context] After filtering by room_id=%r => %d msgs remain.", 
+    # Filter by room_id and skip messages starting with '!'
+    relevant_msgs = []
+    for m in all_msgs:
+        if m["room_id"] == room_id:
+            body = m["body"].lstrip() if m["body"] else ""
+            if not body.startswith("!"):  # skip commands
+                relevant_msgs.append(m)
+    logger.debug("[build_context] After filtering by room_id=%r and skipping commands => %d msgs remain.",
                  room_id, len(relevant_msgs))
 
-    # Sort them ascending by timestamp
+    # Sort ascending by timestamp
     relevant_msgs.sort(key=lambda x: x["timestamp"])
     logger.debug("[build_context] Sorted messages ascending by timestamp.")
 
-    # Truncate
+    # Truncate to max_history (20 by default)
     truncated = relevant_msgs[-max_history:]
     logger.debug("[build_context] Truncated to last %d messages for building context.", len(truncated))
 
-    # 3) Build the GPT conversation
+    # 4) Build the GPT conversation
     conversation: List[Dict[str, str]] = []
-    # Step A: Add system message
+    # Add system message first
     conversation.append({
         "role": "system",
         "content": system_prompt
     })
 
-    # Step B: For each message, classify as user or assistant
+    # Convert each truncated message to a user/assistant role
     bot_full_id = f"@{bot_localpart}:localhost"
 
     for msg in truncated:
@@ -1631,12 +1647,16 @@ from nio import (
     AsyncClient
 )
 
+from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+from luna.luna_command_extensions.command_router import load_config  # or wherever you keep load_config()
+
 # If these handlers are in separate files, adjust imports accordingly:
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
 from luna.luna_command_extensions.luna_message_handler import handle_luna_message
-
+from luna.luna_command_extensions.luna_message_handler2 import handle_luna_message2
+from luna.luna_command_extensions.luna_message_handler3 import handle_luna_message3
 from luna.bot_messages_store import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
@@ -1650,6 +1670,28 @@ BOTS = {}        # localpart -> AsyncClient (for bots)
 BOT_TASKS = []   # list of asyncio Tasks for each bot’s sync loop
 MAIN_LOOP = None # The main event loop
 DATABASE_PATH = "data/luna.db"
+
+# core.py
+import logging
+from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+from luna.luna_command_extensions.command_router import load_config
+
+logger = logging.getLogger(__name__)
+
+def init_globals():
+    """
+    Loads the config.yaml file at startup and populates GLOBAL_PARAMS
+    with any keys found under 'globals:'. 
+    This ensures your in-memory parameters are up-to-date before the bot runs.
+    """
+    logger.info("Initializing global parameters from config.yaml...")
+    cfg = load_config()
+    globals_section = cfg.get("globals", {})
+    for key, value in globals_section.items():
+        GLOBAL_PARAMS[key] = value
+        logger.debug("Loaded global param %r => %r", key, value)
+    logger.info("Global parameters initialized: %d params loaded.", len(globals_section))
+
 
 def configure_logging():
     """
@@ -1789,7 +1831,9 @@ async def main_logic():
       4) Luna's short sync loop runs until SHOULD_SHUT_DOWN.
     """
     logger.debug("Starting main_logic...")
-
+    
+    init_globals()
+    
     # A) Log in Luna (the "director" user)
     luna_client = await load_or_login_client(
         homeserver_url="http://localhost:8008",
@@ -1801,7 +1845,8 @@ async def main_logic():
     # -- 1) Attach Luna's event callbacks --
     # For messages:
     luna_client.add_event_callback(
-        lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
+        #lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
+        lambda room, event: handle_luna_message3(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 
@@ -2395,7 +2440,7 @@ import luna.context_helper as context_helper # your GPT context builder
 from luna import ai_functions                # your GPT API logic
 
 logger = logging.getLogger(__name__)
-
+BOT_START_TIME = time.time() * 1000
 # Regex to capture Matrix-style user mentions like "@username:domain"
 MENTION_REGEX = re.compile(r"(@[A-Za-z0-9_\-\.]+:[A-Za-z0-9_\-\.]+)")
 
@@ -2445,6 +2490,10 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     """
     A “mention or DM” style message handler with GPT-based replies + message store.
     """
+    # do not respond to messages from the past, under any circumstances
+    if event.server_timestamp < BOT_START_TIME:
+        logger.debug("Skipping old event => %s", event.event_id)
+        return
 
     # 1) Must be a text event, and must not be from ourselves
     if not isinstance(event, RoomMessageText):
@@ -2504,7 +2553,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         logger.warning(f"Could not send 'typing start' indicator => {e}")
 
     # 5) Build GPT context (the last N messages, plus a system prompt if you want)
-    config = {"max_history": 10}  # adjust as needed
+    config = {"max_history": 20}  # adjust as needed
     gpt_context = context_helper.build_context(bot_localpart, room.room_id, config)
 
     # 6) Call GPT
@@ -2587,6 +2636,182 @@ async def checkSynapseStatus(homeserver_url: str = "http://localhost:8008") -> s
 
     return status_str
 
+=== luna_command_extensions/chunk_and_summarize.py ===
+# chunk_and_summarize.py 
+
+import logging
+import asyncio
+from luna import ai_functions  # We'll use ai_functions.get_gpt_response
+from luna.bot_messages_store import get_messages_for_bot
+logger = logging.getLogger(__name__)
+
+async def chunk_and_summarize(
+    text: str,
+    chunk_size: int = 2000,
+    abstraction_level: int = 1,
+    model: str = "gpt-4",
+    temperature: float = 0.7,
+    max_tokens: int = 500,
+) -> str:
+    """
+    A simple chunk+summarize function:
+      1) Splits 'text' into ~chunk_size pieces.
+      2) Summarizes each piece individually, calling GPT once per chunk.
+      3) If abstraction_level > 1, merges partial summaries by repeated GPT calls,
+         each time condensing further.
+
+    :param text: The raw text to summarize.
+    :param chunk_size: Approx number of characters per chunk (naive approach).
+    :param abstraction_level: 1 => single pass summary, 
+                             2+ => do extra merges to reach a higher-level summary.
+    :param model: e.g. "gpt-4" or "gpt-3.5-turbo"
+    :param temperature: GPT generation temperature
+    :param max_tokens: GPT max_tokens param for each call.
+    :return: Final summarized text.
+    """
+
+    # 1) Chunk the text by characters
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start = end
+
+    # 2) Summarize each chunk with a single GPT call
+    partial_summaries = []
+    for i, chunk_text in enumerate(chunks):
+        prompt = f"Summarize the following text in a concise manner:\n\n{chunk_text}\n"
+        # We'll build the GPT messages array:
+        messages = [
+            {"role": "system", "content": "You are a summarizing assistant."},
+            {"role": "user",   "content": prompt},
+        ]
+        summary_piece = await ai_functions.get_gpt_response(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        partial_summaries.append(summary_piece)
+
+    # 3) If multiple passes, unify partial summaries into a final summary
+    summary_output = "\n".join(partial_summaries)
+    for level in range(2, abstraction_level + 1):
+        merge_prompt = (
+            f"Merge and further condense these partial summaries (pass={level}):\n"
+            f"{summary_output}"
+        )
+        messages = [
+            {"role": "system", "content": "You are a summarizing assistant."},
+            {"role": "user",   "content": merge_prompt},
+        ]
+        summary_output = await ai_functions.get_gpt_response(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+
+    return summary_output
+
+
+async def summarize_room_for_participant(
+    room_name: str,
+    participant_perspective: str,
+    abstraction_level: int = 1,
+    chunk_size: int = 2000,
+    model: str = "gpt-4",
+    temperature: float = 0.7,
+    max_tokens: int = 500
+) -> str:
+    """
+    Wrapper for summarizing a Matrix room from the perspective of a specific participant.
+    1) Fetch logs from the DB (here we do a naive approach, ignoring real vantage logic).
+    2) Convert them into a text block, possibly including the participant's vantage.
+    3) Call chunk_and_summarize(...) for the final condensed summary.
+
+    :param room_name: E.g. "!abc123:localhost"
+    :param participant_perspective: E.g. "@evan:localhost" or "Some vantage"
+    :param abstraction_level: 1 => single pass, 2 => partial merges, etc.
+    :param chunk_size: ~ chars per chunk
+    :param model: GPT model
+    :param temperature: GPT temperature
+    :param max_tokens: GPT max tokens per call
+    :return: Summarized string
+    """
+
+    # 1) Suppose we want all messages from <participant_perspective> in room <room_name>.
+    #    Right now, we only have get_messages_for_bot(bot_localpart) in our store, 
+    #    so let's do a minimal approach. If we want *all* room messages, 
+    #    we might store them under "lunabot" or a generic "loggerbot." 
+    #    For demonstration, we do a naive text gather:
+
+    # For demonstration, let's assume participant_perspective is also the "bot_localpart" 
+    # in the DB. That might not be exactly how your system is structured, 
+    # but we'll do a simple approach:
+    all_msgs = get_messages_for_bot(participant_perspective)
+
+    # Filter by the room_name
+    room_msgs = [m for m in all_msgs if m["room_id"] == room_name]
+    if not room_msgs:
+        logger.warning(f"No messages found for participant={participant_perspective} in room={room_name}.")
+        return f"(No messages found for {participant_perspective} in {room_name})"
+
+    # Sort them by ascending timestamp
+    room_msgs.sort(key=lambda x: x["timestamp"])
+
+    # Build a big text block:
+    lines = []
+    for msg in room_msgs:
+        tstamp = msg["timestamp"]
+        sender = msg["sender"]
+        body   = msg["body"]
+        # If you want to only keep messages from participant_perspective, you could filter out. 
+        # But let's keep the entire conversation context:
+        line = f"{sender}: {body}"
+        lines.append(line)
+
+    conversation_text = "\n".join(lines)
+
+    # 2) We'll add a tiny prefix describing the perspective in the text 
+    #    (or we can incorporate it in the chunk summarization prompt).
+    text_with_perspective = (
+        f"You are summarizing room '{room_name}' from the vantage of '{participant_perspective}'.\n"
+        f"Below is the raw text:\n\n{conversation_text}"
+    )
+
+    # 3) Now call chunk_and_summarize
+    final_summary = await chunk_and_summarize(
+        text=text_with_perspective,
+        chunk_size=chunk_size,
+        abstraction_level=abstraction_level,
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+
+    return final_summary
+
+
+# Example usage from a REPL or from a test function:
+# 
+# async def example_usage():
+#     result = await summarize_room_for_participant(
+#         room_name="!abc123:localhost",
+#         participant_perspective="blended_malt",  # or e.g. "@blended_malt:localhost" if your store uses that
+#         abstraction_level=2,
+#         chunk_size=1000,
+#         model="gpt-4",
+#         temperature=0.7,
+#         max_tokens=500
+#     )
+#     print("FINAL SUMMARY =>\n", result)
+#
+# if __name__ == "__main__":
+#     # quick test
+#     asyncio.run(example_usage())
+
 === luna_command_extensions/cmd_banner.py ===
 # cmd_banner.py
 import logging
@@ -2618,6 +2843,100 @@ def cmd_exit(args, loop):
     print("SYSTEM: Shutting down Luna gracefully...")    
     request_shutdown()
 
+=== luna_command_extensions/cmd_generate_image.py ===
+import asyncio
+import shlex
+import logging
+from luna.ai_functions import generate_image_save_and_post
+from luna.luna_functions import getClient
+
+logger = logging.getLogger(__name__)
+
+def cmd_generate_image(args, loop):
+    """
+    Usage: generate_image "<prompt text>" [--size 512x512] [--room !roomid:localhost]
+
+    Example:
+      generate_image "A Starship Aurora in deep space" --size 512x512 --room !abc123:localhost
+
+    This console command:
+      1) Parses a text prompt and optional size/room arguments.
+      2) Calls 'generate_image_save_and_post' on the event loop.
+      3) Saves the image locally and sends it to the specified room (defaults to Evan's DM).
+    """
+
+    # Default values
+    default_room_id = "!someRoomEvanAndLunaShare:localhost"  # Replace with Evan's actual room ID
+    default_size = "1024x1024"
+
+    # Parse arguments with shlex to handle quoted prompts
+    try:
+        tokens = shlex.split(args)
+    except ValueError as e:
+        print(f"SYSTEM: Error parsing arguments => {e}")
+        return
+
+    if not tokens:
+        print("Usage: generate_image \"<prompt>\" [--size 512x512] [--room !roomid:localhost]")
+        return
+
+    # The prompt is assumed to be the first token unless preceded by flags
+    prompt = None
+    room_id = default_room_id
+    size = default_size
+
+    # We'll iterate over tokens and look for flags
+    # e.g.  "A Starship Aurora in deep space" --size 512x512 --room !abc123:localhost
+    # tokens might be: ["A Starship Aurora in deep space", "--size", "512x512", "--room", "!abc123:localhost"]
+
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token == "--size":
+            i += 1
+            if i < len(tokens):
+                size = tokens[i]
+        elif token == "--room":
+            i += 1
+            if i < len(tokens):
+                room_id = tokens[i]
+        else:
+            # If prompt is not yet set, assume this token is the prompt
+            # (In many cases, the entire first token is the prompt if it's quoted.)
+            # If you want to allow multi-token prompts without quotes, you'll need more parsing logic.
+            if prompt is None:
+                prompt = token
+            else:
+                # If there's already a prompt, append with space
+                prompt += f" {token}"
+        i += 1
+
+    if not prompt:
+        print("SYSTEM: No prompt text found. Usage: generate_image \"<prompt>\" [--size 512x512] [--room !roomid:localhost]")
+        return
+
+    # Grab the client
+    client = getClient()
+    if not client:
+        print("SYSTEM: No DIRECTOR_CLIENT available, cannot proceed.")
+        return
+
+    def do_generate():
+        # We call the async function in a thread-safe manner
+        try:
+            # Schedule the coroutine and wait for result
+            future = asyncio.run_coroutine_threadsafe(
+                generate_image_save_and_post(prompt, client, room_id, size=size),
+                loop
+            )
+            future.result()  # blocks until complete
+            print("SYSTEM: Image generation process completed.")
+        except Exception as e:
+            logger.exception("Error in do_generate while calling generate_image_save_and_post:")
+            print(f"SYSTEM: Exception => {e}")
+
+    do_generate()
+    print("SYSTEM: Finished cmd_generate_image command.")
 === luna_command_extensions/cmd_help.py ===
 from console_functions import COMMAND_ROUTER
 import logging
@@ -2780,6 +3099,144 @@ def request_shutdown() -> None:
 
     if MAIN_LOOP and MAIN_LOOP.is_running():
         MAIN_LOOP.call_soon_threadsafe(MAIN_LOOP.stop)
+
+=== luna_command_extensions/cmd_summarize_room.py ===
+import logging
+import asyncio
+import shlex
+
+# For BBS-like coloring, we can define a few ANSI color codes:
+ANSI_BLUE = "\x1b[34m"
+ANSI_CYAN = "\x1b[36m"
+ANSI_GREEN = "\x1b[32m"
+ANSI_MAGENTA = "\x1b[35m"
+ANSI_RED = "\x1b[31m"
+ANSI_YELLOW = "\x1b[33m"
+ANSI_WHITE = "\x1b[37m"
+ANSI_RESET = "\x1b[0m"
+
+from luna.luna_command_extensions.summarize_room_for_participant import summarize_room_for_participant
+
+logger = logging.getLogger(__name__)
+
+def cmd_summarize_room(args, loop):
+    """
+    Usage: summarize_room <room_name> <participant_name> [--level N] [--chunk M]
+
+    Example:
+      summarize_room !abc123:localhost userA --level 2 --chunk 1000
+
+    Summarizes the conversation in room_name from the vantage of participant_name
+    using 'summarize_room_for_participant(...)'.
+
+    Optional flags:
+      --level N   => abstraction_level (default 1)
+      --chunk M   => chunk_size in characters (default 2000)
+
+    The result is printed to the console.
+    """
+
+    logger.debug(f"[cmd_summarize_room] Entered function with raw args => {args!r}")
+
+    # 1) Parse arguments
+    logger.debug("[cmd_summarize_room] Parsing arguments via shlex...")
+    parts = shlex.split(args.strip())
+    logger.debug(f"[cmd_summarize_room] Tokenized parts => {parts!r}")
+
+    if len(parts) < 2:
+        logger.warning("[cmd_summarize_room] Not enough arguments => %r", parts)
+        print(
+            f"{ANSI_YELLOW}SYSTEM:{ANSI_RESET} Usage: summarize_room <room_name> "
+            f"<participant_name> [--level N] [--chunk M]"
+        )
+        return
+
+    room_name = parts[0]
+    participant = parts[1]
+    logger.debug(f"[cmd_summarize_room] Room => {room_name!r}, Participant => {participant!r}")
+
+    # Optional flags
+    abstraction_level = 1
+    chunk_size = 2000
+
+    # Parse leftover tokens for --level and --chunk
+    leftover = parts[2:]
+    logger.debug(f"[cmd_summarize_room] Leftover tokens => {leftover!r}")
+
+    i = 0
+    while i < len(leftover):
+        token = leftover[i].lower()
+        logger.debug(f"[cmd_summarize_room] Inspecting leftover token => {token!r}")
+
+        if token == "--level" and (i + 1) < len(leftover):
+            try:
+                abstraction_level = int(leftover[i + 1])
+                logger.debug(f"[cmd_summarize_room] abstraction_level set => {abstraction_level}")
+                i += 2
+                continue
+            except ValueError:
+                logger.error("[cmd_summarize_room] Invalid number after '--level': %r", leftover[i+1])
+                print(f"{ANSI_RED}SYSTEM:{ANSI_RESET} Invalid number after '--level'.")
+        elif token == "--chunk" and (i + 1) < len(leftover):
+            try:
+                chunk_size = int(leftover[i + 1])
+                logger.debug(f"[cmd_summarize_room] chunk_size set => {chunk_size}")
+                i += 2
+                continue
+            except ValueError:
+                logger.error("[cmd_summarize_room] Invalid number after '--chunk': %r", leftover[i+1])
+                print(f"{ANSI_RED}SYSTEM:{ANSI_RESET} Invalid number after '--chunk'.")
+        i += 1
+
+    # 2) Wrap the summarization call in an async function for run_coroutine_threadsafe
+    async def do_summarize():
+        logger.info(
+            "[cmd_summarize_room] Summarizing room=%r from participant=%r, "
+            "level=%d, chunk_size=%d",
+            room_name, participant, abstraction_level, chunk_size
+        )
+        try:
+            # Print a little 1990s BBS–style header
+            print(
+                f"{ANSI_MAGENTA}\n"
+                f"============================================\n"
+                f" Summarizing ROOM: {room_name} \n"
+                f" Participant: {participant} \n"
+                f" Level: {abstraction_level} | Chunk: {chunk_size}\n"
+                f"============================================{ANSI_RESET}"
+            )
+            summary = await summarize_room_for_participant(
+                room_name=room_name,
+                participant_perspective=participant,
+                abstraction_level=abstraction_level,
+                chunk_size=chunk_size
+            )
+            logger.debug("[cmd_summarize_room] Summarize function returned => %r", summary[:120] + "...")
+            return summary
+        except Exception as e:
+            logger.exception("[cmd_summarize_room] Exception in do_summarize => %s", e)
+            raise
+
+    logger.debug("[cmd_summarize_room] Scheduling do_summarize() on the event loop.")
+    future = asyncio.run_coroutine_threadsafe(do_summarize(), loop)
+
+    try:
+        logger.debug("[cmd_summarize_room] Blocking on future.result() for summary.")
+        result = future.result()
+        # 4) Print the summary with BBS style
+        logger.debug("[cmd_summarize_room] Received summary result => %r", result[:120] + "...")
+        print(
+            f"{ANSI_BLUE}\n-----------[ FINAL SUMMARY ]-----------{ANSI_RESET}\n"
+        )
+        # We can color the final summary in a bright color for readability
+        print(f"{ANSI_CYAN}{result}{ANSI_RESET}\n")
+        print(f"{ANSI_BLUE}----------------------------------------{ANSI_RESET}")
+    except Exception as e:
+        logger.exception("[cmd_summarize_room] Caught top-level exception => %s", e)
+        print(f"{ANSI_RED}SYSTEM:{ANSI_RESET} Error summarizing room => {e}")
+    else:
+        logger.debug("[cmd_summarize_room] Finished successfully.\n")
+        print(f"{ANSI_GREEN}SYSTEM:{ANSI_RESET} Summarization complete.\n")
 
 === luna_command_extensions/create_and_login_bot.py ===
 """
@@ -3054,6 +3511,257 @@ async def create_room(args_string: str) -> str:
     except Exception as e:
         logger.exception("Caught an exception while creating room %r:", room_name)
         return f"Exception while creating room => {e}"
+
+=== luna_command_extensions/dall_e_bot_handler.py ===
+# luna_message_handler.py
+
+import os
+import time
+import json
+import logging
+import requests
+import urllib.parse
+import aiohttp
+
+from nio import (
+    AsyncClient,
+    RoomMessageText,
+    RoomSendResponse,
+)
+
+from luna import bot_messages_store  # We’ll use this to track seen event IDs
+
+logger = logging.getLogger(__name__)
+
+async def direct_upload_image(
+    client: AsyncClient,
+    file_path: str,
+    content_type: str = "image/jpeg"
+) -> str:
+    """
+    Manually upload a file to Synapse's media repository, explicitly setting
+    Content-Length (avoiding chunked requests).
+    
+    Returns the mxc:// URI if successful, or raises an exception on failure.
+    """
+    if not client.access_token or not client.homeserver:
+        raise RuntimeError("AsyncClient has no access_token or homeserver set.")
+
+    base_url = client.homeserver.rstrip("/")
+    filename = os.path.basename(file_path)
+    encoded_name = urllib.parse.quote(filename)
+    upload_url = f"{base_url}/_matrix/media/v3/upload?filename={encoded_name}"
+
+    file_size = os.path.getsize(file_path)
+    headers = {
+        "Authorization": f"Bearer {client.access_token}",
+        "Content-Type": content_type,
+        "Content-Length": str(file_size),
+    }
+
+    logger.debug("[direct_upload_image] POST to %s, size=%d", upload_url, file_size)
+
+    async with aiohttp.ClientSession() as session:
+        with open(file_path, "rb") as f:
+            async with session.post(upload_url, headers=headers, data=f) as resp:
+                if resp.status == 200:
+                    body = await resp.json()
+                    content_uri = body.get("content_uri")
+                    if not content_uri:
+                        raise RuntimeError("No 'content_uri' in response JSON.")
+                    logger.debug("[direct_upload_image] Uploaded. content_uri=%s", content_uri)
+                    return content_uri
+                else:
+                    err_text = await resp.text()
+                    raise RuntimeError(
+                        f"Upload failed (HTTP {resp.status}): {err_text}"
+                    )
+
+
+async def handle_luna_message(bot_client: AsyncClient, bot_localpart: str, room, event):
+    """
+    Modified so we only respond ONCE per message/event_id. If the event_id
+    is already in our DB, we skip responding again.
+
+    Steps:
+      1) If from ourselves, ignore.
+      2) If not a RoomMessageText or not "!draw", ignore.
+      3) Check DB for existing event_id. If found, skip.
+      4) Otherwise, store inbound message in DB so we don't respond to it again.
+      5) Generate image via OpenAI + direct upload
+      6) Post m.image + handle fallback
+    """
+
+    bot_full_id = bot_client.user
+
+    # 1) Don’t respond to own messages
+    if event.sender == bot_full_id:
+        logger.debug("Ignoring message from myself: %s", event.sender)
+        return
+
+    # Must be a text event
+    if not isinstance(event, RoomMessageText):
+        return
+
+    message_body = event.body or ""
+    if not message_body.startswith("!draw"):
+        return
+
+    # 2) Check if we already saw this event_id in DB
+    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
+    if any(m["event_id"] == event.event_id for m in existing_msgs):
+        logger.info(
+            "[handle_luna_message] We’ve already responded to event_id=%s, skipping.",
+            event.event_id
+        )
+        return
+
+    # 3) If this is brand new, store the inbound message so we don't respond to it twice
+    bot_messages_store.append_message(
+        bot_localpart=bot_localpart,
+        room_id=room.room_id,
+        event_id=event.event_id,
+        sender=event.sender,
+        timestamp=event.server_timestamp,
+        body=message_body
+    )
+
+    # 4) Check for a non-empty prompt
+    prompt = message_body[5:].strip()
+    if not prompt:
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={
+                "msgtype": "m.text",
+                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
+            },
+        )
+        return
+
+    # 5) Make sure we have an OpenAI API key
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if not OPENAI_API_KEY:
+        logger.error("OpenAI API key not found in environment variables.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
+        )
+        return
+
+    # 6) Indicate typing
+    try:
+        await bot_client.room_typing(room.room_id, typing_state=True, timeout=30000)
+        logger.info("Successfully sent 'typing start' indicator to room.")
+    except Exception as e:
+        logger.warning(f"Could not send 'typing start' indicator => {e}")
+
+    try:
+        # (A) Generate the image from OpenAI
+        try:
+            logger.info("Generating image with OpenAI's API. Prompt=%r", prompt)
+            url = "https://api.openai.com/v1/images/generations"
+            headers = {
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            }
+            data = {
+                "model": "dall-e-3",
+                "prompt": prompt,
+                "n": 1,
+                "size": "1024x1024",
+            }
+            resp = requests.post(url, headers=headers, json=data)
+            resp.raise_for_status()
+            result_data = resp.json()
+            image_url = result_data["data"][0]["url"]
+            logger.info("OpenAI returned an image URL: %s", image_url)
+        except Exception as e:
+            logger.exception("Error occurred while generating image from OpenAI.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
+            )
+            return
+
+        # (B) Download the image
+        try:
+            logger.info("Downloading image from URL: %s", image_url)
+            os.makedirs("data/images", exist_ok=True)
+            timestamp = int(time.time())
+            filename = f"data/images/generated_image_{timestamp}.jpg"
+
+            dl_resp = requests.get(image_url)
+            dl_resp.raise_for_status()
+
+            with open(filename, "wb") as f:
+                f.write(dl_resp.content)
+
+            logger.info("Image downloaded => %s", filename)
+        except Exception as e:
+            logger.exception("Error occurred while downloading the image.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": "Error downloading the image."},
+            )
+            return
+
+        # (C) Upload to Synapse (explicit Content-Length)
+        try:
+            logger.info("Uploading image to Matrix server (direct_upload_image).")
+            mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
+            logger.info("Image upload success => %s", mxc_url)
+        except Exception as e:
+            logger.exception("Error occurred during direct upload to Synapse.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
+            )
+            return
+
+        # (D) Send the m.image event
+        try:
+            file_size = os.path.getsize(filename)
+            image_content = {
+                "msgtype": "m.image",
+                "body": os.path.basename(filename),
+                "url": mxc_url,
+                "info": {
+                    "mimetype": "image/jpeg",
+                    "size": file_size,
+                    "w": 1024,
+                    "h": 1024
+                },
+            }
+            logger.info("Sending m.image =>\n%s", json.dumps(image_content, indent=2))
+            img_response = await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content=image_content,
+            )
+            if isinstance(img_response, RoomSendResponse):
+                logger.info("Sent image to room. Event ID: %s", img_response.event_id)
+            else:
+                logger.error("Failed to send image. Response: %s", img_response)
+        except Exception as e:
+            logger.exception("Error sending the image to the room.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": "There was an error uploading the image."},
+            )
+            return
+
+    finally:
+        # (E) Stop typing no matter what
+        try:
+            await bot_client.room_typing(room.room_id, typing_state=False, timeout=0)
+        except Exception as e:
+            logger.warning(f"Could not send 'typing stop' indicator => {e}")
 
 === luna_command_extensions/luna_message_handler.py ===
 # luna_message_handler.py
@@ -3698,6 +4406,74 @@ def cmd_spawn_squad(args, loop):
             f"{ANSI_RED}SYSTEM: spawn_squad encountered an error => {e}{ANSI_RESET}"
         )
         logger.exception("spawn_squad encountered an exception =>", exc_info=e)
+
+=== luna_command_extensions/summarize_room_for_participant.py ===
+import logging
+from luna.bot_messages_store import get_messages_for_room
+from luna.luna_command_extensions.chunk_and_summarize import chunk_and_summarize
+
+logger = logging.getLogger(__name__)
+
+async def summarize_room_for_participant(
+    room_name: str,
+    participant_perspective: str,
+    abstraction_level: int = 1,
+    chunk_size: int = 2000
+) -> str:
+    """
+    Summarizes the entire conversation in 'room_name' so that
+    'participant_perspective' can see what's going on. In other words,
+    we do not filter by localpart, but return *all* messages from the DB.
+
+    :param room_name: e.g. "!abc123:localhost"
+    :param participant_perspective: e.g. "someUser", but we won't filter by them.
+    :param abstraction_level: 1 => single pass, 2 => do merges, etc.
+    :param chunk_size: approx. chars per chunk
+    :return: Summarized text for the entire channel
+    """
+
+    logger.info(
+        "[summarize_room_for_participant] Summarizing entire channel => %r, perspective=%r",
+        room_name, participant_perspective
+    )
+
+    # 1) Get all messages from the DB for room_name
+    all_msgs = get_messages_for_room(room_name)
+    if not all_msgs:
+        logger.warning("[summarize_room_for_participant] No messages found for %r", room_name)
+        return f"No messages found in {room_name}."
+
+    # 2) Build a big text block
+    lines = []
+    for msg in all_msgs:
+        timestamp = msg["timestamp"]
+        sender    = msg["sender"]
+        body      = msg["body"]
+        lines.append(f"{sender}: {body}")
+
+    big_text = "\n".join(lines)
+
+    # 3) Optionally incorporate participant perspective into the text or prompt:
+    #    e.g. "You are summarizing the entire conversation from the vantage
+    #    of {participant_perspective}..."
+    #    We'll do it in the final prompt by passing the vantage into chunk_and_summarize.
+
+    vantage_intro = (
+        f"You are summarizing the entire conversation in {room_name}, "
+        f"providing an overview for participant '{participant_perspective}'.\n"
+        "Below is the full transcript:\n"
+    )
+
+    # 4) Summarize using a chunk_and_summarize function
+    #    If you’re storing the vantage in the text, we can just prepend vantage_intro
+    text_for_summarization = f"{vantage_intro}{big_text}"
+
+    final_summary = await chunk_and_summarize(
+        text=text_for_summarization,
+        chunk_size=chunk_size,
+        abstraction_level=abstraction_level
+    )
+    return final_summary
 
 === luna_functions.py ===
 """
@@ -4419,6 +5195,11 @@ def getClient():
 import os
 import json
 import datetime
+import yaml
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 PERSONALITIES_FILE = "data/luna_personalities.json"
 
@@ -4571,20 +5352,50 @@ def delete_bot_persona(bot_id: str) -> None:
     # no return needed; it either succeeds or raises an exception
 
 
+def load_luna_config() -> dict:
+    """
+    Loads the config from data/config/config.yaml and returns it as a dict.
+    Expected structure (example):
+    
+    bots:
+      luna:
+        system_prompt: |
+          You are Luna, the advanced AI director...
+    """
+    config_path = "data/config/config.yaml"
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
 def get_system_prompt_by_localpart(localpart: str) -> str | None:
     """
     Returns the system_prompt for the bot whose localpart is `localpart`,
-    or None if that bot does not exist.
-
-    :param localpart: The localpart of the bot user (e.g. "inky").
-    :return: The system_prompt string, or None if not found.
+    or None if that bot does not exist or has no system prompt.
     """
-    bot_id = f"@{localpart}:localhost"
-    persona = read_bot(bot_id)
-    if not persona:
-        return None
-    return persona.get("system_prompt")
 
+    bot_id = f"@{localpart}:localhost"
+
+    # 1) Try reading a persona for the given bot.
+    persona = read_bot(bot_id)
+    if persona:
+        return persona.get("system_prompt")
+
+    # 2) If no persona found but this is lunabot, read from config.yaml
+    if localpart == "lunabot":
+        logger.debug("No persona found in read_bot for lunabot => loading from config.yaml")
+        cfg = load_luna_config()
+        # Adapt key lookups to your actual YAML structure:
+        # e.g.  cfg['bots']['luna']['system_prompt'] if your file is structured that way.
+        try:
+            system_prompt = cfg["bots"]["luna"]["system_prompt"]
+            return system_prompt
+        except KeyError:
+            logger.warning("No 'bots.luna.system_prompt' found in config.yaml.")
+            return None
+
+    # 3) Otherwise, no system prompt available
+    return None
 
 def set_system_prompt_by_localpart(localpart: str, new_prompt: str) -> dict | None:
     """

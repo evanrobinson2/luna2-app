@@ -12,7 +12,7 @@ import luna.context_helper as context_helper # your GPT context builder
 from luna import ai_functions                # your GPT API logic
 
 logger = logging.getLogger(__name__)
-
+BOT_START_TIME = time.time() * 1000
 # Regex to capture Matrix-style user mentions like "@username:domain"
 MENTION_REGEX = re.compile(r"(@[A-Za-z0-9_\-\.]+:[A-Za-z0-9_\-\.]+)")
 
@@ -62,6 +62,10 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     """
     A “mention or DM” style message handler with GPT-based replies + message store.
     """
+    # do not respond to messages from the past, under any circumstances
+    if event.server_timestamp < BOT_START_TIME:
+        logger.debug("Skipping old event => %s", event.event_id)
+        return
 
     # 1) Must be a text event, and must not be from ourselves
     if not isinstance(event, RoomMessageText):
@@ -121,7 +125,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         logger.warning(f"Could not send 'typing start' indicator => {e}")
 
     # 5) Build GPT context (the last N messages, plus a system prompt if you want)
-    config = {"max_history": 10}  # adjust as needed
+    config = {"max_history": 20}  # adjust as needed
     gpt_context = context_helper.build_context(bot_localpart, room.room_id, config)
 
     # 6) Call GPT

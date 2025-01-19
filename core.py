@@ -19,11 +19,17 @@ from nio import (
     AsyncClient
 )
 
+from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+from luna.luna_command_extensions.command_router import load_config  # or wherever you keep load_config()
+
 # If these handlers are in separate files, adjust imports accordingly:
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
 from luna.luna_command_extensions.luna_message_handler import handle_luna_message
+from luna.luna_command_extensions.luna_message_handler2 import handle_luna_message2
+from luna.luna_command_extensions.luna_message_handler3 import handle_luna_message3
+from luna.luna_command_extensions.luna_message_handler4 import handle_luna_message4
 
 from luna.bot_messages_store import load_messages
 
@@ -38,6 +44,28 @@ BOTS = {}        # localpart -> AsyncClient (for bots)
 BOT_TASKS = []   # list of asyncio Tasks for each bot’s sync loop
 MAIN_LOOP = None # The main event loop
 DATABASE_PATH = "data/luna.db"
+
+# core.py
+import logging
+from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+from luna.luna_command_extensions.command_router import load_config
+
+logger = logging.getLogger(__name__)
+
+def init_globals():
+    """
+    Loads the config.yaml file at startup and populates GLOBAL_PARAMS
+    with any keys found under 'globals:'. 
+    This ensures your in-memory parameters are up-to-date before the bot runs.
+    """
+    logger.info("Initializing global parameters from config.yaml...")
+    cfg = load_config()
+    globals_section = cfg.get("globals", {})
+    for key, value in globals_section.items():
+        GLOBAL_PARAMS[key] = value
+        logger.debug("Loaded global param %r => %r", key, value)
+    logger.info("Global parameters initialized: %d params loaded.", len(globals_section))
+
 
 def configure_logging():
     """
@@ -177,7 +205,9 @@ async def main_logic():
       4) Luna's short sync loop runs until SHOULD_SHUT_DOWN.
     """
     logger.debug("Starting main_logic...")
-
+    
+    init_globals()
+    
     # A) Log in Luna (the "director" user)
     luna_client = await load_or_login_client(
         homeserver_url="http://localhost:8008",
@@ -189,7 +219,8 @@ async def main_logic():
     # -- 1) Attach Luna's event callbacks --
     # For messages:
     luna_client.add_event_callback(
-        lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
+        #lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
+        lambda room, event: handle_luna_message4(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 
