@@ -25,7 +25,7 @@ from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
 from luna.luna_command_extensions.luna_message_handler import handle_luna_message
 
-from luna.bot_messages_store2 import load_messages
+from luna.bot_messages_store import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN

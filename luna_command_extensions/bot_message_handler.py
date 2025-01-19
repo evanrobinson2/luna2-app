@@ -7,7 +7,7 @@ import re
 from nio import RoomMessageText, RoomSendResponse
 
 # Adjust these imports to your project’s structure:
-from luna import bot_messages_store2         # or wherever you store your messages
+from luna import bot_messages_store         # or wherever you store your messages
 import luna.context_helper as context_helper # your GPT context builder
 from luna import ai_functions                # your GPT API logic
 
@@ -72,7 +72,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         return
 
     # 2) Check for duplicates by event_id
-    existing_msgs = bot_messages_store2.get_messages_for_bot(bot_localpart)
+    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
     if any(m["event_id"] == event.event_id for m in existing_msgs):
         logger.info(
             f"[handle_bot_room_message] Bot '{bot_localpart}' sees event_id={event.event_id} "
@@ -81,7 +81,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         return
 
     # 3) Store the inbound text message
-    bot_messages_store2.append_message(
+    bot_messages_store.append_message(
         bot_localpart=bot_localpart,
         room_id=room.room_id,
         event_id=event.event_id,
@@ -154,7 +154,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         logger.info(
             f"Bot '{bot_localpart}' posted a GPT reply event_id={outbound_eid} in {room.room_id}."
         )
-        bot_messages_store2.append_message(
+        bot_messages_store.append_message(
             bot_localpart=bot_localpart,
             room_id=room.room_id,
             event_id=outbound_eid,

@@ -13,6 +13,8 @@ import os
 import logging
 import openai
 import time
+from nio import AsyncClient, UploadResponse
+import requests
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
@@ -105,50 +107,143 @@ async def get_gpt_response(
             "I'm sorry, something went wrong on my end. "
             "Could you try again later?"
         )
+    
+logger = logging.getLogger(__name__)
 
-
-async def get_gpt_response_dep(
-    context: list,
-    model: str = "gpt-4",
-    temperature: float = 0.7,
-    max_tokens: int = 300
-) -> str:
+def generate_image(prompt: str, size: str = "1024x1024") -> str:
     """
-    A deprecated or alternate function, but also with verbose logs.
+    Generates an image using OpenAI's API and returns the URL of the generated image.
     """
-    logger.debug("[get_gpt_response_dep] Called with context len=%d", len(context))
-    logger.debug("   model=%s, temperature=%.2f, max_tokens=%d", model, temperature, max_tokens)
-    logger.debug("   context array => %s", context)
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if not OPENAI_API_KEY:
+        logger.error("OpenAI API key not found.")
+        raise ValueError("Missing OpenAI API key.")
 
-    if not client:
-        err_msg = "[get_gpt_response_dep] No AsyncOpenAI client is available!"
-        logger.error(err_msg)
-        return "[Error: GPT backend not available.]"
-
-    t0 = time.time()
     try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=context,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        elapsed = time.time() - t0
-        logger.debug("[get_gpt_response_dep] GPT response time: %.3fs", elapsed)
-        logger.debug("[get_gpt_response_dep] Raw response: %s", response)
+        url = "https://api.openai.com/v1/images/generations"
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": "dall-e-3",
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+        }
 
-        text = response.choices[0].message.content
-        logger.debug("[get_gpt_response_dep] GPT text len=%d => %r", len(text), text[:50])
-
-        return text
+        logger.debug("Sending request to OpenAI: %s", data)
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        image_url = response.json()["data"][0]["url"]
+        logger.info("Generated image URL: %s", image_url)
+        return image_url
     except Exception as e:
-        logger.exception("[get_gpt_response_dep] Exception calling GPT => %s", e)
-        return "[Error: Unable to generate response.]"
+        logger.exception("Failed to generate image.")
+        raise e
 
+async def generate_image_save_and_post(
+    prompt: str,
+    client: AsyncClient,
+    evan_room_id: str,
+    size: str = "1024x179"
+) -> None:
+    """
+    1) Generates an image using OpenAI's newer /v1/images/generations endpoint.
+    2) Saves the image to disk in data/images/.
+    3) Uploads the image to Matrix and sends it to Evan's room (evan_room_id).
+    """
+
+    # Fetch API Key from environment
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if not OPENAI_API_KEY:
+        logger.warning("[ai_functions] No OPENAI_API_KEY found in env variables.")
+        return
+
+    # 1) Generate image from prompt
+    try:
+        url = "https://api.openai.com/v1/images/generations"
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": "dall-e-3",
+            "prompt": prompt,
+            "n": 1,
+            "size": size
+        }
+
+        # Make the request to OpenAI
+        resp = requests.post(url, headers=headers, json=data)
+        resp.raise_for_status()      # Raises an HTTPError if the request failed
+        response_data = resp.json()
+
+        # Extract the URL for the generated image
+        image_url = response_data["data"][0]["url"]
+
+    except Exception as e:
+        logger.exception("Error generating image: %s", e)
+        return
+
+    # 2) Save image to disk
+    try:
+        os.makedirs("data/images", exist_ok=True)
+        timestamp = int(time.time())
+        filename = f"data/images/image_{timestamp}.jpg"
+        dl_resp = requests.get(image_url)
+        if dl_resp.status_code == 200:
+            with open(filename, "wb") as file:
+                file.write(dl_resp.content)
+            logger.info("Image saved to %s", filename)
+        else:
+            logger.error("Failed to download image from %s (HTTP %d)",
+                         image_url, dl_resp.status_code)
+            return
+    except Exception as e:
+        logger.exception("Error saving image to disk: %s", e)
+        return
+
+    # 3) Upload image to Matrix
+    try:
+        with open(filename, "rb") as file:
+            upload_resp = await client.upload(file, content_type="image/jpeg")
+            if not isinstance(upload_resp, UploadResponse):
+                logger.error("Error uploading image to Matrix: %s", upload_resp)
+                return
+            mxc_uri = upload_resp.content_uri
+    except Exception as e:
+        logger.exception("Error uploading image to Matrix: %s", e)
+        return
+
+    # 4) Send the image to Evan's chat room
+    content = {
+        "msgtype": "m.image",
+        "body": os.path.basename(filename),
+        "url": mxc_uri,
+        "info": {
+            "mimetype": "image/jpeg",
+            "size": os.path.getsize(filename),
+        },
+    }
+
+    try:
+        send_resp = await client.room_send(
+            room_id=evan_room_id,
+            message_type="m.room.message",
+            content=content
+        )
+        if send_resp and hasattr(send_resp, "event_id"):
+            logger.info("Image posted to Evan's room => event_id=%s", send_resp.event_id)
+        else:
+            logger.error("Failed to post image to Evan's room.")
+    except Exception as e:
+        logger.exception("Error sending the image message to Matrix: %s", e)
+        
 === bot_messages_store.py ===
 #!/usr/bin/env python3
 """
-bot_messages_store2.py
+bot_messages_store.py
 
 Drop-in replacement for the original JSON-based message store.
 Instead of reading/writing a .json file, we store messages in an SQLite DB.
@@ -182,7 +277,7 @@ from typing import List, Dict
 logger = logging.getLogger(__name__)
 
 # Adjust if desired
-BOT_MESSAGES_DB = "data/bot_messages2.db"
+BOT_MESSAGES_DB = "data/bot_messages.db"
 
 # In-memory cache (optional, to mimic the old JSON approach).
 # If you prefer to query the DB on each call, you can skip this.
@@ -473,6 +568,8 @@ from luna.luna_command_extensions.cmd_remove_room import cmd_remove_room
 from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
 from luna.luna_command_extensions.cmd_shutdown import request_shutdown
 from luna.luna_command_extensions.ascii_art import show_ascii_banner
+from luna.luna_command_extensions.cmd_generate_image import cmd_generate_image
+
 
 logger = logging.getLogger(__name__)
 
@@ -1402,6 +1499,7 @@ COMMAND_ROUTER = {
     "invite": cmd_invite_user,
     "spawn": cmd_spawn_squad,
     "run_script": cmd_run_json_script,
+    "generate_image" : cmd_generate_image
 }
 === context_helper.py ===
 """
@@ -1539,7 +1637,7 @@ from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
 from luna.luna_command_extensions.luna_message_handler import handle_luna_message
 
-from luna.bot_messages_store2 import load_messages
+from luna.bot_messages_store import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
 from luna.luna_command_extensions.cmd_shutdown import init_shutdown, SHOULD_SHUT_DOWN
@@ -2292,7 +2390,7 @@ import re
 from nio import RoomMessageText, RoomSendResponse
 
 # Adjust these imports to your project’s structure:
-from luna import bot_messages_store2         # or wherever you store your messages
+from luna import bot_messages_store         # or wherever you store your messages
 import luna.context_helper as context_helper # your GPT context builder
 from luna import ai_functions                # your GPT API logic
 
@@ -2357,7 +2455,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         return
 
     # 2) Check for duplicates by event_id
-    existing_msgs = bot_messages_store2.get_messages_for_bot(bot_localpart)
+    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
     if any(m["event_id"] == event.event_id for m in existing_msgs):
         logger.info(
             f"[handle_bot_room_message] Bot '{bot_localpart}' sees event_id={event.event_id} "
@@ -2366,7 +2464,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         return
 
     # 3) Store the inbound text message
-    bot_messages_store2.append_message(
+    bot_messages_store.append_message(
         bot_localpart=bot_localpart,
         room_id=room.room_id,
         event_id=event.event_id,
@@ -2439,7 +2537,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
         logger.info(
             f"Bot '{bot_localpart}' posted a GPT reply event_id={outbound_eid} in {room.room_id}."
         )
-        bot_messages_store2.append_message(
+        bot_messages_store.append_message(
             bot_localpart=bot_localpart,
             room_id=room.room_id,
             event_id=outbound_eid,
@@ -2960,269 +3058,253 @@ async def create_room(args_string: str) -> str:
 === luna_command_extensions/luna_message_handler.py ===
 # luna_message_handler.py
 
-import re
+import os
 import time
+import json
 import logging
-import asyncio
-from collections import deque
-from nio import RoomMessageText, RoomSendResponse
+import requests
+import urllib.parse
+import aiohttp
 
-# Suppose these imports match your project structure:
-from luna import bot_messages_store2         # For storing messages in SQLite
-import luna.context_helper as context_helper # Your GPT context builder
-from luna import ai_functions                # Your GPT call function
+from nio import (
+    AsyncClient,
+    RoomMessageText,
+    RoomSendResponse,
+)
+
+from luna import bot_messages_store  # We’ll use this to track seen event IDs
 
 logger = logging.getLogger(__name__)
 
-# We match a pattern like :some_command: in the text
-COMMAND_REGEX = re.compile(r":([a-zA-Z_]\w*):")
-
-# Keep a short command history to prevent infinite loops or spamming
-# Key = sender_id, Value = deque of (commandName, timestamp)
-COMMAND_HISTORY_LIMIT = 8
-COMMAND_HISTORY_WINDOW = 60.0  # seconds
-_command_history = {}
-
-async def handle_luna_message(bot_client, bot_localpart, room, event):
+async def direct_upload_image(
+    client: AsyncClient,
+    file_path: str,
+    content_type: str = "image/jpeg"
+) -> str:
     """
-    The single “monolithic” handler for Luna's inbound messages.
+    Manually upload a file to Synapse's media repository, explicitly setting
+    Content-Length (avoiding chunked requests).
+    
+    Returns the mxc:// URI if successful, or raises an exception on failure.
+    """
+    if not client.access_token or not client.homeserver:
+        raise RuntimeError("AsyncClient has no access_token or homeserver set.")
+
+    base_url = client.homeserver.rstrip("/")
+    filename = os.path.basename(file_path)
+    encoded_name = urllib.parse.quote(filename)
+    upload_url = f"{base_url}/_matrix/media/v3/upload?filename={encoded_name}"
+
+    file_size = os.path.getsize(file_path)
+    headers = {
+        "Authorization": f"Bearer {client.access_token}",
+        "Content-Type": content_type,
+        "Content-Length": str(file_size),
+    }
+
+    logger.debug("[direct_upload_image] POST to %s, size=%d", upload_url, file_size)
+
+    async with aiohttp.ClientSession() as session:
+        with open(file_path, "rb") as f:
+            async with session.post(upload_url, headers=headers, data=f) as resp:
+                if resp.status == 200:
+                    body = await resp.json()
+                    content_uri = body.get("content_uri")
+                    if not content_uri:
+                        raise RuntimeError("No 'content_uri' in response JSON.")
+                    logger.debug("[direct_upload_image] Uploaded. content_uri=%s", content_uri)
+                    return content_uri
+                else:
+                    err_text = await resp.text()
+                    raise RuntimeError(
+                        f"Upload failed (HTTP {resp.status}): {err_text}"
+                    )
+
+
+async def handle_luna_message(bot_client: AsyncClient, bot_localpart: str, room, event):
+    """
+    Modified so we only respond ONCE per message/event_id. If the event_id
+    is already in our DB, we skip responding again.
+
     Steps:
-      1) Validate inbound => must be RoomMessageText from another sender
-      2) Store in DB
-      3) Parse commands => :commandName:
-      4) If commands are found & allowed => dispatch them. Then skip GPT.
-      5) Otherwise => do mention-based or DM-based GPT logic, storing outbound.
+      1) If from ourselves, ignore.
+      2) If not a RoomMessageText or not "!draw", ignore.
+      3) Check DB for existing event_id. If found, skip.
+      4) Otherwise, store inbound message in DB so we don't respond to it again.
+      5) Generate image via OpenAI + direct upload
+      6) Post m.image + handle fallback
     """
 
-    # A) Basic checks
-    if not isinstance(event, RoomMessageText):
-        return  # only process text messages
+    bot_full_id = bot_client.user
 
-    bot_full_id = bot_client.user      # e.g. "@lunabot:localhost"
+    # 1) Don’t respond to own messages
     if event.sender == bot_full_id:
-        logger.debug("Luna ignoring her own message.")
+        logger.debug("Ignoring message from myself: %s", event.sender)
+        return
+
+    # Must be a text event
+    if not isinstance(event, RoomMessageText):
         return
 
     message_body = event.body or ""
-    event_id = event.event_id
-
-    # B) Check duplicates
-    existing = bot_messages_store2.get_messages_for_bot(bot_localpart)
-    if any(m["event_id"] == event_id for m in existing):
-        logger.info(f"[handle_luna_message] Duplicate event_id={event_id}, skipping.")
+    if not message_body.startswith("!draw"):
         return
 
-    # C) Store inbound
-    bot_messages_store2.append_message(
+    # 2) Check if we already saw this event_id in DB
+    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
+    if any(m["event_id"] == event.event_id for m in existing_msgs):
+        logger.info(
+            "[handle_luna_message] We’ve already responded to event_id=%s, skipping.",
+            event.event_id
+        )
+        return
+
+    # 3) If this is brand new, store the inbound message so we don't respond to it twice
+    bot_messages_store.append_message(
         bot_localpart=bot_localpart,
         room_id=room.room_id,
-        event_id=event_id,
+        event_id=event.event_id,
         sender=event.sender,
         timestamp=event.server_timestamp,
         body=message_body
     )
-    logger.debug(f"[handle_luna_message] Stored inbound => event_id={event_id}")
 
-    # D) Parse commands (like :invite_user: or :summon_meta:)
-    found_cmds = COMMAND_REGEX.findall(message_body)
-    if found_cmds:
-        logger.debug(f"Luna sees commands => {found_cmds}")
-        skip_gpt = False
+    # 4) Check for a non-empty prompt
+    prompt = message_body[5:].strip()
+    if not prompt:
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={
+                "msgtype": "m.text",
+                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
+            },
+        )
+        return
 
-        # Rate-limit check
-        for cmd_name in found_cmds:
-            if not _check_command_rate(event.sender, cmd_name):
-                logger.warning(f"Blocking command '{cmd_name}' from {event.sender} due to spam.")
-                skip_gpt = True
-                break
+    # 5) Make sure we have an OpenAI API key
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if not OPENAI_API_KEY:
+        logger.error("OpenAI API key not found in environment variables.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
+        )
+        return
 
-        if not skip_gpt:
-            # Actually handle each command in sequence
-            for cmd_name in found_cmds:
-                await _dispatch_command(cmd_name, message_body, bot_client, room, event)
-            # By design, we skip GPT after commands
+    # 6) Indicate typing
+    try:
+        await bot_client.room_typing(room.room_id, typing_state=True, timeout=30000)
+        logger.info("Successfully sent 'typing start' indicator to room.")
+    except Exception as e:
+        logger.warning(f"Could not send 'typing start' indicator => {e}")
+
+    try:
+        # (A) Generate the image from OpenAI
+        try:
+            logger.info("Generating image with OpenAI's API. Prompt=%r", prompt)
+            url = "https://api.openai.com/v1/images/generations"
+            headers = {
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            }
+            data = {
+                "model": "dall-e-3",
+                "prompt": prompt,
+                "n": 1,
+                "size": "1024x1024",
+            }
+            resp = requests.post(url, headers=headers, json=data)
+            resp.raise_for_status()
+            result_data = resp.json()
+            image_url = result_data["data"][0]["url"]
+            logger.info("OpenAI returned an image URL: %s", image_url)
+        except Exception as e:
+            logger.exception("Error occurred while generating image from OpenAI.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
+            )
             return
 
-    # E) If no command => mention-based or DM-based GPT logic
-    participant_count = len(room.users)
-    mention_data = event.source.get("content", {}).get("m.mentions", {})
-    mentioned_ids = mention_data.get("user_ids", [])
-    should_reply = False
-
-    if participant_count == 2:
-        # DM => always respond
-        should_reply = True
-    else:
-        # In groups => respond only if our own user ID is mentioned
-        if bot_full_id in mentioned_ids:
-            should_reply = True
-
-    if not should_reply:
-        logger.debug("No mention or DM => ignoring GPT logic.")
-        return
-
-    # Build GPT context
-    config = {"max_history": 10}
-    gpt_context = context_helper.build_context(bot_localpart, room.room_id, config)
-    # Optionally load a big system file if you want:
-    # e.g. system_text = load_luna_system_prompt("data/luna_system_prompt.md")
-    # Then prepend to gpt_context if you prefer. For now, we skip that.
-
-    # Call GPT
-    reply_text = await ai_functions.get_gpt_response(
-        messages=gpt_context,
-        model="gpt-4",
-        temperature=0.7,
-        max_tokens=300
-    )
-
-    # Send GPT reply
-    send_resp = await bot_client.room_send(
-        room_id=room.room_id,
-        message_type="m.room.message",
-        content={"msgtype": "m.text", "body": reply_text},
-    )
-    # Store outbound
-    if isinstance(send_resp, RoomSendResponse):
-        out_id = send_resp.event_id
-        bot_messages_store2.append_message(
-            bot_localpart=bot_localpart,
-            room_id=room.room_id,
-            event_id=out_id,
-            sender=bot_full_id,
-            timestamp=int(time.time() * 1000),
-            body=reply_text
-        )
-        logger.info(f"Luna posted GPT reply => event_id={out_id}")
-    else:
-        logger.warning("No event_id from GPT send response => cannot store outbound.")
-
-
-def _check_command_rate(sender_id: str, cmd_name: str) -> bool:
-    """
-    Let each user run each command up to 2 times per 60sec. The third attempt is blocked.
-    This helps avoid infinite loops or spam if GPT or a user quickly repeats commands.
-    """
-    now = time.time()
-    dq = _command_history.setdefault(sender_id, deque())
-
-    # Clear out old items
-    while dq and (now - dq[0][1]) > COMMAND_HISTORY_WINDOW:
-        dq.popleft()
-
-    # Count how many times the *same* cmd_name is already in the window
-    same_cmd_count = sum(1 for (cmd, t) in dq if cmd == cmd_name)
-    if same_cmd_count >= 2:
-        return False
-
-    # Otherwise record & allow
-    dq.append((cmd_name, now))
-    if len(dq) > COMMAND_HISTORY_LIMIT:
-        dq.popleft()
-    return True
-
-
-async def _dispatch_command(cmd_name: str, full_msg: str, bot_client, room, event):
-    """
-    The actual logic for recognized commands.
-    If unrecognized, we post a small 'not recognized' message.
-
-    In principle, you can parse arguments from the text (full_msg),
-    or store them in a custom syntax or JSON.
-    """
-
-    logger.debug(f"Handling command => :{cmd_name}:")
-
-    if cmd_name == "users":
-        # Example: list all known user accounts
-        from luna.luna_functions import list_users
-        users_info = await list_users()
-        lines = ["**Current Users**"]
-        for u in users_info:
-            user_id = u["user_id"]
-            admin_flag = " (admin)" if u.get("admin") else ""
-            lines.append(f" - {user_id}{admin_flag}")
-        text_out = "\n".join(lines)
-        await _post(bot_client, room.room_id, text_out)
-        return
-
-    elif cmd_name == "channels":
-        from luna.luna_functions import list_rooms
-        rooms_info = await list_rooms()
-        lines = ["**Known Rooms**"]
-        for rinfo in rooms_info:
-            lines.append(f" - {rinfo['name']} => {rinfo['room_id']}")
-        text_out = "\n".join(lines)
-        await _post(bot_client, room.room_id, text_out)
-        return
-
-    elif cmd_name == "invite_user":
-        # Possibly parse the user & room from the message
-        # We'll do a placeholder
-        # "invite_user" => try to read e.g. :invite_user: @someUser:localhost !room:localhost
+        # (B) Download the image
         try:
-            # (extremely naive parse)
-            # find the substring after :invite_user:
-            # you can do a real parse or ask user to type JSON, etc.
-            leftover = full_msg.split(":invite_user:")[-1].strip()
-            # maybe leftover = "@someUser:localhost !someRoom:localhost"
-            # but let's do a stub:
-            text_out = f"Ok, I'd invite {leftover} if implemented. (stubbed out)."
-            await _post(bot_client, room.room_id, text_out)
+            logger.info("Downloading image from URL: %s", image_url)
+            os.makedirs("data/images", exist_ok=True)
+            timestamp = int(time.time())
+            filename = f"data/images/generated_image_{timestamp}.jpg"
+
+            dl_resp = requests.get(image_url)
+            dl_resp.raise_for_status()
+
+            with open(filename, "wb") as f:
+                f.write(dl_resp.content)
+
+            logger.info("Image downloaded => %s", filename)
         except Exception as e:
-            logger.exception("Error in invite_user parse => %s", e)
-            await _post(bot_client, room.room_id, "invite_user parse error. Check logs.")
-        return
+            logger.exception("Error occurred while downloading the image.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": "Error downloading the image."},
+            )
+            return
 
-    elif cmd_name == "summon_meta":
-        # Example: create a single persona from GPT and spawn. 
-        # Or parse arguments. For demonstration, let's do a small direct call:
-        from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
+        # (C) Upload to Synapse (explicit Content-Length)
+        try:
+            logger.info("Uploading image to Matrix server (direct_upload_image).")
+            mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
+            logger.info("Image upload success => %s", mxc_url)
+        except Exception as e:
+            logger.exception("Error occurred during direct upload to Synapse.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
+            )
+            return
 
-        # We'll do a naive approach: leftover text is the 'blueprint'
-        leftover = full_msg.split(":summon_meta:")[-1].strip()
-        # leftover might contain user instructions describing the persona
+        # (D) Send the m.image event
+        try:
+            file_size = os.path.getsize(filename)
+            image_content = {
+                "msgtype": "m.image",
+                "body": os.path.basename(filename),
+                "url": mxc_url,
+                "info": {
+                    "mimetype": "image/jpeg",
+                    "size": file_size,
+                    "w": 1024,
+                    "h": 1024
+                },
+            }
+            logger.info("Sending m.image =>\n%s", json.dumps(image_content, indent=2))
+            img_response = await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content=image_content,
+            )
+            if isinstance(img_response, RoomSendResponse):
+                logger.info("Sent image to room. Event ID: %s", img_response.event_id)
+            else:
+                logger.error("Failed to send image. Response: %s", img_response)
+        except Exception as e:
+            logger.exception("Error sending the image to the room.")
+            await bot_client.room_send(
+                room_id=room.room_id,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": "There was an error uploading the image."},
+            )
+            return
 
-        # Now call GPT to produce the JSON
-        # Then parse and create the user. This is up to you.
-        # We'll just respond that we've recognized the command:
-        text_out = f"**Pretending** to summon a persona based on => {leftover}"
-        await _post(bot_client, room.room_id, text_out)
-        return
-
-    else:
-        # Unrecognized
-        text_out = f"I see command :{cmd_name}: but I do not know how to handle it."
-        await _post(bot_client, room.room_id, text_out)
-
-
-async def _post(bot_client, room_id: str, text: str):
-    """
-    Helper to post a text message to the same room.
-    """
-    try:
-        resp = await bot_client.room_send(
-            room_id=room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": text},
-        )
-        if isinstance(resp, RoomSendResponse):
-            # not strictly necessary if you don't track Luna's own messages
-            pass
-    except Exception as e:
-        logger.exception("Failed to post message => %s", e)
-
-
-# (Optional) if you want a function that loads a big system prompt from disk
-def load_luna_system_prompt(filepath: str) -> str:
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = f.read()
-        logger.debug(f"Loaded system prompt from {filepath} with len={len(data)}")
-        return data
-    except Exception as e:
-        logger.exception("Could not load system prompt => %s", e)
-        return ""
+    finally:
+        # (E) Stop typing no matter what
+        try:
+            await bot_client.room_typing(room.room_id, typing_state=False, timeout=0)
+        except Exception as e:
+            logger.warning(f"Could not send 'typing stop' indicator => {e}")
 
 === luna_command_extensions/parse_and_execute.py ===
 import json

@@ -21,6 +21,8 @@ from luna.luna_command_extensions.cmd_remove_room import cmd_remove_room
 from luna.luna_personas import get_system_prompt_by_localpart, set_system_prompt_by_localpart
 from luna.luna_command_extensions.cmd_shutdown import request_shutdown
 from luna.luna_command_extensions.ascii_art import show_ascii_banner
+from luna.luna_command_extensions.cmd_generate_image import cmd_generate_image
+
 
 logger = logging.getLogger(__name__)
 
@@ -950,4 +952,5 @@ COMMAND_ROUTER = {
     "invite": cmd_invite_user,
     "spawn": cmd_spawn_squad,
     "run_script": cmd_run_json_script,
+    "generate_image" : cmd_generate_image
 }
