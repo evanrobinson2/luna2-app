@@ -202,7 +202,7 @@ async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
         messages=gpt_context,
         model="chatgpt-4o-latest",
         temperature=0.7,
-        max_tokens=300
+        max_tokens=2000
     )
     return reply
 
@@ -243,7 +243,7 @@ async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_conten
 
     if context_cue:
         content["context_cue"] = context_cue  # custom field
-            
+
     resp = await bot_client.room_send(room_id=room_id, message_type="m.room.message", content=content)
     if isinstance(resp, RoomSendResponse):
         logger.info("Sent formatted text => event_id=%s in %s", resp.event_id, room_id)

@@ -19,6 +19,8 @@ from nio import AsyncClient, RoomSendResponse
 import yaml
 import os
 
+from luna.luna_command_extensions.spawn_persona import cmd_spawn
+
 CONFIG_PATH = "data/config/config.yaml"
 
 # Import your existing 'generate_image' function
@@ -305,16 +307,6 @@ def set_param(param_name: str, value: str) -> str:
 
     return f"Set {param_name} => {value}"
 
-async def spawn(bot_client: AsyncClient, descriptor: str) -> str:
-    """
-    Usage:
-      !spawn <descriptor>
-
-    A placeholder for a 'spawn' command. Implementation can vary.
-    """
-    return f"Spawned entity described as: {descriptor}"
-
-
 async def help_command(*args, **kwargs) -> str:
     """
     Usage:
@@ -357,6 +349,90 @@ def list_params() -> str:
 
     return table_html
 
+async def luna_gpt(bot_client: AsyncClient, room_id: str, raw_args: str) -> str:
+    """
+    Usage:
+      !luna <prompt>
+
+    Sends the user's prompt through GPT with a full context build for Luna,
+    using `context_helper.build_context`. Returns GPT's plain-text response.
+
+    Handles both quoted and non-quoted inputs by stripping leading/trailing quotes.
+    Examples:
+      !luna "Hello world"
+      !luna Hello world
+    """
+    # 1) Strip leading/trailing quotes or whitespace.
+    #    If raw_args is something like '"Hello world"', we remove the quotes.
+    #    If it's unquoted (e.g. 'Hello world'), we still trim leading/trailing spaces.
+    prompt = raw_args.strip().strip('"\'')
+    if not prompt:
+        return "Usage: !luna <prompt>"
+
+    from luna.context_helper import build_context  # Ensure correct import path
+    from luna.ai_functions import get_gpt_response  # Ensure correct import path
+
+    # 2) Build Luna’s GPT context for this room
+    try:
+        context_config = {"max_history": 20}
+        gpt_context = build_context("lunabot", room_id, context_config)
+        gpt_context.append({"role": "user", "content": prompt})
+
+        logger.debug("[luna_gpt] GPT context built: %s", gpt_context)
+
+        # 3) Call GPT with the context and user’s final prompt
+        gpt_response = await get_gpt_response(
+            messages=gpt_context,
+            model="chatgpt-4o-latest",
+            temperature=0.7,
+            max_tokens=300
+        )
+        logger.debug("[luna_gpt] GPT response: %s", gpt_response)
+
+        # 4) Return the plain-text response to the caller
+        return gpt_response
+
+    except Exception as e:
+        logger.exception("[luna_gpt] Error generating response:")
+        return f"Error generating response: {e}"
+
+
+async def luna_gpt_dep(bot_client: AsyncClient, room_id: str, args: str) -> str:
+    """
+    Usage:
+      !luna <prompt>
+
+    Sends the user's prompt through GPT with a full context build for Luna,
+    using `context_helper.build_context`. Returns GPT's plain-text response.
+    """
+    from luna.context_helper import build_context  # Ensure correct import path
+    from luna.ai_functions import get_gpt_response  # Ensure correct import path
+
+    if not args:
+        return "Usage: !luna <prompt>"
+
+    # 1) Build Luna's context for this room
+    try:
+        context_config = {"max_history": 20}
+        gpt_context = build_context("lunabot", room_id, context_config)
+        gpt_context.append({"role": "user", "content": args})
+
+        logger.debug("[luna_gpt] GPT context built: %s", gpt_context)
+
+        # 2) Call GPT with the context and user's prompt
+        gpt_response = await get_gpt_response(
+            messages=gpt_context,
+            model="chatgpt-4o-latest",
+            temperature=0.7,
+            max_tokens=300
+        )
+        logger.debug("[luna_gpt] GPT response: %s", gpt_response)
+
+        return gpt_response
+
+    except Exception as e:
+        logger.exception("[luna_gpt] Error generating response:")
+        return f"Error generating response: {e}"
 
 
 # -------------------------------------------------------------
@@ -429,12 +505,13 @@ COMMAND_ROUTER = {
     "create_room": create_room,    # async
     "invite_user": invite_user,    # async
     "list_rooms":  list_rooms,     # async
-    "spawn":       spawn,          # async
     "help":        help_command,   # async
     "set_param":   set_param,      # sync
     "get_param":   get_param,      # sync,
     "list_params": list_params,
     "draw":        draw_command,   # now posts the actual image
+    "luna":        luna_gpt,
+    "spawn":       cmd_spawn
 }
 
 
@@ -495,7 +572,12 @@ async def handle_console_command(bot_client: AsyncClient, room_id: str, message_
             return "Usage: !list_params  (no arguments needed)"
         return command_func()
 
-
+    elif command_name == "luna":
+        if not args:
+            return "Usage: !luna <prompt>"
+        prompt = " ".join(args)
+        return await command_func(bot_client, room_id, prompt)
+    
     elif command_name == "draw":
         # Now pass in the 'room_id' so we can post the image there
         if not args:

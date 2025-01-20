@@ -1505,10 +1505,52 @@ COMMAND_ROUTER = {
 """
 context_helper.py
 
-A module to build conversation context for GPT,
-now including all messages in the channel (both user and bot),
-but EXCLUDING command lines that start with '!'.
-Sets a larger default history size (e.g., 20).
+This module builds a GPT-style conversation array for a given bot in a given room.
+
+OVERVIEW OF THE ALGORITHM:
+--------------------------
+1) We load the system prompt for the bot's localpart from the personalities or config.
+   - If none is found, we use a fallback "You are a helpful assistant..."
+
+2) For 'lunabot', we optionally append 'luna_context_appendix' (if set) to the system prompt.
+
+3) We then fetch ALL messages from the local DB that were stored under `bot_localpart`
+   and filter them to only those in the correct `room_id`.
+
+4) We apply two separate rules for skipping lines:
+   - a) If `bot_localpart` is NOT "lunabot", we exclude lines that start with "!" (commands)
+       and lines that have `context_cue == "SYSTEM RESPONSE"`.
+     Why? Because we only want normal user lines or user mention lines for non-Luna bots.
+   - b) If `bot_localpart` == "lunabot", we do NOT skip commands or "SYSTEM RESPONSE" lines,
+       because we want Luna herself to see the entire conversation flow (including commands).
+     (You can further refine logic if you want Luna to skip her own lines, etc.)
+
+5) We sort the remaining lines by ascending timestamp and then truncate to the last N 
+   (default 20) lines to avoid token bloat.
+
+6) Finally, we build a conversation array for GPT:
+   - The first entry is a system-level instruction from the persona’s system_prompt.
+   - Each subsequent message is either role="assistant" if it’s from the bot itself,
+     or role="user" if it’s from someone else.
+
+7) We return that array for the caller to send to GPT.
+
+CODE NOTES:
+----------
+- `bot_messages_store.get_messages_for_bot(bot_localpart)` just returns the rows that 
+  were appended with that `bot_localpart`. Because the message handler typically 
+  appends everything the bot sees under that localpart, we might be storing multiple 
+  copies if multiple bots are in the same channel.
+
+- The logic that differentiates “skip” vs. “include” is entirely in this builder function,
+  based on the new fields: `body.startswith("!")` or `record.get("context_cue") == "SYSTEM RESPONSE"`.
+
+- If you want to skip the bot’s own lines, you can add a check 
+  `(m["sender"] == f"@{bot_localpart}:localhost")`, etc.
+
+- If you want to unify the logic for commands or system responses, you can 
+  adjust the if-conditions accordingly.
+
 """
 
 import logging
@@ -1529,32 +1571,39 @@ def build_context(
 ) -> List[Dict[str, str]]:
     """
     Builds a GPT-style conversation array for `bot_localpart` in `room_id`.
+
     Steps:
-      1) Load the base system prompt from personalities (if missing, fallback).
-      2) Append any 'luna_context_appendix' param (if set) to the system prompt.
-      3) Retrieve up to N (default=20) messages from bot_messages_store for that bot + room.
-         *We skip any that start with '!' (command messages).*
-      4) Convert them to GPT roles: "assistant" if from the bot, "user" otherwise.
-      5) Return a list of dicts e.g.:
-         [
-           {"role": "system", "content": "System instructions..."},
-           {"role": "user", "content": "..."},
-           {"role": "assistant", "content": "..."}
-         ]
+      1) Load system prompt from persona or config for localpart.
+      2) If localpart == 'lunabot', optionally append 'luna_context_appendix'.
+      3) Retrieve all messages from the DB for (bot_localpart, room_id).
+      4) Filtering rules:
+         - If bot_localpart == 'lunabot', skip nothing (include commands & system responses).
+         - Else skip lines that:
+           a) start with '!'  (commands)
+           b) have context_cue == 'SYSTEM RESPONSE'
+      5) Sort ascending by timestamp.
+      6) Keep last N (default=20).
+      7) Build final conversation array:
+         - The first item is {"role": "system", "content": system_prompt}.
+         - Then each item is either {"role": "assistant", "content": ...}
+           or {"role": "user", "content": ...} depending on who sent it.
+      8) Return the array.
     """
 
     logger.info("[build_context] Called for bot_localpart=%r, room_id=%r", bot_localpart, room_id)
 
+    # 0) If user didn't pass a config, create an empty one
     if config is None:
         config = {}
-        logger.debug("[build_context] No config provided, using empty dict.")
+        logger.debug("[build_context] No config provided; using empty dict.")
 
     max_history = config.get("max_history", message_history_length)
     logger.debug("[build_context] Will fetch up to %d messages from store.", max_history)
 
-    # 1) Grab the base system prompt
+    # 1) Grab the base system prompt for this bot
     system_prompt = get_system_prompt_by_localpart(bot_localpart)
     if not system_prompt:
+        # Fallback if no persona or config found
         system_prompt = (
             "You are a helpful assistant. "
             "No personalized system prompt found for this bot, so please be friendly!"
@@ -1564,59 +1613,107 @@ def build_context(
         logger.debug("[build_context] Found system_prompt for %r (length=%d).",
                      bot_localpart, len(system_prompt))
 
-    if bot_localpart == 'lunabot':
-        # 2) Append the 'luna_context_appendix' if present
+    # 2) If lunabot, optionally append 'luna_context_appendix'
+    if bot_localpart == "lunabot":
         extra_context = GLOBAL_PARAMS.get("luna_context_appendix", "").strip()
         if extra_context:
             logger.debug("[build_context] Appending luna_context_appendix (length=%d) to system prompt.",
-                        len(extra_context))
-            system_prompt = f"{system_prompt}\n\n{extra_context}"
+                         len(extra_context))
+            system_prompt += "\n\n" + extra_context
 
-    # 3) Fetch messages from the store for (bot_localpart, room_id)
+    # 3) Fetch messages for (bot_localpart, room_id)
     all_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
-    logger.debug("[build_context] The store returned %d total msgs for bot=%r.", len(all_msgs), bot_localpart)
+    logger.debug("[build_context] The store returned %d total msgs for bot=%r.",
+                 len(all_msgs), bot_localpart)
 
-    # Filter by room_id and skip messages starting with '!'
-    relevant_msgs = []
-    for m in all_msgs:
-        if m["room_id"] == room_id:
-            body = m["body"].lstrip() if m["body"] else ""
-            if not body.startswith("!"):  # skip commands
-                relevant_msgs.append(m)
-    logger.debug("[build_context] After filtering by room_id=%r and skipping commands => %d msgs remain.",
-                 room_id, len(relevant_msgs))
+    # 4) Filter to room_id
+    relevant_msgs = [m for m in all_msgs if m["room_id"] == room_id]
+    logger.debug("[build_context] Filtered by room_id => %d msgs remain.", len(relevant_msgs))
+
+    # 4a) If NOT 'lunabot', also skip lines that are commands or system responses
+    #     We do a minimal check for the '!' prefix, and we also check context_cue.
+    #     If localpart == 'lunabot', we do NOT skip anything.
+    if bot_localpart != "lunabot":
+        filtered_msgs = []
+        for msg in relevant_msgs:
+            # Extract the text from "body"
+            body_str = msg.get("body", "")
+            # We may also have custom fields in the event content, but let's
+            # assume we put "context_cue" in a separate DB column or appended to body if we had to.
+            # If you stored 'context_cue' in the DB, you can do: msg.get("context_cue").
+            # If you just store it in body, you'd parse. This example assumes it's in content.
+
+            # If your table doesn't store context_cue explicitly, you might 
+            # have to do some logic or store it in another table.
+            # But for the sake of demonstration, let's assume we have it:
+            context_cue = None   # default
+            # If you haven't actually stored context_cue, skip it or check if your 
+            # code sets content["context_cue"] => not shown in this snippet.
+
+            # e.g. if we had a separate DB column or JSON field:
+            # context_cue = msg.get("context_cue", None)
+
+            # We'll do a minimal approach: if "system response" 
+            # was appended to the body or something:
+            # This is a placeholder for your actual approach
+            # For demonstration, let's skip any line that starts with special prefix:
+            # e.g. "context_cue=SYSTEM RESPONSE" (faked)
+            # In real usage, store context_cue properly in the DB as a separate column.
+
+            # We'll just do a naive demonstration:
+            if "context_cue\": \"SYSTEM RESPONSE" in body_str:
+                context_cue = "SYSTEM RESPONSE"
+
+            if body_str.startswith("!"):
+                # skip commands
+                continue
+            if context_cue == "SYSTEM RESPONSE":
+                # skip system responses
+                continue
+
+            # If not matched skip logic, we include
+            filtered_msgs.append(msg)
+
+        relevant_msgs = filtered_msgs
+        logger.debug("[build_context] After skipping commands/SYSTEM RESPONSE => %d msgs remain.",
+                     len(relevant_msgs))
 
     # Sort ascending by timestamp
     relevant_msgs.sort(key=lambda x: x["timestamp"])
-    logger.debug("[build_context] Sorted messages ascending by timestamp.")
 
-    # Truncate to max_history (20 by default)
+    # 5) Truncate to max_history
     truncated = relevant_msgs[-max_history:]
     logger.debug("[build_context] Truncated to last %d messages for building context.", len(truncated))
 
-    # 4) Build the GPT conversation
+    # 6) Build the GPT conversation
     conversation: List[Dict[str, str]] = []
-    # Add system message first
+
+    # Step A: Add the system prompt as the first item
     conversation.append({
         "role": "system",
         "content": system_prompt
     })
 
-    # Convert each truncated message to a user/assistant role
+    # Step B: For each truncated message, decide if it's user or assistant
     bot_full_id = f"@{bot_localpart}:localhost"
-
     for msg in truncated:
-        if msg["sender"] == bot_full_id:
+        sender_id = msg["sender"]
+        body_str = msg["body"]
+
+        if sender_id == bot_full_id:
+            # The bot itself => role=assistant
             conversation.append({
                 "role": "assistant",
-                "content": msg["body"]
+                "content": body_str
             })
         else:
+            # Another user => role=user
             conversation.append({
                 "role": "user",
-                "content": msg["body"]
+                "content": body_str
             })
 
+    # Logging for debug
     logger.debug("[build_context] Final conversation array length=%d", len(conversation))
     for i, c in enumerate(conversation):
         logger.debug("   [%d] role=%r, content=(%d chars) %r",
@@ -1657,6 +1754,8 @@ from luna.luna_command_extensions.bot_member_event_handler import handle_bot_mem
 from luna.luna_command_extensions.luna_message_handler import handle_luna_message
 from luna.luna_command_extensions.luna_message_handler2 import handle_luna_message2
 from luna.luna_command_extensions.luna_message_handler3 import handle_luna_message3
+from luna.luna_command_extensions.luna_message_handler4 import handle_luna_message4
+
 from luna.bot_messages_store import load_messages
 
 from luna.console_apparatus import console_loop # Our console apparatus & shutdown signals
@@ -1846,7 +1945,7 @@ async def main_logic():
     # For messages:
     luna_client.add_event_callback(
         #lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
-        lambda room, event: handle_luna_message3(luna_client, "lunabot", room, event),
+        lambda room, event: handle_luna_message4(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 
@@ -3238,6 +3337,647 @@ def cmd_summarize_room(args, loop):
         logger.debug("[cmd_summarize_room] Finished successfully.\n")
         print(f"{ANSI_GREEN}SYSTEM:{ANSI_RESET} Summarization complete.\n")
 
+=== luna_command_extensions/command_router.py ===
+"""
+command_router.py
+
+Defines:
+  - Command functions (create_room, invite_user, etc.) each with docstrings.
+  - A help command that builds an HTML table from these docstrings.
+  - A router that maps command strings to their respective functions.
+  - The handle_console_command() dispatcher that interprets and calls them.
+"""
+
+import logging
+import asyncio
+import inspect
+import shlex
+import os
+import time
+import requests
+from nio import AsyncClient, RoomSendResponse
+import yaml
+import os
+
+CONFIG_PATH = "data/config/config.yaml"
+
+# Import your existing 'generate_image' function
+from luna.ai_functions import generate_image
+# If you have a direct_upload_image helper, import it too:
+from luna.luna_command_extensions.luna_message_handler import direct_upload_image
+
+logger = logging.getLogger(__name__)
+
+# -------------------------------------------------------------
+# GLOBAL PARAM STORE (for set_param / get_param)
+# -------------------------------------------------------------
+GLOBAL_PARAMS = {}
+
+# -------------------------------------------------------------
+# COMMAND FUNCTIONS
+# -------------------------------------------------------------
+
+async def create_room(
+    bot_client: AsyncClient,
+    sender: str,
+    localpart: str,
+    topic: str = None,
+    is_public: bool = True,
+) -> str:
+    """
+    Usage:
+      !create_room <localpart> [topic="..."] [public|private]
+
+    Create a new room using the given localpart (e.g. '#myroom').
+    Invites the sender with power level 100, sets optional topic,
+    and sets visibility (public or private).
+    """
+    domain = "localhost"
+    full_alias = f"{localpart}:{domain}"
+    visibility = "public" if is_public else "private"
+
+    try:
+        logger.info(f"[create_room] Creating room alias={full_alias}, topic={topic}, visibility={visibility}")
+        resp = await bot_client.room_create(
+            visibility=visibility,
+            alias=full_alias,
+            name=localpart.strip("#"),  # display name
+            topic=topic,
+        )
+        if not resp.room_id:
+            return f"Error: Could not create room {full_alias} => {resp}"
+        room_id = resp.room_id
+
+        # Invite the user who issued the command
+        invite_resp = await bot_client.room_invite(room_id, sender)
+        if not (invite_resp and invite_resp.transport_response.ok):
+            return f"Warning: Could not invite {sender} => {invite_resp}"
+
+        # Elevate them to PL100
+        await _set_power_level(bot_client, room_id, sender, 100)
+        return f"Room created: {full_alias} (ID: {room_id}), invited {sender} with PL100."
+    except Exception as e:
+        logger.exception("[create_room] Error =>")
+        return f"Error creating room => {e}"
+
+
+async def _set_power_level(bot_client: AsyncClient, room_id: str, user_id: str, power: int):
+    """Helper to set a user's power level in a given room."""
+    state_resp = await bot_client.room_get_state_event(room_id, "m.room.power_levels", "")
+    current_content = state_resp.event.source.get("content", {})
+
+    users_dict = current_content.get("users", {})
+    users_dict[user_id] = power
+    current_content["users"] = users_dict
+
+    await bot_client.room_send_state(
+        room_id=room_id,
+        event_type="m.room.power_levels",
+        state_key="",
+        content=current_content,
+    )
+
+
+async def invite_user(bot_client: AsyncClient, user_id: str, room_localpart: str) -> str:
+    """
+    Usage:
+      !invite_user <user_id> <room_localpart>
+
+    Invite the given user to the specified room localpart
+    (e.g. '#observation_deck').
+    """
+    domain = "localhost"
+    full_alias = f"{room_localpart}:{domain}"
+
+    try:
+        resolve_resp = await bot_client.room_resolve_alias(full_alias)
+        if not resolve_resp.room_id:
+            return f"Error: Could not resolve alias => {full_alias}"
+        room_id = resolve_resp.room_id
+
+        invite_resp = await bot_client.room_invite(room_id, user_id)
+        if invite_resp and invite_resp.transport_response.ok:
+            return f"Invited {user_id} to {full_alias} (ID: {room_id})."
+        else:
+            return f"Error: Could not invite => {invite_resp}"
+    except Exception as e:
+        logger.exception("[invite_user] Error =>")
+        return f"Error => {e}"
+
+
+async def list_rooms(bot_client: AsyncClient) -> str:
+    """
+    Usage:
+      !list_rooms
+
+    Return a list of rooms the bot is currently in, formatted as an HTML table,
+    with columns in the order: (Name, Alias, Room ID).
+    """
+    # Collect info in a list of (room_id, alias, name)
+    room_info = []
+    for room_id, room_obj in bot_client.rooms.items():
+        alias = getattr(room_obj, "canonical_alias", None) or ""
+        name = room_obj.name or ""
+        room_info.append((room_id, alias, name))
+
+    if not room_info:
+        return "<p>No rooms found.</p>"
+
+    # Build a table with columns: Name, Alias, Room ID
+    rows = []
+    for r_id, r_alias, r_name in room_info:
+        row_html = (
+            "<tr>"
+            f"<td>{r_name}</td>"    # Name
+            f"<td>{r_alias}</td>"   # Alias
+            f"<td>{r_id}</td>"      # Room ID
+            "</tr>"
+        )
+        rows.append(row_html)
+
+    # Combine rows into a table
+    table_html = (
+        "<p><strong>Rooms the bot is currently in:</strong></p>"
+        "<table border='1' style='border-collapse:collapse; margin:1em 0;'>"
+        "<thead>"
+        "<tr><th>Name</th><th>Alias</th><th>Room ID</th></tr>"
+        "</thead>"
+        "<tbody>"
+        + "".join(rows) +
+        "</tbody>"
+        "</table>"
+    )
+
+    return table_html
+
+
+async def draw_command(bot_client: AsyncClient, room_id: str, user_prompt: str) -> str:
+    """
+    Usage:
+      !draw <prompt>
+
+    Generates an image from the user's prompt, appending a global
+    style (found in GLOBAL_PARAMS['global_draw_prompt_appendix']) if present,
+    then uploads the image to Matrix and sends it to the given room.
+    Returns a success or error message.
+    """
+    # -----------------------------------------------------------------
+    # 1) Merge the global style with the user's prompt
+    # -----------------------------------------------------------------
+    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
+    if style:
+        final_prompt = f"{user_prompt.strip()}. {style}"
+    else:
+        final_prompt = user_prompt.strip()
+
+    # -----------------------------------------------------------------
+    # 2) Generate the image via your existing ai_functions.generate_image()
+    #    => returns a public image URL
+    # -----------------------------------------------------------------
+    try:
+        image_url = generate_image(final_prompt, size="1024x1024")
+    except Exception as e:
+        logger.exception("[draw_command] Error generating image.")
+        return f"Error generating image => {e}"
+
+    logger.info("[draw_command] Image generated, URL => %s", image_url)
+
+    # -----------------------------------------------------------------
+    # 3) Download the image to disk
+    # -----------------------------------------------------------------
+    try:
+        logger.debug("[draw_command] Downloading image from %s", image_url)
+        os.makedirs("data/images", exist_ok=True)
+        timestamp = int(time.time())
+        filename = f"data/images/generated_image_{timestamp}.jpg"
+
+        dl_resp = requests.get(image_url)
+        dl_resp.raise_for_status()
+
+        with open(filename, "wb") as f:
+            f.write(dl_resp.content)
+
+        logger.debug("[draw_command] Image saved to %s", filename)
+    except Exception as e:
+        logger.exception("[draw_command] Error downloading image.")
+        return f"Error downloading the image => {e}"
+
+    # -----------------------------------------------------------------
+    # 4) Upload to Matrix (direct_upload_image or client.upload)
+    # -----------------------------------------------------------------
+    try:
+        logger.debug("[draw_command] Uploading image to Matrix.")
+        mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
+        logger.debug("[draw_command] Upload success => %s", mxc_url)
+    except Exception as e:
+        logger.exception("[draw_command] Error uploading image to Matrix.")
+        return f"Error uploading image => {e}"
+
+    # -----------------------------------------------------------------
+    # 5) Send the m.image event to the room
+    # -----------------------------------------------------------------
+    try:
+        file_size = os.path.getsize(filename)
+        image_content = {
+            "msgtype": "m.image",
+            "body": os.path.basename(filename),
+            "url": mxc_url,
+            "info": {
+                "mimetype": "image/jpeg",
+                "size": file_size,
+                "w": 1024,
+                "h": 1024
+            },
+        }
+        logger.debug("[draw_command] Sending image content => %s", image_content)
+
+        img_response = await bot_client.room_send(
+            room_id=room_id,
+            message_type="m.room.message",
+            content=image_content,
+        )
+
+        if isinstance(img_response, RoomSendResponse):
+            return f"Image posted successfully! Prompt: '{final_prompt}'"
+        else:
+            logger.warning("[draw_command] Unexpected response => %s", img_response)
+            return "Failed to send the image to the room."
+    except Exception as e:
+        logger.exception("[draw_command] Error sending the image event.")
+        return f"Error sending the image => {e}"
+
+def get_param(param_name: str) -> str:
+    """
+    1) Check in-memory GLOBAL_PARAMS first (quick read).
+    2) If not found, load from config.yaml -> 'globals' -> param_name.
+    3) Return the string value or a "not found" message.
+    """
+    # Check in-memory
+    if param_name in GLOBAL_PARAMS:
+        return str(GLOBAL_PARAMS[param_name])
+
+    # Otherwise, load from config
+    cfg = load_config()
+    globals_section = cfg.get("globals", {})
+    val = globals_section.get(param_name)
+    if val is not None:
+        # Store it in memory so next time we don't have to reload
+        GLOBAL_PARAMS[param_name] = val
+        return str(val)
+
+    return f"No param set for '{param_name}'."
+
+def set_param(param_name: str, value: str) -> str:
+    """
+    1) Update in-memory GLOBAL_PARAMS.
+    2) Also persist to config.yaml in the 'globals' section.
+    3) Return a confirmation message.
+    """
+    # Update in-memory
+    GLOBAL_PARAMS[param_name] = value
+
+    # Persist to config.yaml
+    cfg = load_config()
+    if "globals" not in cfg:
+        cfg["globals"] = {}
+    cfg["globals"][param_name] = value
+    save_config(cfg)
+
+    return f"Set {param_name} => {value}"
+
+async def spawn(bot_client: AsyncClient, descriptor: str) -> str:
+    """
+    Usage:
+      !spawn <descriptor>
+
+    A placeholder for a 'spawn' command. Implementation can vary.
+    """
+    return f"Spawned entity described as: {descriptor}"
+
+
+async def help_command(*args, **kwargs) -> str:
+    """
+    Usage:
+      !help
+
+    Show help for all available commands, displaying usage and description
+    in a beautiful HTML table.
+    """
+    table_html = build_help_table()
+    return table_html
+
+def list_params() -> str:
+    """
+    Usage:
+      !list_params
+
+    Lists all key-value pairs in the GLOBAL_PARAMS dictionary, formatted as an HTML table.
+    """
+    if not GLOBAL_PARAMS:
+        return "<p>No parameters have been set.</p>"
+
+    rows = []
+    for key, val in GLOBAL_PARAMS.items():
+        row = (
+            "<tr>"
+            f"<td>{key}</td>"
+            f"<td>{val}</td>"
+            "</tr>"
+        )
+        rows.append(row)
+
+    table_html = (
+        "<p><strong>Current Global Parameters</strong></p>"
+        "<table border='1' style='border-collapse:collapse; margin:1em 0;'>"
+        "<thead><tr><th>Param Name</th><th>Value</th></tr></thead>"
+        "<tbody>"
+        + "".join(rows) +
+        "</tbody></table>"
+    )
+
+    return table_html
+
+async def luna_gpt(bot_client: AsyncClient, room_id: str, raw_args: str) -> str:
+    """
+    Usage:
+      !luna <prompt>
+
+    Sends the user's prompt through GPT with a full context build for Luna,
+    using `context_helper.build_context`. Returns GPT's plain-text response.
+
+    Handles both quoted and non-quoted inputs by stripping leading/trailing quotes.
+    Examples:
+      !luna "Hello world"
+      !luna Hello world
+    """
+    # 1) Strip leading/trailing quotes or whitespace.
+    #    If raw_args is something like '"Hello world"', we remove the quotes.
+    #    If it's unquoted (e.g. 'Hello world'), we still trim leading/trailing spaces.
+    prompt = raw_args.strip().strip('"\'')
+    if not prompt:
+        return "Usage: !luna <prompt>"
+
+    from luna.context_helper import build_context  # Ensure correct import path
+    from luna.ai_functions import get_gpt_response  # Ensure correct import path
+
+    # 2) Build Luna’s GPT context for this room
+    try:
+        context_config = {"max_history": 20}
+        gpt_context = build_context("lunabot", room_id, context_config)
+        gpt_context.append({"role": "user", "content": prompt})
+
+        logger.debug("[luna_gpt] GPT context built: %s", gpt_context)
+
+        # 3) Call GPT with the context and user’s final prompt
+        gpt_response = await get_gpt_response(
+            messages=gpt_context,
+            model="chatgpt-4o-latest",
+            temperature=0.7,
+            max_tokens=300
+        )
+        logger.debug("[luna_gpt] GPT response: %s", gpt_response)
+
+        # 4) Return the plain-text response to the caller
+        return gpt_response
+
+    except Exception as e:
+        logger.exception("[luna_gpt] Error generating response:")
+        return f"Error generating response: {e}"
+
+
+async def luna_gpt_dep(bot_client: AsyncClient, room_id: str, args: str) -> str:
+    """
+    Usage:
+      !luna <prompt>
+
+    Sends the user's prompt through GPT with a full context build for Luna,
+    using `context_helper.build_context`. Returns GPT's plain-text response.
+    """
+    from luna.context_helper import build_context  # Ensure correct import path
+    from luna.ai_functions import get_gpt_response  # Ensure correct import path
+
+    if not args:
+        return "Usage: !luna <prompt>"
+
+    # 1) Build Luna's context for this room
+    try:
+        context_config = {"max_history": 20}
+        gpt_context = build_context("lunabot", room_id, context_config)
+        gpt_context.append({"role": "user", "content": args})
+
+        logger.debug("[luna_gpt] GPT context built: %s", gpt_context)
+
+        # 2) Call GPT with the context and user's prompt
+        gpt_response = await get_gpt_response(
+            messages=gpt_context,
+            model="chatgpt-4o-latest",
+            temperature=0.7,
+            max_tokens=300
+        )
+        logger.debug("[luna_gpt] GPT response: %s", gpt_response)
+
+        return gpt_response
+
+    except Exception as e:
+        logger.exception("[luna_gpt] Error generating response:")
+        return f"Error generating response: {e}"
+
+
+# -------------------------------------------------------------
+# BUILD HELP TABLE
+# -------------------------------------------------------------
+def build_help_table() -> str:
+    """
+    Dynamically build an HTML table showing [Command | Usage | Description]
+    by parsing docstrings from each command.
+    """
+    rows = []
+    sorted_commands = sorted(COMMAND_ROUTER.items())
+
+    for cmd_name, func in sorted_commands:
+        usage, description = parse_command_doc(func)
+        row = (
+            f"<tr>"
+            f"<td><b>{cmd_name}</b></td>"
+            f"<td>{usage}</td>"
+            f"<td>{description}</td>"
+            f"</tr>"
+        )
+        rows.append(row)
+
+    table = (
+        "<table border='1' style='border-collapse: collapse; margin:1em 0;'>"
+        "<thead><tr><th>Command</th><th>Usage</th><th>Description</th></tr></thead>"
+        "<tbody>"
+        + "".join(rows) +
+        "</tbody></table>"
+    )
+
+    html = (
+        "<p><strong>Available Commands</strong></p>"
+        + table
+    )
+    return html
+
+
+def parse_command_doc(func) -> tuple[str, str]:
+    """
+    Extract usage and a short description from a function's docstring.
+    Expects docstring lines like:
+        Usage:
+          !command_name <args>
+
+        A longer description...
+    """
+    doc = inspect.getdoc(func) or ""
+    lines = doc.splitlines()
+    usage_line = ""
+    description_lines = []
+
+    for line in lines:
+        line_stripped = line.strip()
+        if line_stripped.lower().startswith("usage:"):
+            usage_line = line_stripped[len("usage:"):].strip()
+        else:
+            description_lines.append(line_stripped)
+
+    usage = usage_line
+    description = " ".join(description_lines).strip()
+    return usage, description
+
+
+# -------------------------------------------------------------
+# COMMAND ROUTER
+# -------------------------------------------------------------
+COMMAND_ROUTER = {
+    "create_room": create_room,    # async
+    "invite_user": invite_user,    # async
+    "list_rooms":  list_rooms,     # async
+    "spawn":       spawn,          # async
+    "help":        help_command,   # async
+    "set_param":   set_param,      # sync
+    "get_param":   get_param,      # sync,
+    "list_params": list_params,
+    "draw":        draw_command,   # now posts the actual image
+    "luna":        luna_gpt
+}
+
+
+# -------------------------------------------------------------
+# COMMAND DISPATCHER
+# -------------------------------------------------------------
+async def handle_console_command(bot_client: AsyncClient, room_id: str, message_body: str, sender: str) -> str:
+    """
+    Parse the message (which starts with '!'), extract command name & args,
+    invoke the appropriate function from COMMAND_ROUTER, and return the result.
+    Now we pass 'room_id' into commands like 'draw_command' so it can post images.
+    """
+    cmd_line = message_body[1:].strip()
+
+    try:
+        parts = shlex.split(cmd_line)
+    except ValueError as e:
+        return f"SYSTEM: Error parsing command => {e}"
+
+    if not parts:
+        return "SYSTEM: No command entered."
+
+    command_name = parts[0].lower()
+    args = parts[1:]
+
+    if command_name not in COMMAND_ROUTER:
+        return f"SYSTEM: Unrecognized command '{command_name}'."
+
+    command_func = COMMAND_ROUTER[command_name]
+
+    # Dispatch to the correct function
+    if command_name == "create_room":
+        if not args:
+            return "Usage: !create_room <localpart> [topic=\"...\"] [public|private]"
+        localpart = args[0]
+        topic = None
+        is_public = True
+
+        for extra in args[1:]:
+            if extra.startswith("topic="):
+                topic_val = extra.split("=", 1)[1].strip('"')
+                topic = topic_val
+            elif extra.lower() in ["public", "private"]:
+                is_public = (extra.lower() == "public")
+
+        return await command_func(bot_client, sender, localpart, topic, is_public)
+
+    elif command_name == "invite_user":
+        if len(args) < 2:
+            return "Usage: !invite_user <user_id> <room_localpart>"
+        user_id = args[0]
+        localpart = args[1]
+        return await command_func(bot_client, user_id, localpart)
+
+    elif command_name == "list_params":
+        # No arguments expected
+        if args:
+            return "Usage: !list_params  (no arguments needed)"
+        return command_func()
+
+    elif command_name == "luna":
+        if not args:
+            return "Usage: !luna <prompt>"
+        prompt = " ".join(args)
+        return await command_func(bot_client, room_id, prompt)
+    
+    elif command_name == "draw":
+        # Now pass in the 'room_id' so we can post the image there
+        if not args:
+            return "Usage: !draw <prompt>"
+        prompt = " ".join(args)
+        return await command_func(bot_client, room_id, prompt)
+
+    elif command_name == "list_rooms":
+        return await command_func(bot_client)
+
+    elif command_name == "spawn":
+        if not args:
+            return "Usage: !spawn <descriptor>"
+        descriptor = " ".join(args)
+        return await command_func(bot_client, descriptor)
+
+    elif command_name == "help":
+        return await command_func()
+
+    elif command_name == "set_param":
+        if len(args) < 2:
+            return "Usage: !set_param <param_name> <value>"
+        param_name = args[0]
+        value = " ".join(args[1:])
+        return command_func(param_name, value)
+
+    elif command_name == "get_param":
+        if len(args) < 1:
+            return "Usage: !get_param <param_name>"
+        param_name = args[0]
+        return command_func(param_name)
+
+    # fallback if not handled above
+    return f"SYSTEM: Command '{command_name}' is recognized but not handled."
+
+def load_config() -> dict:
+    """
+    Loads the YAML config from disk into a dict.
+    Returns an empty dict if file not found or invalid.
+    """
+    if not os.path.exists(CONFIG_PATH):
+        return {}
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+def save_config(config_data: dict) -> None:
+    """
+    Writes the config_data dict back to config.yaml, overwriting existing content.
+    """
+    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        yaml.safe_dump(config_data, f)
 === luna_command_extensions/create_and_login_bot.py ===
 """
 create_and_login_bot.py
@@ -3512,257 +4252,6 @@ async def create_room(args_string: str) -> str:
         logger.exception("Caught an exception while creating room %r:", room_name)
         return f"Exception while creating room => {e}"
 
-=== luna_command_extensions/dall_e_bot_handler.py ===
-# luna_message_handler.py
-
-import os
-import time
-import json
-import logging
-import requests
-import urllib.parse
-import aiohttp
-
-from nio import (
-    AsyncClient,
-    RoomMessageText,
-    RoomSendResponse,
-)
-
-from luna import bot_messages_store  # We’ll use this to track seen event IDs
-
-logger = logging.getLogger(__name__)
-
-async def direct_upload_image(
-    client: AsyncClient,
-    file_path: str,
-    content_type: str = "image/jpeg"
-) -> str:
-    """
-    Manually upload a file to Synapse's media repository, explicitly setting
-    Content-Length (avoiding chunked requests).
-    
-    Returns the mxc:// URI if successful, or raises an exception on failure.
-    """
-    if not client.access_token or not client.homeserver:
-        raise RuntimeError("AsyncClient has no access_token or homeserver set.")
-
-    base_url = client.homeserver.rstrip("/")
-    filename = os.path.basename(file_path)
-    encoded_name = urllib.parse.quote(filename)
-    upload_url = f"{base_url}/_matrix/media/v3/upload?filename={encoded_name}"
-
-    file_size = os.path.getsize(file_path)
-    headers = {
-        "Authorization": f"Bearer {client.access_token}",
-        "Content-Type": content_type,
-        "Content-Length": str(file_size),
-    }
-
-    logger.debug("[direct_upload_image] POST to %s, size=%d", upload_url, file_size)
-
-    async with aiohttp.ClientSession() as session:
-        with open(file_path, "rb") as f:
-            async with session.post(upload_url, headers=headers, data=f) as resp:
-                if resp.status == 200:
-                    body = await resp.json()
-                    content_uri = body.get("content_uri")
-                    if not content_uri:
-                        raise RuntimeError("No 'content_uri' in response JSON.")
-                    logger.debug("[direct_upload_image] Uploaded. content_uri=%s", content_uri)
-                    return content_uri
-                else:
-                    err_text = await resp.text()
-                    raise RuntimeError(
-                        f"Upload failed (HTTP {resp.status}): {err_text}"
-                    )
-
-
-async def handle_luna_message(bot_client: AsyncClient, bot_localpart: str, room, event):
-    """
-    Modified so we only respond ONCE per message/event_id. If the event_id
-    is already in our DB, we skip responding again.
-
-    Steps:
-      1) If from ourselves, ignore.
-      2) If not a RoomMessageText or not "!draw", ignore.
-      3) Check DB for existing event_id. If found, skip.
-      4) Otherwise, store inbound message in DB so we don't respond to it again.
-      5) Generate image via OpenAI + direct upload
-      6) Post m.image + handle fallback
-    """
-
-    bot_full_id = bot_client.user
-
-    # 1) Don’t respond to own messages
-    if event.sender == bot_full_id:
-        logger.debug("Ignoring message from myself: %s", event.sender)
-        return
-
-    # Must be a text event
-    if not isinstance(event, RoomMessageText):
-        return
-
-    message_body = event.body or ""
-    if not message_body.startswith("!draw"):
-        return
-
-    # 2) Check if we already saw this event_id in DB
-    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
-    if any(m["event_id"] == event.event_id for m in existing_msgs):
-        logger.info(
-            "[handle_luna_message] We’ve already responded to event_id=%s, skipping.",
-            event.event_id
-        )
-        return
-
-    # 3) If this is brand new, store the inbound message so we don't respond to it twice
-    bot_messages_store.append_message(
-        bot_localpart=bot_localpart,
-        room_id=room.room_id,
-        event_id=event.event_id,
-        sender=event.sender,
-        timestamp=event.server_timestamp,
-        body=message_body
-    )
-
-    # 4) Check for a non-empty prompt
-    prompt = message_body[5:].strip()
-    if not prompt:
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={
-                "msgtype": "m.text",
-                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
-            },
-        )
-        return
-
-    # 5) Make sure we have an OpenAI API key
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-    if not OPENAI_API_KEY:
-        logger.error("OpenAI API key not found in environment variables.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
-        )
-        return
-
-    # 6) Indicate typing
-    try:
-        await bot_client.room_typing(room.room_id, typing_state=True, timeout=30000)
-        logger.info("Successfully sent 'typing start' indicator to room.")
-    except Exception as e:
-        logger.warning(f"Could not send 'typing start' indicator => {e}")
-
-    try:
-        # (A) Generate the image from OpenAI
-        try:
-            logger.info("Generating image with OpenAI's API. Prompt=%r", prompt)
-            url = "https://api.openai.com/v1/images/generations"
-            headers = {
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-            }
-            data = {
-                "model": "dall-e-3",
-                "prompt": prompt,
-                "n": 1,
-                "size": "1024x1024",
-            }
-            resp = requests.post(url, headers=headers, json=data)
-            resp.raise_for_status()
-            result_data = resp.json()
-            image_url = result_data["data"][0]["url"]
-            logger.info("OpenAI returned an image URL: %s", image_url)
-        except Exception as e:
-            logger.exception("Error occurred while generating image from OpenAI.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
-            )
-            return
-
-        # (B) Download the image
-        try:
-            logger.info("Downloading image from URL: %s", image_url)
-            os.makedirs("data/images", exist_ok=True)
-            timestamp = int(time.time())
-            filename = f"data/images/generated_image_{timestamp}.jpg"
-
-            dl_resp = requests.get(image_url)
-            dl_resp.raise_for_status()
-
-            with open(filename, "wb") as f:
-                f.write(dl_resp.content)
-
-            logger.info("Image downloaded => %s", filename)
-        except Exception as e:
-            logger.exception("Error occurred while downloading the image.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": "Error downloading the image."},
-            )
-            return
-
-        # (C) Upload to Synapse (explicit Content-Length)
-        try:
-            logger.info("Uploading image to Matrix server (direct_upload_image).")
-            mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
-            logger.info("Image upload success => %s", mxc_url)
-        except Exception as e:
-            logger.exception("Error occurred during direct upload to Synapse.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
-            )
-            return
-
-        # (D) Send the m.image event
-        try:
-            file_size = os.path.getsize(filename)
-            image_content = {
-                "msgtype": "m.image",
-                "body": os.path.basename(filename),
-                "url": mxc_url,
-                "info": {
-                    "mimetype": "image/jpeg",
-                    "size": file_size,
-                    "w": 1024,
-                    "h": 1024
-                },
-            }
-            logger.info("Sending m.image =>\n%s", json.dumps(image_content, indent=2))
-            img_response = await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content=image_content,
-            )
-            if isinstance(img_response, RoomSendResponse):
-                logger.info("Sent image to room. Event ID: %s", img_response.event_id)
-            else:
-                logger.error("Failed to send image. Response: %s", img_response)
-        except Exception as e:
-            logger.exception("Error sending the image to the room.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": "There was an error uploading the image."},
-            )
-            return
-
-    finally:
-        # (E) Stop typing no matter what
-        try:
-            await bot_client.room_typing(room.room_id, typing_state=False, timeout=0)
-        except Exception as e:
-            logger.warning(f"Could not send 'typing stop' indicator => {e}")
-
 === luna_command_extensions/luna_message_handler.py ===
 # luna_message_handler.py
 
@@ -4013,6 +4502,810 @@ async def handle_luna_message(bot_client: AsyncClient, bot_localpart: str, room,
             await bot_client.room_typing(room.room_id, typing_state=False, timeout=0)
         except Exception as e:
             logger.warning(f"Could not send 'typing stop' indicator => {e}")
+
+=== luna_command_extensions/luna_message_handler2.py ===
+# luna_message_handler2.py
+
+import os
+import time
+import json
+import logging
+import random
+import asyncio
+import sys
+import io
+import html
+import requests
+import urllib.parse
+import aiohttp
+from nio import (
+    AsyncClient,
+    RoomMessageText,
+    RoomSendResponse,
+)
+
+from luna import bot_messages_store
+from luna.console_functions import COMMAND_ROUTER
+from luna.context_helper import build_context
+from luna.ai_functions import get_gpt_response
+from luna.luna_command_extensions.luna_message_handler import direct_upload_image  # Reuse the direct_upload_image helper
+
+logger = logging.getLogger(__name__)
+
+def run_console_command_in_memory(cmd_line: str) -> str:
+    """
+    Intercepts sys.stdout to capture console_functions' prints.
+    Calls the appropriate function in COMMAND_ROUTER and returns all output as a single string.
+    Supports both sync and async commands.
+    """
+    old_stdout = sys.stdout
+    output_buffer = io.StringIO()
+
+    try:
+        sys.stdout = output_buffer
+        parts = cmd_line.strip().split(maxsplit=1)
+        if not parts:
+            print("SYSTEM: No command entered.")
+            return output_buffer.getvalue()
+
+        command_name = parts[0].lower()
+        argument_string = parts[1] if len(parts) > 1 else ""
+
+        if command_name not in COMMAND_ROUTER:
+            print(f"SYSTEM: Unrecognized command '{command_name}'.")
+            return output_buffer.getvalue()
+
+        command_func = COMMAND_ROUTER[command_name]
+        loop = asyncio.get_event_loop()
+
+        # If the command is an async function, await it;
+        # otherwise call it as a normal sync function.
+        if asyncio.iscoroutinefunction(command_func):
+            loop.run_until_complete(command_func(argument_string, loop))
+        else:
+            command_func(argument_string, loop)
+
+    except Exception as e:
+        logger.exception("Error in run_console_command_in_memory => %s", e)
+        print(f"SYSTEM: Command failed => {e}")
+    finally:
+        sys.stdout = old_stdout
+
+    return output_buffer.getvalue()
+
+
+def run_console_command_in_memory_dep(cmd_line: str) -> str:
+    """
+    Intercepts sys.stdout to capture console_functions' prints.
+    Calls the appropriate function in COMMAND_ROUTER and returns all output as a single string.
+    """
+    old_stdout = sys.stdout
+    output_buffer = io.StringIO()
+    try:
+        sys.stdout = output_buffer
+        parts = cmd_line.strip().split(maxsplit=1)
+        if not parts:
+            print("SYSTEM: No command entered.")
+        else:
+            command_name = parts[0].lower()
+            argument_string = parts[1] if len(parts) > 1 else ""
+
+            if command_name in COMMAND_ROUTER:
+                COMMAND_ROUTER[command_name](argument_string, asyncio.get_running_loop())
+            else:
+                print(f"SYSTEM: Unrecognized command '{command_name}'.")
+    except Exception as e:
+        logger.exception("Error in run_console_command_in_memory => %s", e)
+        print(f"SYSTEM: Command failed => {e}")
+    finally:
+        sys.stdout = old_stdout
+
+    return output_buffer.getvalue()
+
+async def handle_luna_message2(bot_client: AsyncClient, bot_localpart: str, room, event):
+    """
+    Enhanced message handler with the following features:
+      - Typing indicators with random delays.
+      - Prevents duplicate responses.
+      - Handles commands starting with '!' using existing console commands.
+      - Defaults to GPT responses for unrecognized commands or regular messages.
+      - Maintains thorough logging throughout the process.
+    """
+    bot_full_id = bot_client.user
+
+    # -- 1) Ignore messages from self
+    if event.sender == bot_full_id:
+        logger.debug("Ignoring message from myself: %s", event.sender)
+        return
+
+    # -- 2) Ensure it's a text message
+    if not isinstance(event, RoomMessageText):
+        logger.debug("Ignoring non-text message.")
+        return
+
+    message_body = event.body or ""
+    logger.info("Received message in room=%s from=%s => %r",
+                room.room_id, event.sender, message_body)
+
+    # -- 3) Check for duplicates to prevent duplication and proliferation of responses to the same message
+    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
+    if any(m["event_id"] == event.event_id for m in existing_msgs):
+        logger.info("Event %s already in DB => skipping response.", event.event_id)
+        return
+
+    # -- 4) Store inbound message now that we know it's unique
+    bot_messages_store.append_message(
+        bot_localpart=bot_localpart,
+        room_id=room.room_id,
+        event_id=event.event_id,
+        sender=event.sender,
+        timestamp=event.server_timestamp,
+        body=message_body
+    )
+    logger.debug("Stored inbound event_id=%s in DB.", event.event_id)
+
+    # -- 5) Random delay for realism
+    await asyncio.sleep(random.uniform(0.5, 2.5))
+
+    # -- 6) Start typing indicator
+    try:
+        await bot_client.room_typing(room.room_id, True, timeout=30000)
+        logger.info("Sent 'typing start' indicator.")
+    except Exception as e:
+        logger.warning("Could not send 'typing start' indicator => %s", e)
+
+    # -- 7) Determine if it's a command
+    if message_body.startswith("!draw"):
+        await _handle_draw_command(bot_client, bot_localpart, room, event, message_body)
+    elif message_body.startswith("!"):
+        # Extract command line without the leading '!'
+        cmd_line = message_body[1:].strip()
+        console_output = run_console_command_in_memory(cmd_line)
+
+        if console_output and not console_output.strip().startswith("SYSTEM: Unrecognized command"):
+            # Recognized command: send the console output as HTML
+            await _send_formatted_text(bot_client, room.room_id, console_output)
+        else:
+            # Unrecognized command: fallback to GPT
+            logger.debug("Unrecognized command '%s' => falling back to GPT.", cmd_line)
+            await _send_formatted_text(bot_client, room.room_id, "SYSTEM:  Unrecognized Command.")        
+    else:
+        # Regular message: send GPT response in plain text
+        gpt_reply = await _call_gpt(bot_localpart, room.room_id, message_body)
+        await _send_text(bot_client, room.room_id, gpt_reply)
+
+    # -- 8) Stop typing indicator
+    try:
+        await bot_client.room_typing(room.room_id, False, timeout=0)
+        logger.info("Sent 'typing stop' indicator.")
+    except Exception as e:
+        logger.warning("Could not send 'typing stop' indicator => %s", e)
+
+async def _handle_draw_command(bot_client, bot_localpart, room, event, message_body: str):
+    """
+    Handles the '!draw' command: generates an image via DALL·E, uploads it,
+    and sends it to the room along with a fallback text message.
+    """
+    
+    prompt = message_body[5:].strip()
+    if not prompt:
+        logger.debug("No prompt provided to !draw.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={
+                "msgtype": "m.text",
+                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
+            },
+        )
+        return
+
+    # Check for OpenAI API Key
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if not OPENAI_API_KEY:
+        logger.error("Missing OPENAI_API_KEY for !draw.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
+        )
+        return
+
+    try:
+        # Generate image from DALL·E
+        logger.info("Generating image from prompt => %r", prompt)
+        url = "https://api.openai.com/v1/images/generations"
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": "dall-e-3",
+            "prompt": prompt,
+            "n": 1,
+            "size": "1024x1024",
+        }
+        resp = requests.post(url, headers=headers, json=data)
+        resp.raise_for_status()
+        result_data = resp.json()
+        image_url = result_data["data"][0]["url"]
+        logger.info("OpenAI returned image_url=%s", image_url)
+    except Exception as e:
+        logger.exception("Error generating image from OpenAI.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
+        )
+        return
+
+    try:
+        # Download the image
+        logger.info("Downloading image from URL: %s", image_url)
+        os.makedirs("data/images", exist_ok=True)
+        timestamp = int(time.time())
+        filename = f"data/images/generated_image_{timestamp}.jpg"
+
+        dl_resp = requests.get(image_url)
+        dl_resp.raise_for_status()
+
+        with open(filename, "wb") as f:
+            f.write(dl_resp.content)
+
+        logger.info("Image downloaded => %s", filename)
+    except Exception as e:
+        logger.exception("Error downloading the image.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": "Error downloading the image."},
+        )
+        return
+
+    try:
+        # Upload to Synapse
+        logger.info("Uploading image to Matrix server (direct_upload_image).")
+        mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
+        logger.info("Image upload success => %s", mxc_url)
+    except Exception as e:
+        logger.exception("Error uploading image to Synapse.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
+        )
+        return
+
+    try:
+        # Send the image
+        file_size = os.path.getsize(filename)
+        image_content = {
+            "msgtype": "m.image",
+            "body": os.path.basename(filename),
+            "url": mxc_url,
+            "info": {
+                "mimetype": "image/jpeg",
+                "size": file_size,
+                "w": 1024,
+                "h": 1024
+            },
+        }
+        logger.debug("Sending image content => %s", json.dumps(image_content, indent=2))
+        img_response = await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content=image_content,
+        )
+        if isinstance(img_response, RoomSendResponse):
+            logger.info("Image sent => event_id=%s", img_response.event_id)
+            # Optionally, store the outbound image message
+            bot_messages_store.append_message(
+                bot_localpart=bot_localpart,
+                room_id=room.room_id,
+                event_id=img_response.event_id,
+                sender=bot_client.user_id,
+                timestamp=int(time.time() * 1000),
+                body=json.dumps(image_content)
+            )
+        else:
+            logger.warning("Failed to send image => %s", img_response)
+    except Exception as e:
+        logger.exception("Error sending the image to the room.")
+        await bot_client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": "There was an error uploading the image."},
+        )
+
+
+async def _send_formatted_text(bot_client: AsyncClient, room_id: str, text: str):
+    """
+    Escape & wrap text in <pre> for a minimal approach.
+    """
+    safe_text = html.escape(text)
+    html_body = f"<pre>{safe_text}</pre>"
+
+    content = {
+        "msgtype": "m.text",
+        "body": text,  # Fallback
+        "format": "org.matrix.custom.html",
+        "formatted_body": html_body
+    }
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content
+    )
+    if isinstance(resp, RoomSendResponse):
+        logger.info("Sent formatted text => event_id=%s", resp.event_id)
+    else:
+        logger.warning("Failed to send formatted text => %s", resp)
+
+async def _send_text(bot_client: AsyncClient, room_id: str, text: str):
+    """
+    Sends plain text (no HTML formatting) to the given room.
+    """
+    content = {
+        "msgtype": "m.text",
+        "body": text,
+    }
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content
+    )
+    return resp
+
+async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
+    """
+    Build context (including system prompt) + user message => GPT call.
+    Returns the text reply from GPT.
+    """
+    logger.debug("_call_gpt => building context for localpart=%s, room_id=%s", bot_localpart, room_id)
+    context_config = {"max_history": 10}
+    gpt_context = build_context(bot_localpart, room_id, context_config)
+
+    # Append the new user message
+    gpt_context.append({"role": "user", "content": user_message})
+
+    logger.debug("GPT context => %s", gpt_context)
+    reply = await get_gpt_response(
+        messages=gpt_context,
+        model="gpt-4",
+        temperature=0.7,
+        max_tokens=300
+    )
+    return reply
+
+=== luna_command_extensions/luna_message_handler3.py ===
+"""
+luna_message_handler3.py
+
+Example usage of the new command router + help command in a simplified
+Matrix event handler for text messages.
+"""
+
+import random
+import asyncio
+import logging
+from luna.context_helper import build_context
+from luna import bot_messages_store
+from luna.ai_functions import get_gpt_response
+import time
+from nio import (
+    AsyncClient,
+    RoomMessageText,
+    RoomSendResponse,
+)
+
+from luna.luna_command_extensions.command_router import handle_console_command
+
+logger = logging.getLogger(__name__)
+BOT_START_TIME = time.time() * 1000
+
+async def handle_luna_message3(bot_client: AsyncClient, bot_localpart: str, room, event):
+    """
+    A new message handler that:
+      - Ignores messages from itself
+      - Checks if message starts with '!' => route to handle_console_command
+      - Otherwise, do a fallback (like echo or GPT).
+      - Sends typing indicators for realism.
+    """
+
+    # do not respond to messages from the past, under any circumstances
+    if event.server_timestamp < BOT_START_TIME:
+        logger.debug("Skipping old event => %s", event.event_id)
+        return
+
+    bot_full_id = bot_client.user
+
+    # 1) Ignore messages from itself
+    if event.sender == bot_full_id:
+        logger.debug("Ignoring message from myself: %s", event.sender)
+        return
+
+    # 2) Check if it's a text message
+    if not isinstance(event, RoomMessageText):
+        logger.debug("Ignoring non-text message.")
+        return
+
+    message_body = event.body or ""
+    logger.info("Received message in room=%s from=%s => %r", room.room_id, event.sender, message_body)
+
+    # e.g. after verifying not from ourselves, and that it's text
+    bot_messages_store.append_message(
+        bot_localpart=bot_localpart,
+        room_id=room.room_id,
+        event_id=event.event_id,
+        sender=event.sender,
+        timestamp=event.server_timestamp,
+        body=message_body
+    )
+
+    # 5) Start typing indicator
+    try:
+        await bot_client.room_typing(room.room_id, True, timeout=5000)
+        logger.info("Sent 'typing start' indicator.")
+    except Exception as e:
+        logger.warning("Could not send 'typing start' indicator => %s", e)
+
+    await asyncio.sleep(0.5) # wait at least a half a second to respond
+
+    # 6) If it starts with "!", treat it as a command
+    if message_body.startswith("!"):
+        # dispatch to console_command
+        reply_text = await handle_console_command(
+            bot_client,
+            room.room_id,
+            message_body,
+            event.sender
+        )
+        # Some commands (like !help) return HTML. Let's send it as formatted text.
+        if reply_text.strip().startswith("<table") or "<table" in reply_text:
+            await send_formatted_text(bot_client, room.room_id, reply_text)
+        else:
+            # fallback plain text
+            await send_text(bot_client, room.room_id, reply_text)
+    else:
+        # Fallback path (e.g., echo or GPT)
+        # 4) Random delay to mimic "typing"
+        await asyncio.sleep(random.uniform(0.5, 2.0))
+
+        # Regular message: send GPT response in plain text
+        gpt_reply = await _call_gpt(bot_localpart, room.room_id, message_body)
+        await send_text(bot_client, room.room_id, gpt_reply)
+
+    # 7) Stop typing indicator
+    try:
+        await bot_client.room_typing(room.room_id, False, timeout=0)
+        logger.info("Sent 'typing stop' indicator.")
+    except Exception as e:
+        logger.warning("Could not send 'typing stop' indicator => %s", e)
+
+
+async def send_text(bot_client: AsyncClient, room_id: str, text: str):
+    """Send a plain text message (no HTML formatting)."""
+    content = {
+        "msgtype": "m.text",
+        "body": text,
+    }
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content,
+    )
+    if isinstance(resp, RoomSendResponse):
+        logger.info(f"Sent text => event_id={resp.event_id}")
+    else:
+        logger.warning(f"Failed to send text => {resp}")
+
+
+async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_content: str):
+    """
+    Send an HTML-formatted message with a plain-text fallback.
+    """
+    # For fallback, just strip tags (naive approach).
+    fallback_text = remove_html_tags(html_content)
+
+    content = {
+        "msgtype": "m.text",
+        "body": fallback_text,
+        "format": "org.matrix.custom.html",
+        "formatted_body": html_content
+    }
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content,
+    )
+    if isinstance(resp, RoomSendResponse):
+        logger.info(f"Sent formatted text => event_id={resp.event_id}")
+    else:
+        logger.warning(f"Failed to send formatted text => {resp}")
+
+
+def remove_html_tags(html: str) -> str:
+    """Minimal HTML tag remover for fallback body."""
+    import re
+    return re.sub(r'<[^>]+>', '', html).strip()
+
+async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
+    """
+    Build context (including system prompt) + user message => GPT call.
+    Returns the text reply from GPT.
+    """
+    logger.debug("_call_gpt => building context for localpart=%s, room_id=%s", bot_localpart, room_id)
+    context_config = {"max_history": 10}
+    gpt_context = build_context(bot_localpart, room_id, context_config)
+
+    # Append the new user message
+    gpt_context.append({"role": "user", "content": user_message})
+
+    logger.debug("GPT context => %s", gpt_context)
+    reply = await get_gpt_response(
+        messages=gpt_context,
+        model="chatgpt-4o-latest",
+        temperature=0.7,
+        max_tokens=300
+    )
+    return reply
+
+=== luna_command_extensions/luna_message_handler4.py ===
+"""
+luna_message_handler4.py
+
+Admin-only behavior, but now GPT fallback is interpreted as Markdown and sent
+via 'org.matrix.custom.html', so it can render bold/italics/etc. in the client.
+We assume there's no color code being injected – any mention highlighting is
+still a client-side theme/notifications setting.
+"""
+
+import random
+import asyncio
+import time
+import logging
+import re
+import markdown  # for converting GPT's string to HTML
+
+from nio import (
+    AsyncClient,
+    RoomMessageText,
+    RoomSendResponse,
+    RoomCreateResponse
+)
+
+from luna.luna_command_extensions.command_router import handle_console_command
+from luna.context_helper import build_context
+from luna.ai_functions import get_gpt_response
+from luna import bot_messages_store
+
+logger = logging.getLogger(__name__)
+BOT_START_TIME = time.time() * 1000
+
+async def handle_luna_message4(bot_client: AsyncClient, bot_localpart: str, room, event):
+    """
+    1) Ignores old/self messages
+    2) Must be text
+    3) Saves inbound
+    4) If DM (2 participants) => handle commands or GPT
+       Else => role-play channel => commands => respond by DM
+    """
+    message_body = event.body or ""
+    logger.info("handle_luna_message4: room=%s from=%s => %r",
+                room.room_id, event.sender, message_body)
+
+    # 3) store inbound
+    bot_messages_store.append_message(
+        bot_localpart=bot_localpart,
+        room_id=room.room_id,
+        event_id=event.event_id,
+        sender=event.sender,
+        timestamp=event.server_timestamp,
+        body=message_body
+    )
+
+    # 1) ignore old / from self
+    if event.server_timestamp < BOT_START_TIME:
+        logger.debug("Ignoring old event => %s", event.event_id)
+        return
+
+    bot_full_id = bot_client.user
+    if event.sender == bot_full_id:
+        logger.debug("Ignoring message from myself: %s", event.sender)
+        return
+
+    # 2) Must be text
+    if not isinstance(event, RoomMessageText):
+        logger.debug("Ignoring non-text event => %s", event.type)
+        return
+
+    # 4) DM vs. role-play channel
+    participant_count = len(room.users)
+    if participant_count == 2:
+        await _handle_dm_channel(bot_client, bot_localpart, room, event, message_body)
+    else:
+        await _handle_roleplay_channel(bot_client, bot_localpart, room, event, message_body)
+
+
+async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_body):
+    """
+    2-participant DM:
+      - If command => handle, respond in same room
+      - Else => GPT fallback => interpret as Markdown
+    """
+    await _start_typing(bot_client, room.room_id)
+
+    if message_body.startswith("!"):
+        # commands
+        reply_text = await handle_console_command(bot_client, room.room_id, message_body, event.sender)
+
+        if "<table" in reply_text:
+            # Possibly HTML from e.g. !help
+            await send_formatted_text(bot_client, room.room_id, reply_text)
+        else:
+            await send_text(bot_client, room.room_id, reply_text)
+
+    else:
+        # GPT fallback => interpret as Markdown
+        await asyncio.sleep(random.uniform(0.5, 2.0))
+        gpt_reply = await _call_gpt(bot_localpart, room.room_id, message_body)
+
+        # Convert GPT’s string from Markdown => HTML
+        # (If GPT doesn't use markdown, it still renders fine.)
+        reply_html = markdown.markdown(gpt_reply, extensions=["extra", "sane_lists"])
+        # Then post it with formatted_text
+        await send_formatted_text(bot_client, room.room_id, reply_html)
+
+    await _stop_typing(bot_client, room.room_id)
+
+
+async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, message_body):
+    """
+    If 3+ participants => role-play context:
+      - Only respond to commands => respond right in the same room thread
+      - Tag each response with "context_cue": "SYSTEM RESPONSE"
+    """
+    # 1) If the message does NOT start with '!', ignore
+    if not message_body.startswith("!"):
+        logger.debug("Ignoring non-command in role-play channel.")
+        return
+
+    # 2) Indicate typing
+    await _start_typing(bot_client, room.room_id)
+
+    try:
+        # 3) Handle the console command
+        command_reply = await handle_console_command(
+            bot_client, 
+            room.room_id, 
+            message_body, 
+            event.sender
+        )
+
+        # 4) If the command output includes tables (<table>), we send HTML
+        if "<table" in command_reply:
+            await send_formatted_text(
+                bot_client, 
+                room.room_id, 
+                command_reply,
+                context_cue="SYSTEM RESPONSE"
+            )
+        else:
+            await send_text(
+                bot_client, 
+                room.room_id, 
+                command_reply,
+                context_cue="SYSTEM RESPONSE"
+            )
+
+    finally:
+        # 5) Stop typing no matter what
+        await _stop_typing(bot_client, room.room_id)
+
+
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+async def _ensure_dm_room(bot_client: AsyncClient, user_id: str) -> str:
+    for rid, room_obj in bot_client.rooms.items():
+        if len(room_obj.users) == 2 and user_id in room_obj.users:
+            logger.debug("Found existing DM => %s", rid)
+            return rid
+
+    # create if not found
+    logger.debug("No existing DM => create for %s", user_id)
+    try:
+        resp = await bot_client.room_create(
+            invite=[user_id],
+            is_direct=True,
+            name=f"DM_with_{user_id}"
+        )
+        if isinstance(resp, RoomCreateResponse):
+            logger.info("Created DM => %s", resp.room_id)
+            return resp.room_id
+        else:
+            logger.warning("room_create => %s", resp)
+            return "!failedDM:localhost"
+    except Exception as e:
+        logger.exception("Error creating DM => %s", e)
+        return "!failedDM:localhost"
+
+async def _start_typing(bot_client: AsyncClient, room_id: str):
+    try:
+        await bot_client.room_typing(room_id, True, timeout=5000)
+        logger.debug("Typing start => %s", room_id)
+    except Exception as e:
+        logger.warning("Could not send typing start => %s", e)
+
+async def _stop_typing(bot_client: AsyncClient, room_id: str):
+    try:
+        await bot_client.room_typing(room_id, False, timeout=0)
+        logger.debug("Typing stop => %s", room_id)
+    except Exception as e:
+        logger.warning("Could not send typing stop => %s", e)
+
+async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
+    context_config = {"max_history": 10}
+    gpt_context = build_context(bot_localpart, room_id, context_config)
+    gpt_context.append({"role": "user", "content": user_message})
+    logger.debug("GPT context => %s", gpt_context)
+
+    reply = await get_gpt_response(
+        messages=gpt_context,
+        model="chatgpt-4o-latest",
+        temperature=0.7,
+        max_tokens=300
+    )
+    return reply
+
+# ---------------------------------------------------------------------
+# Senders
+# ---------------------------------------------------------------------
+async def send_text(bot_client: AsyncClient, room_id: str, text: str, context_cue: str = None):
+    """
+    Sends plain text. If `context_cue` is provided, we add it to the message content.
+    """
+    content = {
+        "msgtype": "m.text",
+        "body": text
+    }
+    if context_cue:
+        content["context_cue"] = context_cue  # custom field
+
+    resp = await bot_client.room_send(room_id, "m.room.message", content=content)
+    if isinstance(resp, RoomSendResponse):
+        logger.info("Sent text => event_id=%s in %s", resp.event_id, room_id)
+    else:
+        logger.warning("Failed to send text => %s", resp)
+
+
+
+async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_content: str, context_cue: str = None):
+    """
+    Sends HTML in 'formatted_body', with a stripped fallback in 'body'.
+    This can handle any markdown->html or other markup.
+    """
+    fallback_text = remove_html_tags(html_content)
+    content = {
+        "msgtype": "m.text",
+        "body": fallback_text,
+        "format": "org.matrix.custom.html",
+        "formatted_body": html_content
+    }
+
+    if context_cue:
+        content["context_cue"] = context_cue  # custom field
+            
+    resp = await bot_client.room_send(room_id=room_id, message_type="m.room.message", content=content)
+    if isinstance(resp, RoomSendResponse):
+        logger.info("Sent formatted text => event_id=%s in %s", resp.event_id, room_id)
+    else:
+        logger.warning("Failed to send formatted text => %s", resp)
+
+def remove_html_tags(text: str) -> str:
+    import re
+    return re.sub(r'<[^>]*>', '', text or "").strip()
 
 === luna_command_extensions/parse_and_execute.py ===
 import json
