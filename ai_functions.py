@@ -41,9 +41,9 @@ except Exception as e:
 
 async def get_gpt_response(
     messages: list,
-    model: str = "gpt-4",
+    model: str = "gpt-4o", # @TODO: make this a configuration based parameter, settable in luna-element command console
     temperature: float = 0.7,
-    max_tokens: int = 300
+    max_tokens: int = 1000
 ) -> str:
     """
     Sends `messages` (a conversation array) to GPT and returns the text
@@ -116,6 +116,16 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
         logger.error("OpenAI API key not found.")
         raise ValueError("Missing OpenAI API key.")
 
+    # -----------------------------------------------------------------
+    # 1) Merge the global style with the user's prompt
+    # -----------------------------------------------------------------
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
+    if style:
+        final_prompt = f"{prompt.strip()}. {style}"
+    else:
+        final_prompt = prompt.strip()
+
     try:
         url = "https://api.openai.com/v1/images/generations"
         headers = {
@@ -124,7 +134,7 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
         }
         data = {
             "model": "dall-e-3",
-            "prompt": prompt,
+            "prompt": final_prompt,
             "n": 1,
             "size": size,
         }
@@ -157,6 +167,16 @@ async def generate_image_save_and_post(
         logger.warning("[ai_functions] No OPENAI_API_KEY found in env variables.")
         return
 
+    # -----------------------------------------------------------------
+    # 1) Merge the global style with the user's prompt
+    # -----------------------------------------------------------------
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
+    if style:
+        final_prompt = f"{prompt.strip()}. {style}"
+    else:
+        final_prompt = prompt.strip()
+
     # 1) Generate image from prompt
     try:
         url = "https://api.openai.com/v1/images/generations"
@@ -166,7 +186,7 @@ async def generate_image_save_and_post(
         }
         data = {
             "model": "dall-e-3",
-            "prompt": prompt,
+            "prompt": final_prompt,
             "n": 1,
             "size": size
         }

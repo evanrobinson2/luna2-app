@@ -132,8 +132,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     gpt_reply = await ai_functions.get_gpt_response(
         messages=gpt_context,
         model="gpt-4",
-        temperature=0.7,
-        max_tokens=300
+        temperature=0.7
     )
 
     # 7) Convert GPT reply => mention-aware content (including m.mentions)

@@ -2,203 +2,288 @@ import asyncio
 import logging
 import json
 import shlex
+import time
+import os
+import html
 
 from luna.ai_functions import get_gpt_response, generate_image
-from luna.luna_command_extensions.luna_message_handler import direct_upload_image
 from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 from luna.luna_personas import update_bot
 from luna.luna_functions import getClient
-
 
 logger = logging.getLogger(__name__)
 
 async def spawn_persona(descriptor: str) -> str:
     """
-    1) Builds a system prompt for GPT to produce valid JSON for a new persona.
-    2) Create & ephemeral-log the bot. (create_and_login_bot now returns (msg, ephemeral_client)).
-    3) Generate a portrait image + upload => get mxc URI.
-    4) Update the persona's traits with the portrait link, set the avatar if ephemeral client is available.
-    5) Return success or error message.
+    Creates a new persona, returning one HTML string that includes:
+    - A table (the "character card") with:
+       * localpart, displayname, biography, backstory, system prompt
+       * the EXACT DALL·E prompt used for image creation
+       * traits as a nested table
+    - Possibly an <img> referencing the final mxc:// URI.
     """
-    logger.debug("[spawn_persona] Entered function. Descriptor=%r", descriptor)
 
-    from .command_router import GLOBAL_PARAMS, load_config
-    logger.debug("[spawn_persona] Loading config...")
-
-    cfg = load_config()
-    rp_system_prompt = cfg.get("bots", {}).get("role_play", {}).get("system_parameter", "")
-    if not rp_system_prompt:
-        logger.warning("[spawn_persona] No role_play.system_parameter found; using fallback.")
-        rp_system_prompt = "You are in a role-play scenario..."
-
+    # 1) GPT => persona JSON
     system_instructions = (
         "You are an assistant that outputs ONLY valid JSON. "
         "No markdown, no code fences, no extra commentary. "
         "Generate a persona object which must have keys: localpart, displayname, biography, backstory, "
         "system_prompt, password, traits. No other keys. "
         "The 'traits' key is a JSON object with arbitrary key/values. "
-        "Be sure that the system prompt instructs the bot to behave at all times in character. "
-        "Incorporate as much of the character's identity into the system prompt as possible. "
-        "In this environment, you can explicitly mention another bot by typing their Matrix user ID in the format @<localpart>:localhost. "
-        "For example, if a bot’s localpart is diamond_dave, you would mention them as @diamond_dave:localhost. "
-        "Important: mentioning a bot this way always triggers a response from them. "
-        "Therefore, avoid frivolous or unnecessary mentions. "
-        "Only mention another bot when you genuinely need their attention or expertise."
+        "Be sure that the system prompt instructs the bot to behave in character."
     )
-
     user_message = (
-        f"Create a role-play persona based on this descriptor:\n{descriptor}\n\n"
-        "Return ONLY valid JSON with the required keys.\n"
+        f"Create a persona based on:\n{descriptor}\n\n"
+        "Return ONLY valid JSON with required keys."
     )
 
-    # B) GPT call
-    logger.debug("[spawn_persona] Preparing GPT messages with system_text length=%d", len(system_instructions))
-    gpt_messages = [
+    messages = [
         {"role": "system", "content": system_instructions},
-        {"role": "user", "content": user_message}
+        {"role": "user", "content": user_message},
     ]
-    logger.info("[spawn_persona] About to call get_gpt_response with model='gpt-4'...")
 
+    logger.info(f"SYSTEM: Attemping to get a character card generated via GPT. System Instruction: {system_instructions}. Prompt: {user_message}")
     try:
         gpt_response = await get_gpt_response(
-            messages=gpt_messages,
+            messages=messages,
             model="gpt-4",
             temperature=0.7,
-            max_tokens=1200
+            max_tokens=5000
         )
     except Exception as e:
-        logger.exception("[spawn_persona] GPT call failed:")
-        return f"SYSTEM: GPT call raised an exception => {e}"
+        logger.exception("GPT error =>")
+        return f"SYSTEM: GPT error => {e}"
 
-    logger.debug("[spawn_persona] GPT call finished. Response length=%d", len(gpt_response))
-
-    # C) Parse GPT output
+    # 2) Parse persona JSON
     try:
         persona_data = json.loads(gpt_response)
-        logger.debug("[spawn_persona] Successfully parsed GPT JSON => %s", persona_data)
     except json.JSONDecodeError as e:
-        logger.exception("[spawn_persona] JSON parse error:")
+        logger.exception("JSON parse error =>")
         return f"SYSTEM: GPT returned invalid JSON => {e}"
 
-    required_fields = ["localpart", "password", "displayname", "system_prompt", "traits"]
-    missing = [f for f in required_fields if f not in persona_data]
+    required = ["localpart", "password", "displayname", "system_prompt", "traits"]
+    missing = [f for f in required if f not in persona_data]
     if missing:
-        logger.warning("[spawn_persona] Missing fields=%r in GPT output.", missing)
-        return f"SYSTEM: Persona is missing field(s) {missing}"
+        return f"SYSTEM: Persona missing fields => {missing}"
 
     localpart     = persona_data["localpart"]
     password      = persona_data["password"]
     displayname   = persona_data["displayname"]
     system_prompt = persona_data["system_prompt"]
     traits        = persona_data["traits"] or {}
+    biography     = persona_data.get("biography", "")
+    backstory     = persona_data.get("backstory", "")
 
-    logger.info("[spawn_persona] Persona fields extracted: localpart=%r, displayname=%r", localpart, displayname)
+    # 3) Register & login the persona
+    spawn_msg, ephemeral_bot_client = await create_and_login_bot(
+        bot_id=f"@{localpart}:localhost",
+        password=password,
+        displayname=displayname,
+        system_prompt=system_prompt,
+        traits=traits
+    )
+    if not spawn_msg.startswith("Successfully created & logged in"):
+        return f"SYSTEM: Bot creation failed => {spawn_msg}"
 
-    # D) Create & login bot => returns (msg, ephemeral_bot_client)
-    try:
-        logger.debug("[spawn_persona] Creating and logging in new bot => @%s:localhost", localpart)
-        spawn_result, ephemeral_bot_client = await create_and_login_bot(
-            bot_id=f"@{localpart}:localhost",
-            password=password,
-            displayname=displayname,
-            system_prompt=system_prompt,
-            traits=traits
-        )
-        logger.debug("[spawn_persona] create_and_login_bot => %r", spawn_result)
-
-        if not spawn_result.startswith("Successfully created & logged in"):
-            logger.warning("[spawn_persona] Bot creation returned non-success => %r", spawn_result)
-            return f"SYSTEM: Bot creation failed => {spawn_result}"
-
-    except Exception as e:
-        logger.exception("[spawn_persona] ephemeral-login error =>")
-        return f"SYSTEM: ephemeral-login error => {e}"
-
-    # E) Generate a portrait
-    from .command_router import GLOBAL_PARAMS
-    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
-    final_prompt = f"{descriptor.strip()}. {style}" if style else descriptor.strip()
-
-    logger.info("[spawn_persona] Generating portrait with final_prompt=%r", final_prompt)
-    portrait_url = None
+    # 4) Attempt to generate & upload a portrait
+    #    We'll store the EXACT DALL·E prompt in 'final_prompt'
+    final_prompt = descriptor.strip()  
+    portrait_mxc = None
     try:
         portrait_url = generate_image(final_prompt, size="1024x1024")
-        logger.debug("[spawn_persona] Received portrait_url => %r", portrait_url)
+        if portrait_url:
+            portrait_mxc = await _download_and_upload_portrait(portrait_url, localpart, password, system_prompt, traits, ephemeral_bot_client)
     except Exception as e:
-        logger.exception("[spawn_persona] error generating portrait image:")
-        portrait_url = None  # Not fatal
+        logger.warning("Portrait error => %s", e)
 
-    #  If we have a portrait => upload to matrix
-    portrait_mxc = None
-    if portrait_url:
-        logger.info("[spawn_persona] Attempting to download + upload portrait.")
-        import requests, os, time
-        os.makedirs("data/images", exist_ok=True)
-        filename = f"data/images/portrait_{int(time.time())}.jpg"
+    # get the global style prompt appendix
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    global_draw_appendix = GLOBAL_PARAMS["global_draw_prompt_appendix"]
 
-        try:
-            resp = requests.get(portrait_url)
-            resp.raise_for_status()
-            with open(filename, "wb") as f:
-                f.write(resp.content)
-
-            logger.debug("[spawn_persona] Portrait downloaded => %s", filename)
-
-            # Use the director client to do the direct_upload
-            client = getClient()
-            if not client:
-                logger.warning("[spawn_persona] No director client found => cannot upload portrait.")
-            else:
-                portrait_mxc = await direct_upload_image(client, filename, "image/jpeg")
-                logger.info("[spawn_persona] Portrait uploaded => %s", portrait_mxc)
-
-                # Update the persona's traits
-                traits["portrait_url"] = portrait_mxc
-                logger.debug("[spawn_persona] Updating persona with new portrait info.")        
-
-                update_bot(
-                    bot_id=f"@{localpart}:localhost",
-                    updates={
-                        "displayname": displayname,
-                        "password": password,
-                        "creator_user_id": "@lunabot:localhost",
-                        "system_prompt": system_prompt,
-                        "traits": traits
-                    }
-                )
-
-                # === NEW: Set the ephemeral bot's avatar if ephemeral_bot_client is available
-                if ephemeral_bot_client and portrait_mxc:
-                    try:
-                        logger.info("[spawn_persona] Setting new bot avatar => %s", portrait_mxc)
-                        await ephemeral_bot_client.set_avatar(portrait_mxc)
-
-                        logger.info("[spawn_persona] Avatar set successfully.")
-                    except Exception as e:
-                        logger.exception("[spawn_persona] Error setting avatar_url =>")
-                        # Not fatal
-        except Exception as e:
-            logger.exception("[spawn_persona] portrait upload error:")
-            # not fatal
-    else:
-        logger.debug("[spawn_persona] No portrait_url returned; skipping upload.")
-
-    # F) Return success
-    portrait_msg = f" Portrait => {portrait_mxc}" if portrait_mxc else ""
-    success_message = f"SYSTEM: Successfully spawned persona '@{localpart}:localhost' named '{displayname}'.{portrait_msg}"
-    logger.info("[spawn_persona] Completed success => %s", success_message)
-    return success_message
+    # 5) Build final HTML table (with nested table for `traits`)
+    #    plus an <img> if we have a portrait.
+    card_html = _build_persona_card(
+        localpart=localpart,
+        displayname=displayname,
+        biography=biography,
+        backstory=backstory,
+        system_prompt=system_prompt,
+        dall_e_prompt=final_prompt,   # EXACT final prompt
+        traits=traits,
+        portrait_mxc=portrait_mxc,
+        global_draw_appendix = global_draw_appendix 
+    )
+    return card_html
 
 
 async def cmd_spawn(bot_client, descriptor):
     """
-    Usage: spawn "<descriptor>"
-    e.g. !spawn "A cosmic explorer who hunts star routes"
+    Usage: spawn "A cosmic explorer..."
+    Returns a single HTML string containing the entire character card
+    (table + optional <img>).
     """
-    logger.debug(f"[cmd_spawn] Attempting to Spawn: {descriptor}")
     try:
-        msg = await spawn_persona(descriptor)
-        return msg
+        card_html = await spawn_persona(descriptor)
+        return card_html
     except Exception as e:
         logger.exception("cmd_spawn => error in spawn_persona")
         return f"SYSTEM: Error spawning persona => {e}"
+
+
+# ----------------------------------------------------------------------
+# Internal helpers
+# ----------------------------------------------------------------------
+
+async def _download_and_upload_portrait(
+    portrait_url: str,
+    localpart: str,
+    password: str,
+    system_prompt: str,
+    traits: dict,
+    ephemeral_bot_client
+) -> str:
+    """
+    Download the image from portrait_url, upload to matrix,
+    update persona record + set bot avatar. Returns mxc:// URI or None.
+    """
+    import requests
+    os.makedirs("data/images", exist_ok=True)
+    filename = f"data/images/portrait_{int(time.time())}.jpg"
+    dl_resp = requests.get(portrait_url)
+    dl_resp.raise_for_status()
+    with open(filename, "wb") as f:
+        f.write(dl_resp.content)
+
+    client = getClient()
+    if not client:
+        return None
+
+    # Upload
+    from luna.luna_command_extensions.luna_message_handler4 import direct_upload_image
+    portrait_mxc = await direct_upload_image(client, filename, "image/jpeg")
+    # Update persona
+    traits["portrait_url"] = portrait_mxc
+    update_bot(
+        f"@{localpart}:localhost",
+        {
+            "password": password,
+            "system_prompt": system_prompt,
+            "traits": traits
+        }
+    )
+    # Attempt to set avatar
+    if ephemeral_bot_client:
+        try:
+            await ephemeral_bot_client.set_avatar(portrait_mxc)
+        except Exception as e:
+            logger.warning("Error setting avatar => %s", e)
+
+    return portrait_mxc
+
+def _build_persona_card(
+    localpart: str,
+    displayname: str,
+    biography: str,
+    backstory: str,
+    system_prompt: str,
+    dall_e_prompt: str,
+    global_draw_appendix: str,
+    traits: dict,
+    portrait_mxc: str = None
+) -> str:
+    """
+    1) Show the localpart as a big title above the portrait.
+    2) Show an italic line beneath the title (e.g. the displayname).
+    3) Then the portrait if available.
+    4) Then a table with the rest of the details, including version=1.0.
+    """
+
+    import html
+    def esc(t): 
+        return html.escape(str(t))
+
+    # -------------------------
+    # Sub-table for traits
+    # -------------------------
+    trait_rows = []
+    for k, v in traits.items():
+        trait_rows.append(
+            "<tr>"
+            f"<td style='padding:2px 6px;'><b>{esc(k)}</b></td>"
+            f"<td style='padding:2px 6px;'>{esc(v)}</td>"
+            "</tr>"
+        )
+    traits_subtable = (
+        "<table border='1' style='border-collapse:collapse; font-size:0.9em;'>"
+        "<thead><tr><th colspan='2'>Traits</th></tr></thead>"
+        f"<tbody>{''.join(trait_rows)}</tbody>"
+        "</table>"
+    )
+
+    # A quick helper to build each row
+    def row(label, val):
+        return (
+            "<tr>"
+            f"<td style='padding:4px 8px;vertical-align:top;'><b>{esc(label)}</b></td>"
+            f"<td style='padding:4px 8px;'>{val}</td>"
+            "</tr>"
+        )
+
+    # -------------------------
+    # The portrait HTML (if any)
+    # -------------------------
+    portrait_html = ""
+    if portrait_mxc:
+        portrait_html = (
+            f"<div style='margin-bottom:8px;'>"
+            f"<img src='{esc(portrait_mxc)}' alt='Portrait' width='300'/>"
+            "</div>"
+        )
+
+    # -------------------------
+    # The table of fields
+    # -------------------------
+    # Hardcoded version => "1.0"
+    row_version       = row("Version", "1.0")
+    row_localpart     = row("Localpart", esc(localpart))
+    row_displayname   = row("DisplayName", esc(displayname))
+    row_biography     = row("Biography", esc(biography))
+    row_backstory     = row("Backstory", esc(backstory))
+    row_systemprompt  = row("System Prompt", esc(system_prompt))
+    row_dalle_prompt  = row("DALL·E Prompt", esc(dall_e_prompt))
+    row_draw_appendix = row("Draw Prompt Appendix", esc(global_draw_appendix))
+    row_traits        = row("Traits", traits_subtable)
+
+    table_body = "".join([
+        row_localpart,
+        row_displayname,
+        row_biography,
+        row_backstory,
+        row_systemprompt,
+        row_dalle_prompt,
+        row_draw_appendix,
+        row_traits,
+        row_version
+    ])
+
+    table_html = (
+        "<table border='1' style='border-collapse:collapse;'>"
+        f"<tbody>{table_body}</tbody>"
+        "</table>"
+    )
+
+    # -------------------------
+    # Combine everything
+    # -------------------------
+    # 1) <h2>@localpart</h2> as a big title
+    # 2) Italic line with displayName (or biography if you prefer)
+    # 3) The portrait
+    # 4) The table
+    final_html = (
+        f"<h2 style='margin-bottom:2px;'>{esc(localpart)}</h2>"
+        f"<p style='margin-top:0; margin-bottom:10px;'><em>{esc(displayname)}</em></p>"
+        f"{portrait_html}"
+        f"{table_html}"
+        "<p><em>All done creating the persona!</em></p>"
+    )
+    return final_html

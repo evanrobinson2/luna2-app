@@ -7,6 +7,11 @@ We assume there's no color code being injected – any mention highlighting is
 still a client-side theme/notifications setting.
 """
 
+import os
+import time
+import logging
+import urllib.parse
+import aiohttp
 import random
 import asyncio
 import time
@@ -102,7 +107,9 @@ async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_bod
         reply_html = markdown.markdown(gpt_reply, extensions=["extra", "sane_lists"])
         # Then post it with formatted_text
         await send_formatted_text(bot_client, room.room_id, reply_html)
-
+    
+    await bot_client.sync(timeout=500)
+    
     await _stop_typing(bot_client, room.room_id)
 
 
@@ -147,6 +154,7 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
 
     finally:
         # 5) Stop typing no matter what
+        await bot_client.sync(timeout=500) 
         await _stop_typing(bot_client, room.room_id)
 
 
@@ -154,6 +162,7 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
 # ---------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------
+# @TODO delete this if it's truly not being used
 async def _ensure_dm_room(bot_client: AsyncClient, user_id: str) -> str:
     for rid, room_obj in bot_client.rooms.items():
         if len(room_obj.users) == 2 and user_id in room_obj.users:
@@ -253,3 +262,4 @@ async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_conten
 def remove_html_tags(text: str) -> str:
     import re
     return re.sub(r'<[^>]*>', '', text or "").strip()
+

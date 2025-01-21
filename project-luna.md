@@ -44,9 +44,9 @@ except Exception as e:
 
 async def get_gpt_response(
     messages: list,
-    model: str = "gpt-4",
+    model: str = "gpt-4o", # @TODO: make this a configuration based parameter, settable in luna-element command console
     temperature: float = 0.7,
-    max_tokens: int = 300
+    max_tokens: int = 1000
 ) -> str:
     """
     Sends `messages` (a conversation array) to GPT and returns the text
@@ -119,6 +119,16 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
         logger.error("OpenAI API key not found.")
         raise ValueError("Missing OpenAI API key.")
 
+    # -----------------------------------------------------------------
+    # 1) Merge the global style with the user's prompt
+    # -----------------------------------------------------------------
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
+    if style:
+        final_prompt = f"{prompt.strip()}. {style}"
+    else:
+        final_prompt = prompt.strip()
+
     try:
         url = "https://api.openai.com/v1/images/generations"
         headers = {
@@ -127,7 +137,7 @@ def generate_image(prompt: str, size: str = "1024x1024") -> str:
         }
         data = {
             "model": "dall-e-3",
-            "prompt": prompt,
+            "prompt": final_prompt,
             "n": 1,
             "size": size,
         }
@@ -160,6 +170,16 @@ async def generate_image_save_and_post(
         logger.warning("[ai_functions] No OPENAI_API_KEY found in env variables.")
         return
 
+    # -----------------------------------------------------------------
+    # 1) Merge the global style with the user's prompt
+    # -----------------------------------------------------------------
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
+    if style:
+        final_prompt = f"{prompt.strip()}. {style}"
+    else:
+        final_prompt = prompt.strip()
+
     # 1) Generate image from prompt
     try:
         url = "https://api.openai.com/v1/images/generations"
@@ -169,7 +189,7 @@ async def generate_image_save_and_post(
         }
         data = {
             "model": "dall-e-3",
-            "prompt": prompt,
+            "prompt": final_prompt,
             "n": 1,
             "size": size
         }
@@ -1558,7 +1578,6 @@ from typing import Dict, Any, List
 
 from luna.luna_personas import get_system_prompt_by_localpart
 from luna import bot_messages_store
-from luna.luna_command_extensions.command_router import GLOBAL_PARAMS  # or wherever GLOBAL_PARAMS is stored
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -1567,7 +1586,7 @@ def build_context(
     bot_localpart: str,
     room_id: str,
     config: Dict[str, Any] | None = None,
-    message_history_length: int = 20
+    message_history_length: int = 10
 ) -> List[Dict[str, str]]:
     """
     Builds a GPT-style conversation array for `bot_localpart` in `room_id`.
@@ -1614,6 +1633,8 @@ def build_context(
                      bot_localpart, len(system_prompt))
 
     # 2) If lunabot, optionally append 'luna_context_appendix'
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS  # or wherever GLOBAL_PARAMS is stored
+
     if bot_localpart == "lunabot":
         extra_context = GLOBAL_PARAMS.get("luna_context_appendix", "").strip()
         if extra_context:
@@ -3359,6 +3380,9 @@ from nio import AsyncClient, RoomSendResponse
 import yaml
 import os
 
+from luna.luna_command_extensions.spawn_persona import cmd_spawn
+from luna.luna_personas import read_bot, update_bot
+
 CONFIG_PATH = "data/config/config.yaml"
 
 # Import your existing 'generate_image' function
@@ -3522,20 +3546,11 @@ async def draw_command(bot_client: AsyncClient, room_id: str, user_prompt: str) 
     Returns a success or error message.
     """
     # -----------------------------------------------------------------
-    # 1) Merge the global style with the user's prompt
-    # -----------------------------------------------------------------
-    style = GLOBAL_PARAMS.get("global_draw_prompt_appendix", "").strip()
-    if style:
-        final_prompt = f"{user_prompt.strip()}. {style}"
-    else:
-        final_prompt = user_prompt.strip()
-
-    # -----------------------------------------------------------------
     # 2) Generate the image via your existing ai_functions.generate_image()
     #    => returns a public image URL
     # -----------------------------------------------------------------
     try:
-        image_url = generate_image(final_prompt, size="1024x1024")
+        image_url = generate_image(user_prompt, size="1024x1024")
     except Exception as e:
         logger.exception("[draw_command] Error generating image.")
         return f"Error generating image => {e}"
@@ -3598,7 +3613,7 @@ async def draw_command(bot_client: AsyncClient, room_id: str, user_prompt: str) 
         )
 
         if isinstance(img_response, RoomSendResponse):
-            return f"Image posted successfully! Prompt: '{final_prompt}'"
+            return f"Image posted successfully! Prompt: '{user_prompt}'"
         else:
             logger.warning("[draw_command] Unexpected response => %s", img_response)
             return "Failed to send the image to the room."
@@ -3644,16 +3659,6 @@ def set_param(param_name: str, value: str) -> str:
     save_config(cfg)
 
     return f"Set {param_name} => {value}"
-
-async def spawn(bot_client: AsyncClient, descriptor: str) -> str:
-    """
-    Usage:
-      !spawn <descriptor>
-
-    A placeholder for a 'spawn' command. Implementation can vary.
-    """
-    return f"Spawned entity described as: {descriptor}"
-
 
 async def help_command(*args, **kwargs) -> str:
     """
@@ -3744,45 +3749,6 @@ async def luna_gpt(bot_client: AsyncClient, room_id: str, raw_args: str) -> str:
         logger.exception("[luna_gpt] Error generating response:")
         return f"Error generating response: {e}"
 
-
-async def luna_gpt_dep(bot_client: AsyncClient, room_id: str, args: str) -> str:
-    """
-    Usage:
-      !luna <prompt>
-
-    Sends the user's prompt through GPT with a full context build for Luna,
-    using `context_helper.build_context`. Returns GPT's plain-text response.
-    """
-    from luna.context_helper import build_context  # Ensure correct import path
-    from luna.ai_functions import get_gpt_response  # Ensure correct import path
-
-    if not args:
-        return "Usage: !luna <prompt>"
-
-    # 1) Build Luna's context for this room
-    try:
-        context_config = {"max_history": 20}
-        gpt_context = build_context("lunabot", room_id, context_config)
-        gpt_context.append({"role": "user", "content": args})
-
-        logger.debug("[luna_gpt] GPT context built: %s", gpt_context)
-
-        # 2) Call GPT with the context and user's prompt
-        gpt_response = await get_gpt_response(
-            messages=gpt_context,
-            model="chatgpt-4o-latest",
-            temperature=0.7,
-            max_tokens=300
-        )
-        logger.debug("[luna_gpt] GPT response: %s", gpt_response)
-
-        return gpt_response
-
-    except Exception as e:
-        logger.exception("[luna_gpt] Error generating response:")
-        return f"Error generating response: {e}"
-
-
 # -------------------------------------------------------------
 # BUILD HELP TABLE
 # -------------------------------------------------------------
@@ -3845,24 +3811,6 @@ def parse_command_doc(func) -> tuple[str, str]:
     description = " ".join(description_lines).strip()
     return usage, description
 
-
-# -------------------------------------------------------------
-# COMMAND ROUTER
-# -------------------------------------------------------------
-COMMAND_ROUTER = {
-    "create_room": create_room,    # async
-    "invite_user": invite_user,    # async
-    "list_rooms":  list_rooms,     # async
-    "spawn":       spawn,          # async
-    "help":        help_command,   # async
-    "set_param":   set_param,      # sync
-    "get_param":   get_param,      # sync,
-    "list_params": list_params,
-    "draw":        draw_command,   # now posts the actual image
-    "luna":        luna_gpt
-}
-
-
 # -------------------------------------------------------------
 # COMMAND DISPATCHER
 # -------------------------------------------------------------
@@ -3906,6 +3854,19 @@ async def handle_console_command(bot_client: AsyncClient, room_id: str, message_
                 is_public = (extra.lower() == "public")
 
         return await command_func(bot_client, sender, localpart, topic, is_public)
+
+    elif command_name == "set_avatar":
+        # We expect exactly two arguments: <localpart> and <mxc_uri_or_mediaID>
+        if len(args) < 2:
+            return "Usage: !set_avatar <localpart> <mxc_uri_or_mediaID>"
+        
+        localpart = args[0]
+        mxc_or_media_id = args[1]
+
+        # Pass both arguments as a single string to cmd_set_avatar
+        args_string = f"{localpart} {mxc_or_media_id}"
+        return await command_func(args_string)
+
 
     elif command_name == "invite_user":
         if len(args) < 2:
@@ -3978,6 +3939,94 @@ def save_config(config_data: dict) -> None:
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         yaml.safe_dump(config_data, f)
+
+async def cmd_set_avatar(args: str) -> str:
+    """
+    Usage:
+      set_avatar <localpart> <mxc_uri_or_mediaID>
+
+    Examples:
+      set_avatar ghostbot mxc://localhost/HASH123
+      set_avatar ghostbot HASH123
+
+    This command:
+      1) Looks up the persona data for @<localpart>:localhost to get password, etc.
+      2) If we already have an ephemeral bot client loaded, use it; otherwise ephemeral-login.
+      3) If the second argument is a raw media ID (no 'mxc://'), we prepend 'mxc://localhost/'.
+      4) Calls .set_avatar(<mxc URI>).
+      5) Also updates the persona's "portrait_url" trait in personalities.json (so it persists).
+      6) Returns a success or error message.
+    """
+    tokens = shlex.split(args)
+    if len(tokens) < 2:
+        return "Usage: set_avatar <localpart> <mxc_uri_or_mediaID>"
+
+    localpart = tokens[0]
+    raw_avatar_arg = tokens[1]
+
+    # 1) Build the final mxc URI
+    if raw_avatar_arg.startswith("mxc://"):
+        mxc_uri = raw_avatar_arg
+    else:
+        # Assume it's just the media ID, e.g. 'jyTMtUvNgbtLcKIvJnoQQtTj'
+        # Prepend the local domain name. Adjust if your domain is not 'localhost'.
+        mxc_uri = f"mxc://localhost/{raw_avatar_arg}"
+
+    # 2) Read persona to get password, confirm it exists
+    full_user_id = f"@{localpart}:localhost"
+    persona = read_bot(full_user_id)
+    if not persona:
+        return f"No persona found for {full_user_id}. Please create one first."
+
+    password = persona.get("password")
+    if not password:
+        return f"Persona for {full_user_id} has no password stored. Can't ephemeral-login."
+
+    # 3) Attempt to find an existing ephemeral client in your BOTS dict, or ephemeral-login
+    #    We'll do a minimal approach: if it's not in BOTS, ephemeral login
+    from luna.core import BOTS
+    bot_client = BOTS.get(localpart)
+
+    if not bot_client:
+        logger.debug(f"[set_avatar] No ephemeral client for '{localpart}' in BOTS.")
+    else:
+        logger.debug(f"[set_avatar] Found existing ephemeral client for '{localpart}' in BOTS.")
+
+    # 4) Now set the avatar
+    try:
+        await bot_client.set_avatar(mxc_uri)
+    except Exception as e:
+        logger.exception("Error setting avatar =>")
+        return f"Error setting avatar => {e}"
+
+    # 5) Update the persona's traits to store 'portrait_url' or something similar
+    updated_traits = persona.get("traits", {})
+    updated_traits["portrait_url"] = mxc_uri
+    update_bot(
+        full_user_id,
+        {
+            "traits": updated_traits
+        }
+    )
+
+    return f"Set avatar for {full_user_id} => {mxc_uri}"
+
+# -------------------------------------------------------------
+# COMMAND ROUTER
+# -------------------------------------------------------------
+COMMAND_ROUTER = {
+    "create_room": create_room,    # async
+    "invite_user": invite_user,    # async
+    "list_rooms":  list_rooms,     # async
+    "help":        help_command,   # async
+    "set_param":   set_param,      # sync
+    "get_param":   get_param,      # sync,
+    "list_params": list_params,
+    "draw":        draw_command,   # now posts the actual image
+    "luna":        luna_gpt,
+    "spawn":       cmd_spawn,
+    "set_avatar":  cmd_set_avatar
+}
 === luna_command_extensions/create_and_login_bot.py ===
 """
 create_and_login_bot.py
@@ -3991,7 +4040,7 @@ import asyncio
 import re
 import secrets  # for fallback random localpart (if needed)
 
-from nio import RoomMessageText, InviteMemberEvent, RoomMemberEvent
+from nio import RoomMessageText, InviteMemberEvent, RoomMemberEvent, AsyncClient
 
 # Adjust these imports to match your new layout:
 import luna.luna_personas
@@ -4010,6 +4059,121 @@ logger = logging.getLogger(__name__)
 VALID_LOCALPART_REGEX = re.compile(r'[a-z0-9._=\-/]+')
 
 async def create_and_login_bot(
+    bot_id: str,
+    password: str,
+    displayname: str,
+    system_prompt: str,
+    traits: dict,
+    creator_user_id: str = "@lunabot:localhost",
+    is_admin: bool = False
+) -> tuple[str, AsyncClient | None]:
+    """
+    1) Creates a local persona entry in personalities.json (using bot_id as key).
+    2) Calls create_user(...) to register with Synapse.
+    3) Does ephemeral login (load_or_login_client_v2) => returns an AsyncClient for that user.
+    4) Registers event handlers, spawns the bot’s sync loop.
+    5) Stores references (AsyncClient + sync task) in the global BOTS/TASKS.
+    6) Returns (success_message, ephemeral_bot_client). If something fails, returns (error_msg, None).
+    """
+
+    logger.debug("[create_and_login_bot] Called with bot_id=%r, displayname=%r", bot_id, displayname)
+
+    # 1) Validate & parse localpart
+    if not bot_id.startswith("@") or ":" not in bot_id:
+        err = f"[create_and_login_bot] Invalid bot_id => {bot_id}"
+        logger.warning(err)
+        return (err, None)
+
+    original_localpart = bot_id.split(":")[0].replace("@", "", 1)
+    logger.debug("Original localpart extracted => %r", original_localpart)
+
+    # 2) Sanitize localpart
+    tmp = original_localpart.lower()
+    sanitized = "".join(ch for ch in tmp if VALID_LOCALPART_REGEX.match(ch))
+    if not sanitized:
+        random_suffix = secrets.token_hex(4)
+        sanitized = f"bot_{random_suffix}"
+        logger.debug("Localpart was invalid, using fallback => %r", sanitized)
+    elif sanitized != original_localpart.lower():
+        logger.debug("Sanitized localpart from %r to %r", original_localpart, sanitized)
+
+    new_bot_id = f"@{sanitized}:localhost"
+    logger.debug("Final bot_id => %r", new_bot_id)
+    bot_id = new_bot_id
+
+    # 3) Create persona in personalities.json
+    try:
+        logger.debug("Creating persona in personalities.json => %r", bot_id)
+        luna.luna_personas.create_bot(
+            bot_id=bot_id,
+            password=password,
+            displayname=displayname,
+            creator_user_id=creator_user_id,
+            system_prompt=system_prompt,
+            traits=traits
+        )
+        logger.info("[create_and_login_bot] Persona created for %s.", bot_id)
+    except Exception as e:
+        msg = f"[create_and_login_bot] Could not create persona => {e}"
+        logger.exception(msg)
+        return (msg, None)
+
+    # 4) Create the user in Synapse
+    matrix_localpart = sanitized
+    logger.debug("Attempting create_user(localpart=%r)", matrix_localpart)
+    creation_msg = await create_user(matrix_localpart, password, is_admin=is_admin)
+    if not creation_msg.startswith("Created user"):
+        err = f"[create_and_login_bot] Synapse user creation failed => {creation_msg}"
+        logger.error(err)
+        return (err, None)
+
+    # 5) Ephemeral login
+    try:
+        logger.debug("Attempting ephemeral login => bot_id=%r", bot_id)
+        client = await load_or_login_client_v2(
+            homeserver_url="http://localhost:8008",
+            user_id=bot_id,
+            password=password,
+            device_name=f"{sanitized}_device"
+        )
+        logger.info("[create_and_login_bot] Ephemeral login success => %s", bot_id)
+    except Exception as e:
+        logger.exception("[create_and_login_bot] Ephemeral login failed => %s", e)
+        return (f"Error ephemeral-logging in {bot_id}: {e}", None)
+
+    # 6) Register event callbacks
+    client.add_event_callback(
+        lambda room, evt: handle_bot_room_message(client, sanitized, room, evt),
+        RoomMessageText
+    )
+    client.add_event_callback(
+        lambda room, evt: handle_bot_invite(client, sanitized, room, evt),
+        InviteMemberEvent
+    )
+    client.add_event_callback(
+        lambda room, evt: handle_bot_member_event(client, sanitized, room, evt),
+        RoomMemberEvent
+    )
+    logger.info("[create_and_login_bot] Registered event handlers for '%s'.", sanitized)
+
+    # 7) Start the sync loop & store references
+    try:
+        from luna.core import BOTS, BOT_TASKS, run_bot_sync
+        BOTS[sanitized] = client
+        sync_task = asyncio.create_task(run_bot_sync(client, sanitized))
+        BOT_TASKS.append(sync_task)
+        logger.info("[create_and_login_bot] Bot '%s' sync loop started.", sanitized)
+    except Exception as e:
+        logger.exception("[create_and_login_bot] Could not store references or start sync => %s", e)
+        return (f"Error hooking bot '{sanitized}' into global loops => {e}", None)
+
+    # 8) Return final success message plus ephemeral-bot client
+    success_msg = f"Successfully created & logged in => {bot_id}"
+    logger.info(success_msg)
+    return (success_msg, client)
+
+
+async def create_and_login_bot_dep(
     bot_id: str,
     password: str,
     displayname: str,
@@ -5155,7 +5319,9 @@ async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_bod
         reply_html = markdown.markdown(gpt_reply, extensions=["extra", "sane_lists"])
         # Then post it with formatted_text
         await send_formatted_text(bot_client, room.room_id, reply_html)
-
+    
+    await bot_client.sync(timeout=500)
+    
     await _stop_typing(bot_client, room.room_id)
 
 
@@ -5200,6 +5366,7 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
 
     finally:
         # 5) Stop typing no matter what
+        await bot_client.sync(timeout=500) 
         await _stop_typing(bot_client, room.room_id)
 
 
@@ -5207,6 +5374,7 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
 # ---------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------
+# @TODO delete this if it's truly not being used
 async def _ensure_dm_room(bot_client: AsyncClient, user_id: str) -> str:
     for rid, room_obj in bot_client.rooms.items():
         if len(room_obj.users) == 2 and user_id in room_obj.users:
@@ -5255,7 +5423,7 @@ async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
         messages=gpt_context,
         model="chatgpt-4o-latest",
         temperature=0.7,
-        max_tokens=300
+        max_tokens=2000
     )
     return reply
 
@@ -5296,7 +5464,7 @@ async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_conten
 
     if context_cue:
         content["context_cue"] = context_cue  # custom field
-            
+
     resp = await bot_client.room_send(room_id=room_id, message_type="m.room.message", content=content)
     if isinstance(resp, RoomSendResponse):
         logger.info("Sent formatted text => event_id=%s in %s", resp.event_id, room_id)
@@ -5458,6 +5626,297 @@ def parse_and_execute(script_str, loop):
 
     logger.debug("[parse_and_execute] Script completed.")
     print("SYSTEM: Script execution complete (blocking).")
+
+=== luna_command_extensions/spawn_persona.py ===
+import asyncio
+import logging
+import json
+import shlex
+import time
+import os
+import html
+
+from luna.ai_functions import get_gpt_response, generate_image
+from luna.luna_command_extensions.luna_message_handler import direct_upload_image
+from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
+from luna.luna_personas import update_bot
+from luna.luna_functions import getClient
+
+logger = logging.getLogger(__name__)
+
+async def spawn_persona(descriptor: str) -> str:
+    """
+    Creates a new persona, returning one HTML string that includes:
+    - A table (the "character card") with:
+       * localpart, displayname, biography, backstory, system prompt
+       * the EXACT DALL·E prompt used for image creation
+       * traits as a nested table
+    - Possibly an <img> referencing the final mxc:// URI.
+    """
+
+    # 1) GPT => persona JSON
+    system_instructions = (
+        "You are an assistant that outputs ONLY valid JSON. "
+        "No markdown, no code fences, no extra commentary. "
+        "Generate a persona object which must have keys: localpart, displayname, biography, backstory, "
+        "system_prompt, password, traits. No other keys. "
+        "The 'traits' key is a JSON object with arbitrary key/values. "
+        "Be sure that the system prompt instructs the bot to behave in character."
+    )
+    user_message = (
+        f"Create a persona based on:\n{descriptor}\n\n"
+        "Return ONLY valid JSON with required keys."
+    )
+
+    messages = [
+        {"role": "system", "content": system_instructions},
+        {"role": "user", "content": user_message},
+    ]
+
+    logger.info(f"SYSTEM: Attemping to get a character card generated via GPT. System Instruction: {system_instructions}. Prompt: {user_message}")
+    try:
+        gpt_response = await get_gpt_response(
+            messages=messages,
+            model="gpt-4",
+            temperature=0.7,
+            max_tokens=1200
+        )
+    except Exception as e:
+        logger.exception("GPT error =>")
+        return f"SYSTEM: GPT error => {e}"
+
+    # 2) Parse persona JSON
+    try:
+        persona_data = json.loads(gpt_response)
+    except json.JSONDecodeError as e:
+        logger.exception("JSON parse error =>")
+        return f"SYSTEM: GPT returned invalid JSON => {e}"
+
+    required = ["localpart", "password", "displayname", "system_prompt", "traits"]
+    missing = [f for f in required if f not in persona_data]
+    if missing:
+        return f"SYSTEM: Persona missing fields => {missing}"
+
+    localpart     = persona_data["localpart"]
+    password      = persona_data["password"]
+    displayname   = persona_data["displayname"]
+    system_prompt = persona_data["system_prompt"]
+    traits        = persona_data["traits"] or {}
+    biography     = persona_data.get("biography", "")
+    backstory     = persona_data.get("backstory", "")
+
+    # 3) Register & login the persona
+    spawn_msg, ephemeral_bot_client = await create_and_login_bot(
+        bot_id=f"@{localpart}:localhost",
+        password=password,
+        displayname=displayname,
+        system_prompt=system_prompt,
+        traits=traits
+    )
+    if not spawn_msg.startswith("Successfully created & logged in"):
+        return f"SYSTEM: Bot creation failed => {spawn_msg}"
+
+    # 4) Attempt to generate & upload a portrait
+    #    We'll store the EXACT DALL·E prompt in 'final_prompt'
+    final_prompt = descriptor.strip()  
+    portrait_mxc = None
+    try:
+        portrait_url = generate_image(final_prompt, size="1024x1024")
+        if portrait_url:
+            portrait_mxc = await _download_and_upload_portrait(portrait_url, localpart, password, system_prompt, traits, ephemeral_bot_client)
+    except Exception as e:
+        logger.warning("Portrait error => %s", e)
+
+    # get the global style prompt appendix
+    from luna.luna_command_extensions.command_router import GLOBAL_PARAMS
+    global_draw_appendix = GLOBAL_PARAMS["global_draw_prompt_appendix"]
+
+    # 5) Build final HTML table (with nested table for `traits`)
+    #    plus an <img> if we have a portrait.
+    card_html = _build_persona_card(
+        localpart=localpart,
+        displayname=displayname,
+        biography=biography,
+        backstory=backstory,
+        system_prompt=system_prompt,
+        dall_e_prompt=final_prompt,   # EXACT final prompt
+        traits=traits,
+        portrait_mxc=portrait_mxc,
+        global_draw_appendix = global_draw_appendix 
+    )
+    return card_html
+
+
+async def cmd_spawn(bot_client, descriptor):
+    """
+    Usage: spawn "A cosmic explorer..."
+    Returns a single HTML string containing the entire character card
+    (table + optional <img>).
+    """
+    try:
+        card_html = await spawn_persona(descriptor)
+        return card_html
+    except Exception as e:
+        logger.exception("cmd_spawn => error in spawn_persona")
+        return f"SYSTEM: Error spawning persona => {e}"
+
+
+# ----------------------------------------------------------------------
+# Internal helpers
+# ----------------------------------------------------------------------
+
+async def _download_and_upload_portrait(
+    portrait_url: str,
+    localpart: str,
+    password: str,
+    system_prompt: str,
+    traits: dict,
+    ephemeral_bot_client
+) -> str:
+    """
+    Download the image from portrait_url, upload to matrix,
+    update persona record + set bot avatar. Returns mxc:// URI or None.
+    """
+    import requests
+    os.makedirs("data/images", exist_ok=True)
+    filename = f"data/images/portrait_{int(time.time())}.jpg"
+    dl_resp = requests.get(portrait_url)
+    dl_resp.raise_for_status()
+    with open(filename, "wb") as f:
+        f.write(dl_resp.content)
+
+    client = getClient()
+    if not client:
+        return None
+
+    # Upload
+    portrait_mxc = await direct_upload_image(client, filename, "image/jpeg")
+    # Update persona
+    traits["portrait_url"] = portrait_mxc
+    update_bot(
+        f"@{localpart}:localhost",
+        {
+            "password": password,
+            "system_prompt": system_prompt,
+            "traits": traits
+        }
+    )
+    # Attempt to set avatar
+    if ephemeral_bot_client:
+        try:
+            await ephemeral_bot_client.set_avatar(portrait_mxc)
+        except Exception as e:
+            logger.warning("Error setting avatar => %s", e)
+
+    return portrait_mxc
+
+def _build_persona_card(
+    localpart: str,
+    displayname: str,
+    biography: str,
+    backstory: str,
+    system_prompt: str,
+    dall_e_prompt: str,
+    global_draw_appendix: str,
+    traits: dict,
+    portrait_mxc: str = None
+) -> str:
+    """
+    1) Show the localpart as a big title above the portrait.
+    2) Show an italic line beneath the title (e.g. the displayname).
+    3) Then the portrait if available.
+    4) Then a table with the rest of the details, including version=1.0.
+    """
+
+    import html
+    def esc(t): 
+        return html.escape(str(t))
+
+    # -------------------------
+    # Sub-table for traits
+    # -------------------------
+    trait_rows = []
+    for k, v in traits.items():
+        trait_rows.append(
+            "<tr>"
+            f"<td style='padding:2px 6px;'><b>{esc(k)}</b></td>"
+            f"<td style='padding:2px 6px;'>{esc(v)}</td>"
+            "</tr>"
+        )
+    traits_subtable = (
+        "<table border='1' style='border-collapse:collapse; font-size:0.9em;'>"
+        "<thead><tr><th colspan='2'>Traits</th></tr></thead>"
+        f"<tbody>{''.join(trait_rows)}</tbody>"
+        "</table>"
+    )
+
+    # A quick helper to build each row
+    def row(label, val):
+        return (
+            "<tr>"
+            f"<td style='padding:4px 8px;vertical-align:top;'><b>{esc(label)}</b></td>"
+            f"<td style='padding:4px 8px;'>{val}</td>"
+            "</tr>"
+        )
+
+    # -------------------------
+    # The portrait HTML (if any)
+    # -------------------------
+    portrait_html = ""
+    if portrait_mxc:
+        portrait_html = (
+            f"<div style='margin-bottom:8px;'>"
+            f"<img src='{esc(portrait_mxc)}' alt='Portrait' width='300'/>"
+            "</div>"
+        )
+
+    # -------------------------
+    # The table of fields
+    # -------------------------
+    # Hardcoded version => "1.0"
+    row_version       = row("Version", "1.0")
+    row_localpart     = row("Localpart", esc(localpart))
+    row_displayname   = row("DisplayName", esc(displayname))
+    row_biography     = row("Biography", esc(biography))
+    row_backstory     = row("Backstory", esc(backstory))
+    row_systemprompt  = row("System Prompt", esc(system_prompt))
+    row_dalle_prompt  = row("DALL·E Prompt", esc(dall_e_prompt))
+    row_draw_appendix = row("Draw Prompt Appendix", esc(global_draw_appendix))
+    row_traits        = row("Traits", traits_subtable)
+
+    table_body = "".join([
+        row_localpart,
+        row_displayname,
+        row_biography,
+        row_backstory,
+        row_systemprompt,
+        row_dalle_prompt,
+        row_draw_appendix,
+        row_traits,
+        row_version
+    ])
+
+    table_html = (
+        "<table border='1' style='border-collapse:collapse;'>"
+        f"<tbody>{table_body}</tbody>"
+        "</table>"
+    )
+
+    # -------------------------
+    # Combine everything
+    # -------------------------
+    # 1) <h2>@localpart</h2> as a big title
+    # 2) Italic line with displayName (or biography if you prefer)
+    # 3) The portrait
+    # 4) The table
+    final_html = (
+        f"<h2 style='margin-bottom:2px;'>{esc(localpart)}</h2>"
+        f"<p style='margin-top:0; margin-bottom:10px;'><em>{esc(displayname)}</em></p>"
+        f"{portrait_html}"
+        f"{table_html}"
+        "<p><em>All done creating the persona!</em></p>"
+    )
+    return final_html
 
 === luna_command_extensions/spawner.py ===
 # spawner.py

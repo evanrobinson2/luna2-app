@@ -26,9 +26,7 @@ from luna.luna_command_extensions.command_router import load_config  # or wherev
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
-from luna.luna_command_extensions.luna_message_handler import handle_luna_message
-from luna.luna_command_extensions.luna_message_handler2 import handle_luna_message2
-from luna.luna_command_extensions.luna_message_handler3 import handle_luna_message3
+
 from luna.luna_command_extensions.luna_message_handler4 import handle_luna_message4
 
 from luna.bot_messages_store import load_messages
