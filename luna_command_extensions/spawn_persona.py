@@ -1,15 +1,13 @@
-import asyncio
 import logging
 import json
-import shlex
 import time
 import os
-import html
 
 from luna.ai_functions import get_gpt_response, generate_image
 from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 from luna.luna_personas import update_bot
 from luna.luna_functions import getClient
+from luna.luna_command_extensions.image_helpers import direct_upload_image
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +88,7 @@ async def spawn_persona(descriptor: str) -> str:
     final_prompt = descriptor.strip()  
     portrait_mxc = None
     try:
-        portrait_url = generate_image(final_prompt, size="1024x1024")
+        portrait_url = await generate_image(final_prompt, size="1024x1024")
         if portrait_url:
             portrait_mxc = await _download_and_upload_portrait(portrait_url, localpart, password, system_prompt, traits, ephemeral_bot_client)
     except Exception as e:
@@ -157,9 +155,6 @@ async def _download_and_upload_portrait(
     client = getClient()
     if not client:
         return None
-
-    # Upload
-    from luna.luna_command_extensions.luna_message_handler4 import direct_upload_image
     portrait_mxc = await direct_upload_image(client, filename, "image/jpeg")
     # Update persona
     traits["portrait_url"] = portrait_mxc

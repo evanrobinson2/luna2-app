@@ -34,7 +34,7 @@ from luna import bot_messages_store
 logger = logging.getLogger(__name__)
 BOT_START_TIME = time.time() * 1000
 
-async def handle_luna_message4(bot_client: AsyncClient, bot_localpart: str, room, event):
+async def handle_luna_message4(bot_client: AsyncClient, bot_localpart: str, room, event: RoomMessageText):
     """
     1) Ignores old/self messages
     2) Must be text
@@ -89,7 +89,7 @@ async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_bod
 
     if message_body.startswith("!"):
         # commands
-        reply_text = await handle_console_command(bot_client, room.room_id, message_body, event.sender)
+        reply_text = await handle_console_command(bot_client, room.room_id, message_body, event.sender, event)
 
         if "<table" in reply_text:
             # Possibly HTML from e.g. !help
@@ -133,24 +133,26 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
             bot_client, 
             room.room_id, 
             message_body, 
-            event.sender
+            event.sender,
+            event
         )
 
-        # 4) If the command output includes tables (<table>), we send HTML
-        if "<table" in command_reply:
-            await send_formatted_text(
-                bot_client, 
-                room.room_id, 
-                command_reply,
-                context_cue="SYSTEM RESPONSE"
-            )
-        else:
-            await send_text(
-                bot_client, 
-                room.room_id, 
-                command_reply,
-                context_cue="SYSTEM RESPONSE"
-            )
+        if not command_reply == None:
+            # 4) If the command output includes tables (<table>), we send HTML
+            if "<table" in command_reply:
+                await send_formatted_text(
+                    bot_client, 
+                    room.room_id, 
+                    command_reply,
+                    context_cue="SYSTEM RESPONSE"
+                )
+            else:
+                await send_text(
+                    bot_client, 
+                    room.room_id, 
+                    command_reply,
+                    context_cue="SYSTEM RESPONSE"
+                )
 
     finally:
         # 5) Stop typing no matter what

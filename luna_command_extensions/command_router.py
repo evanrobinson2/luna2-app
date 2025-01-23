@@ -18,6 +18,8 @@ import requests
 from nio import AsyncClient, RoomSendResponse
 import yaml
 import os
+
+from luna.luna_command_extensions.cmd_summarize import cmd_summarize
 from luna.luna_command_extensions.image_helpers import direct_upload_image
 from luna.luna_command_extensions.spawn_persona import cmd_spawn
 from luna.luna_personas import read_bot, update_bot
@@ -188,7 +190,7 @@ async def draw_command(bot_client: AsyncClient, room_id: str, user_prompt: str) 
     #    => returns a public image URL
     # -----------------------------------------------------------------
     try:
-        image_url = generate_image(user_prompt, size="1024x1024")
+        image_url = await generate_image(user_prompt, size="1024x1024")
     except Exception as e:
         logger.exception("[draw_command] Error generating image.")
         return f"Error generating image => {e}"
@@ -452,7 +454,7 @@ def parse_command_doc(func) -> tuple[str, str]:
 # -------------------------------------------------------------
 # COMMAND DISPATCHER
 # -------------------------------------------------------------
-async def handle_console_command(bot_client: AsyncClient, room_id: str, message_body: str, sender: str) -> str:
+async def handle_console_command(bot_client: AsyncClient, room_id: str, message_body: str, sender: str, event: any) -> str:
     """
     Parse the message (which starts with '!'), extract command name & args,
     invoke the appropriate function from COMMAND_ROUTER, and return the result.
@@ -524,6 +526,42 @@ async def handle_console_command(bot_client: AsyncClient, room_id: str, message_
             return "Usage: !luna <prompt>"
         prompt = " ".join(args)
         return await command_func(bot_client, room_id, prompt)
+
+    elif command_name == "summarize":
+
+        if not args:
+            return "Usage: !summarize <prompt>"
+
+        user_prompt = " ".join(args)
+        # We'll call run_summarize_pipeline(...) but not return anything; 
+        # it posts results directly in the thread.
+
+        # Because handle_console_command is an async function, we can do:
+        from luna.luna_command_extensions.summarize_pipeline import run_summarize_pipeline
+
+        # We do not "return" the summary, because we want to post partial/final messages 
+        # in the same thread. So we just schedule it.
+        await run_summarize_pipeline(
+            bot_client, 
+            room_id,
+            event.event_id,  # or pass in if you have it
+            user_prompt,
+            bot_localpart="lunabot"
+        )
+
+        # Possibly return a short "Sure, summarizing now..." or just empty
+        return None  # The user will see the actual summary in-thread
+
+    elif command_name == "summarize_depreciated":
+        # If user typed just "!summarize" with no leftover tokens, show usage
+        if not args:
+            return "Usage: !summarize <prompt>"
+
+        # Otherwise, join all leftover tokens into one string
+        prompt_str = " ".join(args)
+
+        # Call the summarize function, passing bot_client, room_id, and the joined prompt
+        return await command_func(bot_client, room_id, prompt_str)
     
     elif command_name == "draw":
         # Now pass in the 'room_id' so we can post the image there
@@ -663,5 +701,6 @@ COMMAND_ROUTER = {
     "draw":        draw_command,   # now posts the actual image
     "luna":        luna_gpt,
     "spawn":       cmd_spawn,
-    "set_avatar":  cmd_set_avatar
+    "set_avatar":  cmd_set_avatar,
+    "summarize":   cmd_summarize
 }

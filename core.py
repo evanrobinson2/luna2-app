@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 BOTS = {}        # localpart -> AsyncClient (for bots)
 BOT_TASKS = []   # list of asyncio Tasks for each bot’s sync loop
 MAIN_LOOP = None # The main event loop
-DATABASE_PATH = "data/luna.db"
+DATABASE_PATH = "data/bot_messages.db"
 
 # core.py
 import logging

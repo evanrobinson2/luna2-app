@@ -1772,9 +1772,7 @@ from luna.luna_command_extensions.command_router import load_config  # or wherev
 from luna.luna_command_extensions.bot_message_handler import handle_bot_room_message
 from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
-from luna.luna_command_extensions.luna_message_handler import handle_luna_message
-from luna.luna_command_extensions.luna_message_handler2 import handle_luna_message2
-from luna.luna_command_extensions.luna_message_handler3 import handle_luna_message3
+
 from luna.luna_command_extensions.luna_message_handler4 import handle_luna_message4
 
 from luna.bot_messages_store import load_messages
@@ -1789,7 +1787,7 @@ logger = logging.getLogger(__name__)
 BOTS = {}        # localpart -> AsyncClient (for bots)
 BOT_TASKS = []   # list of asyncio Tasks for each bot’s sync loop
 MAIN_LOOP = None # The main event loop
-DATABASE_PATH = "data/luna.db"
+DATABASE_PATH = "data/bot_messages.db"
 
 # core.py
 import logging
@@ -2085,17 +2083,90 @@ def load_system_prompt():
     with open("data/luna_system_prompt.md", "r", encoding="utf-8") as f:
         return f.read()
 
+=== get_all_messages_standalone.py ===
+#!/usr/bin/env python3
+
+import os
+import csv
+import sqlite3
+from datetime import datetime
+
+# Adjust if your DB or table is in a different location/name:
+DB_PATH = "../data/bot_messages.db"
+TABLE_NAME = "bot_messages"
+
+def main():
+    # Create output directory if needed
+    out_dir = "exports"
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Build a timestamped filename
+    timestamp_str = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    out_filename = f"all_messages_{timestamp_str}.csv"
+    out_path = os.path.join(out_dir, out_filename)
+
+    try:
+        # Connect to the SQLite DB
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Query all messages from the table (sorted by timestamp ascending)
+        query = f"""
+            SELECT 
+                id,
+                bot_localpart,
+                room_id,
+                event_id,
+                sender,
+                timestamp,
+                body
+            FROM {TABLE_NAME}
+            ORDER BY timestamp ASC
+        """
+        rows = cursor.execute(query).fetchall()
+        
+        # Write rows to CSV
+        with open(out_path, mode="w", encoding="utf-8", newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            # Write a header row:
+            writer.writerow(["id", 
+                             "bot_localpart", 
+                             "room_id", 
+                             "event_id", 
+                             "sender", 
+                             "timestamp", 
+                             "body"])
+            # Write all data rows
+            for row in rows:
+                writer.writerow(row)
+        
+        print(f"Exported {len(rows)} messages to '{out_path}'.")
+    
+    except Exception as e:
+        print(f"Error exporting messages: {e}")
+    
+    finally:
+        # Always close the DB connection
+        if 'conn' in locals():
+            conn.close()
+
+if __name__ == "__main__":
+    main()
+
 === issues.md ===
 #### ISSUES
 
+Need to be able to remove users.
+Need to be able to list users.
+Need to be able to review a specific user's profile.
+Global system prompt?
+Improved context formulation that uses summaries instead of pure history
 
+Technical minutae / Housekeeping:
 1. Lunabot is the admin, it's hardcoded in multiple files
 2. Multiple files declare globals and constants, those should move to a config file of some kind
 3. Keys like the director key should be stored in environment variables, not on disk
 4. In Luna Functions, sometimes we use the API to make changes, sometimes we call functions from matrix-nio, it's inconsistent
-5. deleting a user doesn't destroy their entry in personalities
-
-
 6. shut-down not graceful:?
 2025-01-12 15:33:28,560 [ERROR] __main__: An unexpected exception occurred in main_logic: Event loop stopped before Future completed.
 Traceback (most recent call last):
@@ -2110,285 +2181,6 @@ RuntimeError: Event loop stopped before Future completed.
 2025-01-12 15:33:28,595 [ERROR] asyncio: Unclosed connector
 connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x11de93f50>, 42509.1350415)])']
 connector: <aiohttp.connector.TCPConnector object at 0x11de76350>
-
-ISSUE - spawn_squad needs to be tested
-ISSUE - Orphaned users can accumulate on the server.
-=== luna.md ===
-luna.md
-
-# Luna System Conversation Recap
-
-This file consolidates the **three levels** of summarization and explanation into a single document. Each level offers a progressively deeper view of the Luna + Matrix ecosystem, culminating in a detailed architecture overview.
-
----
-
-## **Level 1: High-Level Summary**
-
-We have developed a **Matrix-based chatbot system** named **Luna**. Luna:
-
-1. **Connects to a Synapse (Matrix) server** to send and receive messages in real time.  
-2. **Interacts with GPT** (e.g., OpenAI models) to provide intelligent replies based on recent chat context.  
-3. **Maintains a local store (CSV or DB)** of inbound and outbound messages, plus tokens for synchronization with the Matrix server.  
-4. **Provides a command-driven console** (in a separate thread) where an admin can manage rooms, invite users, rotate logs, or purge/re-seed data.  
-
-### Why We Did This
-- **Real-time chat**: Matrix-NIO handles the real-time synchronization.  
-- **Flexible GPT integration**: We can adjust how many recent messages or summarized context to pass to GPT.  
-- **Multi-agent expansions**: We can have multiple bots (or personas) working in different channels.  
-- **Ease of experimentation**: Admin commands let us quickly create or invite new users, fetch missed messages, or rotate logs.
-
-### High-Level Value
-This system can power:
-- Creative storytelling: letting Luna participate in a multi-user role-play.  
-- Educational scenarios: a teacher bot in a dedicated room with students.  
-- Multi-agent expansions: specialized “math bot,” “story bot,” “lore bot,” each with unique system prompts.  
-
----
-
-## **Level 2: Deeper Detail**
-
-In more detail, the conversation led us to discuss:
-
-1. **On-Room Message Triage**  
-   - Luna ignores her own messages, only replies automatically in 2-person rooms, and checks for mentions (“luna,” “lunabot”) in group rooms.
-
-2. **Local Data Handling**  
-   - We store every inbound/outbound message in `luna_messages.csv` or a DB.  
-   - We keep a sync token (`sync_token.json`) to fetch only new events if needed.
-
-3. **Console and Command Flow**  
-   - A background console thread listens for user commands:  
-     - _create_channel_, _add_participant_, _fetch_all_, _fetch_new_, etc.  
-   - These commands schedule async tasks on the main event loop.  
-   - Results are printed back to the console.
-
-4. **Summarization & Context**  
-   - Because GPT has a token limit, we plan to chunk or summarize older logs.  
-   - Possibly embed them so relevant parts can be retrieved.  
-   - This ensures Luna’s knowledge of prior events grows without losing coherence in GPT prompts.
-
-5. **Testing & Expansion**  
-   - We can build **automated regression tests** that simulate console inputs, check logs, or run ephemeral servers for integration checks.  
-   - This system can scale to multiple “bot personas,” each an account on the same Matrix server or a single account with multiple “modes.”
-
-### Example Use Cases
-- **Storytelling**: The user might say, “@lunabot, describe the next scene!” If multiple sessions have built up a plot, Luna consults the local store or sync data, calls GPT with a summarized context, and replies with a continuing narrative.  
-- **Teacher & Student**: A teacher bot in a private channel with students. The teacher references the conversation logs for context-based tips.
-
-### Why This Design
-- **Matrix**: We want open-source, real-time messaging with robust identity (rooms, invites, etc.).  
-- **Asynchronous**: “asyncio” plus `matrix-nio` handles large concurrency without blocking.  
-- **Local CSV**: Quick, simple data store for now. Could replace with SQL if needed.  
-- **Flexible**: The command router is easy to extend with new admin commands (e.g., “purge_and_seed,” “list_channels,” etc.).
-
----
-
-## **Level 3: Detailed Architecture Overview**
-
-Below is a **detailed** technical breakdown from bottom to top.
-
-### 1. Matrix Server Layer
-- **Synapse** or another Matrix homeserver runs locally or on a host.  
-- Houses user accounts (like `@lunabot:localhost`).  
-- Manages real-time message flow, invitations, and authentication.  
-- On startup, the console can do “purge_and_seed” to wipe the server DB, re-register admin users, etc.
-
-### 2. Luna’s Python Client
-
-**2.1. AsyncClient Setup**  
-- We use **`matrix-nio`** to create `AsyncClient(homeserver_url=..., user=...)`.  
-- Luna has a `director_token.json` file storing `access_token` for reconnection.  
-- On first run, if no token is found, Luna does a password login and saves the new token.
-
-**2.2. on_room_message**  
-- Called every time the Matrix server sends a `RoomMessageText` event to Luna.  
-- Steps:
-  1. **Ignore own messages** (avoid self-loop).  
-  2. **Check participant count** in that room:
-     - If 2 people, respond automatically.  
-     - If 3 or more, respond only if “luna” is mentioned.  
-  3. **Store inbound message** into CSV/DB.  
-  4. **Fetch recent messages** (e.g. last 10) for context.  
-  5. **Add system instructions** and user’s latest text => GPT.  
-  6. **Send GPT’s reply** back to room, also store it in CSV/DB.
-
-**2.3. Database or CSV**  
-- In real-time, each message is appended to “luna_messages.csv.”  
-- We can do `fetch_all` to get older messages from the server, or `fetch_new` using the sync token.  
-- If the server was offline or Luna was offline, we still can do a sync step to fill gaps.
-
-### 3. Summaries & Larger Context
-- We have not fully implemented chunking or embedding but the plan is:  
-  - Summarize older logs so GPT’s token window stays manageable.  
-  - Potentially store partial summaries in a separate file or columns for quick reference.  
-  - For multi-hour or multi-day role plays, have a top-level “chapter summary,” and pass it into the system prompt.
-
-### 4. Console & Admin Commands
-
-**4.1. Console Thread**  
-- A separate Python thread runs `console_loop`, using `prompt_toolkit` for tab-completion.  
-- The user sees a `[luna-app] timestamp (#N) % ` prompt.  
-- They type commands like “create_channel MyRoom” or “add_participant !abc:localhost @someuser:localhost.”
-
-**4.2. Command Router**  
-- A dictionary mapping strings (like “fetch_new”) to functions (like `cmd_fetch_new`).  
-- Each command function parses arguments, schedules an async call in the event loop, and prints results.
-
-**4.3. Commands & Handlers**  
-- **`cmd_create_channel`**: calls `luna_functions.create_channel(...)`.  
-- **`cmd_add_participant`**: calls `luna_functions.add_participant(...)`.  
-- **`cmd_fetch_all`**: calls `luna_functions.fetch_all_messages_once(...)`.  
-- **`cmd_rotate_logs`**: rotates `server.log`, re-initializes logging.  
-- **`cmd_purge_and_seed`**: destructively resets the server DB and local store, re-registers the needed accounts.
-
-### 5. Testing & Multi-Agent Vision
-
-**5.1. Automated Testing**  
-- We can script console commands to run in a pseudo-terminal.  
-- Confirm expected outputs or log messages.  
-- Potentially spin up a local Synapse server container on each test run.
-
-**5.2. Multi-Agent**  
-- We can register more Matrix user accounts, each with a different GPT personality or specialized knowledge.  
-- They can join the same or different channels, replying according to their system prompts.
-
-**5.3. Summaries for Large Projects**  
-- Over time, we can store big conversation logs and chunk them into “chapters.”  
-- GPT calls can retrieve relevant summary chapters plus the last few messages for immediate context.  
-
----
-
-## Conclusion
-
-This document presents **all three levels**:  
-1. A short, high-level overview of **Luna’s** purpose and value.  
-2. A deeper dive into the system’s features, triage logic, and local data handling.  
-3. A thorough **architecture overview**, covering each layer from the Matrix server up to multi-agent expansions and potential summarization strategies.
-
-All told, this system stands as a flexible, extensible chatbot architecture, combining open-source messaging (Matrix) with GPT’s generative power, supported by a command-driven console for administration and future expansions into multi-agent creative or educational projects.
-
-Next Phase Requirements Document
-1. Objective
-Upgrade Luna to support:
-
-Summoning new bot personas (each as a unique Matrix user).
-Dispatching messages properly so bots only respond in direct chats or when explicitly mentioned in a group.
-Ping-Pong Suppression to prevent infinite loops or repetitive back-and-forth among bots.
-2. Key Features & Flow
-2.1. Summoning (Spawning)
-Description: Luna should be able to create (“spawn”) a new bot persona on demand, complete with a Matrix user account and an entry in the local personality store.
-User Story: “As a user, I can instruct Luna to summon a new bot. Luna will create the Matrix user, a channel if needed, invite the bot to that channel, and store its persona in personalities.json or equivalent DB.”
-Requirements:
-Create a new user in Matrix (via register_new_matrix_user or a Synapse Admin API).
-Must confirm success (e.g., check the response from the admin API).
-(Optional) Create a channel if no existing channel is specified.
-If a channel is passed in or chosen by the user, skip creation.
-Invite the newly created user to the channel.
-Store the bot’s personality in a local data file (e.g. personalities.json), keyed by @botname:localhost.
-Must include at least:
-displayname (string)
-system_prompt (string)
-traits (dict or map of Big Five or other characteristics)
-created_at (timestamp)
-channel_id or list of room IDs
-The format is flexible for future extension.
-2.2. Despawning
-Description: Luna should be able to remove (“despawn”) a bot persona from the environment and local store.
-User Story: “As an admin, I can instruct Luna to despawn a bot so that it no longer appears in the channel, user lists, or local store.”
-Requirements:
-Remove the user from the channel(s) (via room_kick or room_leave).
-Delete the Matrix user from the homeserver (via Synapse Admin API, DELETE /_synapse/admin/v2/users/<userID>).
-Remove the persona from the local data store (personalities.json or DB).
-2.3. Dispatch Rules
-Description: Each bot, including Luna, only responds automatically in:
-Direct (2-participant) rooms: always respond.
-Group rooms (3+ participants): respond only if explicitly mentioned (e.g., “@botname:localhost”).
-User Story: “As a user in a group channel, I only want the bot to respond if I mention it. As a user in a DM with the bot, it should always reply to me.”
-Requirements:
-Participant Count Check: If count == 2, respond unconditionally.
-Mention Check: If count >= 3, parse message for @botUserID or a recognized handle. If found, respond; otherwise, ignore.
-Ignore Own Messages: A bot should never respond to its own text to prevent loops.
-2.4. Ping-Pong Suppression
-Description: Prevent runaway or infinite loops when bots mention each other repeatedly, or when users keep bouncing short messages.
-Proposal: “If any chain of messages in a channel contains exactly the same users in the same repeating pattern 5 times, the next message from each user is suppressed.”
-For instance, if @botA and @botB keep alternating messages 5 times with no other participants joining, the bot conversation is suppressed or halted on the 6th attempt.
-User Story: “As an admin, I want to avoid endless spam if two or more bots inadvertently mention each other in a loop.”
-Requirements:
-Track recent messages in a channel, focusing on the participants in chronological order.
-Identify repeating patterns of the same subset of participants (e.g., @botA → @botB → @botA → @botB…).
-When this chain occurs 5 times in a row (or any threshold you define), automatically suppress the next message from those same participants.
-“Suppress” might mean refusing to send the response, or sending a warning message about ping-pong limit reached.
-Reset the chain if a new user enters the conversation or after some time passes (configurable reset).
-Note: This is a simple approach but ensures a clear, user-friendly rule. You can adjust the threshold or the definition of “exactly the same users” to refine behavior.
-
-3. Data Storage
-Personality Store:
-File: personalities.json (or DB).
-Keys: @bot:localhost (Matrix IDs).
-Values: flexible JSON with fields for system prompts, traits, timestamps, notes, etc.
-Local Message Log:
-Continue storing inbound/outbound messages (e.g. luna_messages.csv) or a DB. This helps with:
-Dispatch logic (check the last few messages to detect ping-pong patterns).
-Summaries for GPT context if needed.
-4. Architecture & Sequence Diagrams (Conceptual)
-4.1. Summoning Sequence
-User: “Luna, create new bot named @scoutbot:localhost.”
-Luna (Controller):
-a. create_user(“scoutbot”, …) via admin API
-b. create_room(“ScoutBotChannel”) if needed
-c. invite_user_to_room(“@scoutbot:localhost”, “!someID:localhost”)
-d. store_personality(“@scoutbot:localhost”, {...})
-4.2. Despawning Sequence
-User: “Luna, despawn @scoutbot:localhost.”
-Luna (Controller):
-a. kick or leave the room (room_kick)
-b. delete_user_via_admin_api(“@scoutbot:localhost”)
-c. remove from personalities.json
-4.3. Dispatch Flow (Inbound Message)
-Matrix → Bot Callback: on_room_message(room, event)
-Bot checks participant count.
-If 2-person room → respond. If 3+ → respond only if “@botID” in message text.
-Check ping-pong pattern in local message log. If limit reached, suppress.
-Otherwise → build GPT prompt, generate response, store it in local log, send to room.
-5. Non-Functional Requirements
-Performance:
-Summoning a new bot (user creation + channel invite) should complete within a few seconds.
-Logging messages and personalities to disk should not block the main event loop excessively.
-Security:
-Only authorized admins can spawn or despawn bots.
-The admin token for user creation/deletion must be kept secure in director_token.json.
-Reliability:
-If the server or Luna is restarted, the personality data should still be available.
-If the creation fails partially (e.g., user is created but not invited), a rollback or cleanup step should be possible.
-Extensibility:
-The personality store is JSON-based and can accommodate new fields (traits, system prompts, etc.) as the system evolves.
-Maintainability:
-Keep the summoning logic in a dedicated function (e.g., spawn_persona(...)) for clarity.
-Keep dispatch/ping-pong logic in the message callback or a dedicated “routing” module.
-6. Testing & Validation
-Summoning Test:
-Summon a bot, confirm user appears in “list_users,” is in the designated channel, and persona is in personalities.json.
-Despawning Test:
-Despawn that bot, confirm user is gone from “list_users,” removed from channel participants, and removed from personalities.json.
-Dispatch:
-In a group room of 3+ participants, ensure the bot remains silent until someone tags “@botname:localhost.”
-In a DM with the bot, ensure it responds automatically to any message.
-Ping-Pong Suppression:
-Intentionally create a repeating sequence of messages between two or more bots. After X repeated patterns, confirm the system suppresses further messages or logs a warning.
-Ensure it resets once a new user enters the conversation or after a certain cooldown.
-7. Conclusion & Next Steps
-With these requirements, Luna can:
-
-Spawn new bots (Matrix user + local personality store),
-Despawning them cleanly,
-Dispatch only when relevant,
-Prevent infinite loops via simple, user-friendly ping-pong suppression rules.
-Next Steps:
-
-Implement each step in code, likely in luna_functions.py and console_functions.py.
-Test each scenario in your dev environment.
-Validate performance, security, and user experience.
-Once completed, you’ll have a robust multi-bot ecosystem where each new persona truly “exists” in Matrix, and your channels stay sane thanks to mention-based dispatch and loop suppression.
 === luna_command_extensions/__init__.py ===
 
 === luna_command_extensions/ascii_art.py ===
@@ -2680,8 +2472,7 @@ async def handle_bot_room_message(bot_client, bot_localpart, room, event):
     gpt_reply = await ai_functions.get_gpt_response(
         messages=gpt_context,
         model="gpt-4",
-        temperature=0.7,
-        max_tokens=300
+        temperature=0.7
     )
 
     # 7) Convert GPT reply => mention-aware content (including m.mentions)
@@ -3379,7 +3170,7 @@ import requests
 from nio import AsyncClient, RoomSendResponse
 import yaml
 import os
-
+from luna.luna_command_extensions.image_helpers import direct_upload_image
 from luna.luna_command_extensions.spawn_persona import cmd_spawn
 from luna.luna_personas import read_bot, update_bot
 
@@ -3388,7 +3179,6 @@ CONFIG_PATH = "data/config/config.yaml"
 # Import your existing 'generate_image' function
 from luna.ai_functions import generate_image
 # If you have a direct_upload_image helper, import it too:
-from luna.luna_command_extensions.luna_message_handler import direct_upload_image
 
 logger = logging.getLogger(__name__)
 
@@ -3582,6 +3372,7 @@ async def draw_command(bot_client: AsyncClient, room_id: str, user_prompt: str) 
     # -----------------------------------------------------------------
     try:
         logger.debug("[draw_command] Uploading image to Matrix.")
+        
         mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
         logger.debug("[draw_command] Upload success => %s", mxc_url)
     except Exception as e:
@@ -3737,8 +3528,7 @@ async def luna_gpt(bot_client: AsyncClient, room_id: str, raw_args: str) -> str:
         gpt_response = await get_gpt_response(
             messages=gpt_context,
             model="chatgpt-4o-latest",
-            temperature=0.7,
-            max_tokens=300
+            temperature=0.7
         )
         logger.debug("[luna_gpt] GPT response: %s", gpt_response)
 
@@ -4416,24 +4206,15 @@ async def create_room(args_string: str) -> str:
         logger.exception("Caught an exception while creating room %r:", room_name)
         return f"Exception while creating room => {e}"
 
-=== luna_command_extensions/luna_message_handler.py ===
-# luna_message_handler.py
+=== luna_command_extensions/image_helpers.py ===
+# image_helpers.py
 
 import os
-import time
-import json
 import logging
-import requests
 import urllib.parse
+
 import aiohttp
-
-from nio import (
-    AsyncClient,
-    RoomMessageText,
-    RoomSendResponse,
-)
-
-from luna import bot_messages_store  # We’ll use this to track seen event IDs
+from nio import AsyncClient
 
 logger = logging.getLogger(__name__)
 
@@ -4481,739 +4262,6 @@ async def direct_upload_image(
                         f"Upload failed (HTTP {resp.status}): {err_text}"
                     )
 
-
-async def handle_luna_message(bot_client: AsyncClient, bot_localpart: str, room, event):
-    """
-    Modified so we only respond ONCE per message/event_id. If the event_id
-    is already in our DB, we skip responding again.
-
-    Steps:
-      1) If from ourselves, ignore.
-      2) If not a RoomMessageText or not "!draw", ignore.
-      3) Check DB for existing event_id. If found, skip.
-      4) Otherwise, store inbound message in DB so we don't respond to it again.
-      5) Generate image via OpenAI + direct upload
-      6) Post m.image + handle fallback
-    """
-
-    bot_full_id = bot_client.user
-
-    # 1) Don’t respond to own messages
-    if event.sender == bot_full_id:
-        logger.debug("Ignoring message from myself: %s", event.sender)
-        return
-
-    # Must be a text event
-    if not isinstance(event, RoomMessageText):
-        return
-
-    message_body = event.body or ""
-    if not message_body.startswith("!draw"):
-        return
-
-    # 2) Check if we already saw this event_id in DB
-    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
-    if any(m["event_id"] == event.event_id for m in existing_msgs):
-        logger.info(
-            "[handle_luna_message] We’ve already responded to event_id=%s, skipping.",
-            event.event_id
-        )
-        return
-
-    # 3) If this is brand new, store the inbound message so we don't respond to it twice
-    bot_messages_store.append_message(
-        bot_localpart=bot_localpart,
-        room_id=room.room_id,
-        event_id=event.event_id,
-        sender=event.sender,
-        timestamp=event.server_timestamp,
-        body=message_body
-    )
-
-    # 4) Check for a non-empty prompt
-    prompt = message_body[5:].strip()
-    if not prompt:
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={
-                "msgtype": "m.text",
-                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
-            },
-        )
-        return
-
-    # 5) Make sure we have an OpenAI API key
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-    if not OPENAI_API_KEY:
-        logger.error("OpenAI API key not found in environment variables.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
-        )
-        return
-
-    # 6) Indicate typing
-    try:
-        await bot_client.room_typing(room.room_id, typing_state=True, timeout=30000)
-        logger.info("Successfully sent 'typing start' indicator to room.")
-    except Exception as e:
-        logger.warning(f"Could not send 'typing start' indicator => {e}")
-
-    try:
-        # (A) Generate the image from OpenAI
-        try:
-            logger.info("Generating image with OpenAI's API. Prompt=%r", prompt)
-            url = "https://api.openai.com/v1/images/generations"
-            headers = {
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-            }
-            data = {
-                "model": "dall-e-3",
-                "prompt": prompt,
-                "n": 1,
-                "size": "1024x1024",
-            }
-            resp = requests.post(url, headers=headers, json=data)
-            resp.raise_for_status()
-            result_data = resp.json()
-            image_url = result_data["data"][0]["url"]
-            logger.info("OpenAI returned an image URL: %s", image_url)
-        except Exception as e:
-            logger.exception("Error occurred while generating image from OpenAI.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
-            )
-            return
-
-        # (B) Download the image
-        try:
-            logger.info("Downloading image from URL: %s", image_url)
-            os.makedirs("data/images", exist_ok=True)
-            timestamp = int(time.time())
-            filename = f"data/images/generated_image_{timestamp}.jpg"
-
-            dl_resp = requests.get(image_url)
-            dl_resp.raise_for_status()
-
-            with open(filename, "wb") as f:
-                f.write(dl_resp.content)
-
-            logger.info("Image downloaded => %s", filename)
-        except Exception as e:
-            logger.exception("Error occurred while downloading the image.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": "Error downloading the image."},
-            )
-            return
-
-        # (C) Upload to Synapse (explicit Content-Length)
-        try:
-            logger.info("Uploading image to Matrix server (direct_upload_image).")
-            mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
-            logger.info("Image upload success => %s", mxc_url)
-        except Exception as e:
-            logger.exception("Error occurred during direct upload to Synapse.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
-            )
-            return
-
-        # (D) Send the m.image event
-        try:
-            file_size = os.path.getsize(filename)
-            image_content = {
-                "msgtype": "m.image",
-                "body": os.path.basename(filename),
-                "url": mxc_url,
-                "info": {
-                    "mimetype": "image/jpeg",
-                    "size": file_size,
-                    "w": 1024,
-                    "h": 1024
-                },
-            }
-            logger.info("Sending m.image =>\n%s", json.dumps(image_content, indent=2))
-            img_response = await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content=image_content,
-            )
-            if isinstance(img_response, RoomSendResponse):
-                logger.info("Sent image to room. Event ID: %s", img_response.event_id)
-            else:
-                logger.error("Failed to send image. Response: %s", img_response)
-        except Exception as e:
-            logger.exception("Error sending the image to the room.")
-            await bot_client.room_send(
-                room_id=room.room_id,
-                message_type="m.room.message",
-                content={"msgtype": "m.text", "body": "There was an error uploading the image."},
-            )
-            return
-
-    finally:
-        # (E) Stop typing no matter what
-        try:
-            await bot_client.room_typing(room.room_id, typing_state=False, timeout=0)
-        except Exception as e:
-            logger.warning(f"Could not send 'typing stop' indicator => {e}")
-
-=== luna_command_extensions/luna_message_handler2.py ===
-# luna_message_handler2.py
-
-import os
-import time
-import json
-import logging
-import random
-import asyncio
-import sys
-import io
-import html
-import requests
-import urllib.parse
-import aiohttp
-from nio import (
-    AsyncClient,
-    RoomMessageText,
-    RoomSendResponse,
-)
-
-from luna import bot_messages_store
-from luna.console_functions import COMMAND_ROUTER
-from luna.context_helper import build_context
-from luna.ai_functions import get_gpt_response
-from luna.luna_command_extensions.luna_message_handler import direct_upload_image  # Reuse the direct_upload_image helper
-
-logger = logging.getLogger(__name__)
-
-def run_console_command_in_memory(cmd_line: str) -> str:
-    """
-    Intercepts sys.stdout to capture console_functions' prints.
-    Calls the appropriate function in COMMAND_ROUTER and returns all output as a single string.
-    Supports both sync and async commands.
-    """
-    old_stdout = sys.stdout
-    output_buffer = io.StringIO()
-
-    try:
-        sys.stdout = output_buffer
-        parts = cmd_line.strip().split(maxsplit=1)
-        if not parts:
-            print("SYSTEM: No command entered.")
-            return output_buffer.getvalue()
-
-        command_name = parts[0].lower()
-        argument_string = parts[1] if len(parts) > 1 else ""
-
-        if command_name not in COMMAND_ROUTER:
-            print(f"SYSTEM: Unrecognized command '{command_name}'.")
-            return output_buffer.getvalue()
-
-        command_func = COMMAND_ROUTER[command_name]
-        loop = asyncio.get_event_loop()
-
-        # If the command is an async function, await it;
-        # otherwise call it as a normal sync function.
-        if asyncio.iscoroutinefunction(command_func):
-            loop.run_until_complete(command_func(argument_string, loop))
-        else:
-            command_func(argument_string, loop)
-
-    except Exception as e:
-        logger.exception("Error in run_console_command_in_memory => %s", e)
-        print(f"SYSTEM: Command failed => {e}")
-    finally:
-        sys.stdout = old_stdout
-
-    return output_buffer.getvalue()
-
-
-def run_console_command_in_memory_dep(cmd_line: str) -> str:
-    """
-    Intercepts sys.stdout to capture console_functions' prints.
-    Calls the appropriate function in COMMAND_ROUTER and returns all output as a single string.
-    """
-    old_stdout = sys.stdout
-    output_buffer = io.StringIO()
-    try:
-        sys.stdout = output_buffer
-        parts = cmd_line.strip().split(maxsplit=1)
-        if not parts:
-            print("SYSTEM: No command entered.")
-        else:
-            command_name = parts[0].lower()
-            argument_string = parts[1] if len(parts) > 1 else ""
-
-            if command_name in COMMAND_ROUTER:
-                COMMAND_ROUTER[command_name](argument_string, asyncio.get_running_loop())
-            else:
-                print(f"SYSTEM: Unrecognized command '{command_name}'.")
-    except Exception as e:
-        logger.exception("Error in run_console_command_in_memory => %s", e)
-        print(f"SYSTEM: Command failed => {e}")
-    finally:
-        sys.stdout = old_stdout
-
-    return output_buffer.getvalue()
-
-async def handle_luna_message2(bot_client: AsyncClient, bot_localpart: str, room, event):
-    """
-    Enhanced message handler with the following features:
-      - Typing indicators with random delays.
-      - Prevents duplicate responses.
-      - Handles commands starting with '!' using existing console commands.
-      - Defaults to GPT responses for unrecognized commands or regular messages.
-      - Maintains thorough logging throughout the process.
-    """
-    bot_full_id = bot_client.user
-
-    # -- 1) Ignore messages from self
-    if event.sender == bot_full_id:
-        logger.debug("Ignoring message from myself: %s", event.sender)
-        return
-
-    # -- 2) Ensure it's a text message
-    if not isinstance(event, RoomMessageText):
-        logger.debug("Ignoring non-text message.")
-        return
-
-    message_body = event.body or ""
-    logger.info("Received message in room=%s from=%s => %r",
-                room.room_id, event.sender, message_body)
-
-    # -- 3) Check for duplicates to prevent duplication and proliferation of responses to the same message
-    existing_msgs = bot_messages_store.get_messages_for_bot(bot_localpart)
-    if any(m["event_id"] == event.event_id for m in existing_msgs):
-        logger.info("Event %s already in DB => skipping response.", event.event_id)
-        return
-
-    # -- 4) Store inbound message now that we know it's unique
-    bot_messages_store.append_message(
-        bot_localpart=bot_localpart,
-        room_id=room.room_id,
-        event_id=event.event_id,
-        sender=event.sender,
-        timestamp=event.server_timestamp,
-        body=message_body
-    )
-    logger.debug("Stored inbound event_id=%s in DB.", event.event_id)
-
-    # -- 5) Random delay for realism
-    await asyncio.sleep(random.uniform(0.5, 2.5))
-
-    # -- 6) Start typing indicator
-    try:
-        await bot_client.room_typing(room.room_id, True, timeout=30000)
-        logger.info("Sent 'typing start' indicator.")
-    except Exception as e:
-        logger.warning("Could not send 'typing start' indicator => %s", e)
-
-    # -- 7) Determine if it's a command
-    if message_body.startswith("!draw"):
-        await _handle_draw_command(bot_client, bot_localpart, room, event, message_body)
-    elif message_body.startswith("!"):
-        # Extract command line without the leading '!'
-        cmd_line = message_body[1:].strip()
-        console_output = run_console_command_in_memory(cmd_line)
-
-        if console_output and not console_output.strip().startswith("SYSTEM: Unrecognized command"):
-            # Recognized command: send the console output as HTML
-            await _send_formatted_text(bot_client, room.room_id, console_output)
-        else:
-            # Unrecognized command: fallback to GPT
-            logger.debug("Unrecognized command '%s' => falling back to GPT.", cmd_line)
-            await _send_formatted_text(bot_client, room.room_id, "SYSTEM:  Unrecognized Command.")        
-    else:
-        # Regular message: send GPT response in plain text
-        gpt_reply = await _call_gpt(bot_localpart, room.room_id, message_body)
-        await _send_text(bot_client, room.room_id, gpt_reply)
-
-    # -- 8) Stop typing indicator
-    try:
-        await bot_client.room_typing(room.room_id, False, timeout=0)
-        logger.info("Sent 'typing stop' indicator.")
-    except Exception as e:
-        logger.warning("Could not send 'typing stop' indicator => %s", e)
-
-async def _handle_draw_command(bot_client, bot_localpart, room, event, message_body: str):
-    """
-    Handles the '!draw' command: generates an image via DALL·E, uploads it,
-    and sends it to the room along with a fallback text message.
-    """
-    
-    prompt = message_body[5:].strip()
-    if not prompt:
-        logger.debug("No prompt provided to !draw.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={
-                "msgtype": "m.text",
-                "body": "Please provide a description for me to draw!\nExample: `!draw A roaring lion in armor`"
-            },
-        )
-        return
-
-    # Check for OpenAI API Key
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-    if not OPENAI_API_KEY:
-        logger.error("Missing OPENAI_API_KEY for !draw.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": "Error: Missing OPENAI_API_KEY."},
-        )
-        return
-
-    try:
-        # Generate image from DALL·E
-        logger.info("Generating image from prompt => %r", prompt)
-        url = "https://api.openai.com/v1/images/generations"
-        headers = {
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json",
-        }
-        data = {
-            "model": "dall-e-3",
-            "prompt": prompt,
-            "n": 1,
-            "size": "1024x1024",
-        }
-        resp = requests.post(url, headers=headers, json=data)
-        resp.raise_for_status()
-        result_data = resp.json()
-        image_url = result_data["data"][0]["url"]
-        logger.info("OpenAI returned image_url=%s", image_url)
-    except Exception as e:
-        logger.exception("Error generating image from OpenAI.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": f"Error generating image: {e}"},
-        )
-        return
-
-    try:
-        # Download the image
-        logger.info("Downloading image from URL: %s", image_url)
-        os.makedirs("data/images", exist_ok=True)
-        timestamp = int(time.time())
-        filename = f"data/images/generated_image_{timestamp}.jpg"
-
-        dl_resp = requests.get(image_url)
-        dl_resp.raise_for_status()
-
-        with open(filename, "wb") as f:
-            f.write(dl_resp.content)
-
-        logger.info("Image downloaded => %s", filename)
-    except Exception as e:
-        logger.exception("Error downloading the image.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": "Error downloading the image."},
-        )
-        return
-
-    try:
-        # Upload to Synapse
-        logger.info("Uploading image to Matrix server (direct_upload_image).")
-        mxc_url = await direct_upload_image(bot_client, filename, "image/jpeg")
-        logger.info("Image upload success => %s", mxc_url)
-    except Exception as e:
-        logger.exception("Error uploading image to Synapse.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": f"Image upload error: {e}"},
-        )
-        return
-
-    try:
-        # Send the image
-        file_size = os.path.getsize(filename)
-        image_content = {
-            "msgtype": "m.image",
-            "body": os.path.basename(filename),
-            "url": mxc_url,
-            "info": {
-                "mimetype": "image/jpeg",
-                "size": file_size,
-                "w": 1024,
-                "h": 1024
-            },
-        }
-        logger.debug("Sending image content => %s", json.dumps(image_content, indent=2))
-        img_response = await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content=image_content,
-        )
-        if isinstance(img_response, RoomSendResponse):
-            logger.info("Image sent => event_id=%s", img_response.event_id)
-            # Optionally, store the outbound image message
-            bot_messages_store.append_message(
-                bot_localpart=bot_localpart,
-                room_id=room.room_id,
-                event_id=img_response.event_id,
-                sender=bot_client.user_id,
-                timestamp=int(time.time() * 1000),
-                body=json.dumps(image_content)
-            )
-        else:
-            logger.warning("Failed to send image => %s", img_response)
-    except Exception as e:
-        logger.exception("Error sending the image to the room.")
-        await bot_client.room_send(
-            room_id=room.room_id,
-            message_type="m.room.message",
-            content={"msgtype": "m.text", "body": "There was an error uploading the image."},
-        )
-
-
-async def _send_formatted_text(bot_client: AsyncClient, room_id: str, text: str):
-    """
-    Escape & wrap text in <pre> for a minimal approach.
-    """
-    safe_text = html.escape(text)
-    html_body = f"<pre>{safe_text}</pre>"
-
-    content = {
-        "msgtype": "m.text",
-        "body": text,  # Fallback
-        "format": "org.matrix.custom.html",
-        "formatted_body": html_body
-    }
-    resp = await bot_client.room_send(
-        room_id=room_id,
-        message_type="m.room.message",
-        content=content
-    )
-    if isinstance(resp, RoomSendResponse):
-        logger.info("Sent formatted text => event_id=%s", resp.event_id)
-    else:
-        logger.warning("Failed to send formatted text => %s", resp)
-
-async def _send_text(bot_client: AsyncClient, room_id: str, text: str):
-    """
-    Sends plain text (no HTML formatting) to the given room.
-    """
-    content = {
-        "msgtype": "m.text",
-        "body": text,
-    }
-    resp = await bot_client.room_send(
-        room_id=room_id,
-        message_type="m.room.message",
-        content=content
-    )
-    return resp
-
-async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
-    """
-    Build context (including system prompt) + user message => GPT call.
-    Returns the text reply from GPT.
-    """
-    logger.debug("_call_gpt => building context for localpart=%s, room_id=%s", bot_localpart, room_id)
-    context_config = {"max_history": 10}
-    gpt_context = build_context(bot_localpart, room_id, context_config)
-
-    # Append the new user message
-    gpt_context.append({"role": "user", "content": user_message})
-
-    logger.debug("GPT context => %s", gpt_context)
-    reply = await get_gpt_response(
-        messages=gpt_context,
-        model="gpt-4",
-        temperature=0.7,
-        max_tokens=300
-    )
-    return reply
-
-=== luna_command_extensions/luna_message_handler3.py ===
-"""
-luna_message_handler3.py
-
-Example usage of the new command router + help command in a simplified
-Matrix event handler for text messages.
-"""
-
-import random
-import asyncio
-import logging
-from luna.context_helper import build_context
-from luna import bot_messages_store
-from luna.ai_functions import get_gpt_response
-import time
-from nio import (
-    AsyncClient,
-    RoomMessageText,
-    RoomSendResponse,
-)
-
-from luna.luna_command_extensions.command_router import handle_console_command
-
-logger = logging.getLogger(__name__)
-BOT_START_TIME = time.time() * 1000
-
-async def handle_luna_message3(bot_client: AsyncClient, bot_localpart: str, room, event):
-    """
-    A new message handler that:
-      - Ignores messages from itself
-      - Checks if message starts with '!' => route to handle_console_command
-      - Otherwise, do a fallback (like echo or GPT).
-      - Sends typing indicators for realism.
-    """
-
-    # do not respond to messages from the past, under any circumstances
-    if event.server_timestamp < BOT_START_TIME:
-        logger.debug("Skipping old event => %s", event.event_id)
-        return
-
-    bot_full_id = bot_client.user
-
-    # 1) Ignore messages from itself
-    if event.sender == bot_full_id:
-        logger.debug("Ignoring message from myself: %s", event.sender)
-        return
-
-    # 2) Check if it's a text message
-    if not isinstance(event, RoomMessageText):
-        logger.debug("Ignoring non-text message.")
-        return
-
-    message_body = event.body or ""
-    logger.info("Received message in room=%s from=%s => %r", room.room_id, event.sender, message_body)
-
-    # e.g. after verifying not from ourselves, and that it's text
-    bot_messages_store.append_message(
-        bot_localpart=bot_localpart,
-        room_id=room.room_id,
-        event_id=event.event_id,
-        sender=event.sender,
-        timestamp=event.server_timestamp,
-        body=message_body
-    )
-
-    # 5) Start typing indicator
-    try:
-        await bot_client.room_typing(room.room_id, True, timeout=5000)
-        logger.info("Sent 'typing start' indicator.")
-    except Exception as e:
-        logger.warning("Could not send 'typing start' indicator => %s", e)
-
-    await asyncio.sleep(0.5) # wait at least a half a second to respond
-
-    # 6) If it starts with "!", treat it as a command
-    if message_body.startswith("!"):
-        # dispatch to console_command
-        reply_text = await handle_console_command(
-            bot_client,
-            room.room_id,
-            message_body,
-            event.sender
-        )
-        # Some commands (like !help) return HTML. Let's send it as formatted text.
-        if reply_text.strip().startswith("<table") or "<table" in reply_text:
-            await send_formatted_text(bot_client, room.room_id, reply_text)
-        else:
-            # fallback plain text
-            await send_text(bot_client, room.room_id, reply_text)
-    else:
-        # Fallback path (e.g., echo or GPT)
-        # 4) Random delay to mimic "typing"
-        await asyncio.sleep(random.uniform(0.5, 2.0))
-
-        # Regular message: send GPT response in plain text
-        gpt_reply = await _call_gpt(bot_localpart, room.room_id, message_body)
-        await send_text(bot_client, room.room_id, gpt_reply)
-
-    # 7) Stop typing indicator
-    try:
-        await bot_client.room_typing(room.room_id, False, timeout=0)
-        logger.info("Sent 'typing stop' indicator.")
-    except Exception as e:
-        logger.warning("Could not send 'typing stop' indicator => %s", e)
-
-
-async def send_text(bot_client: AsyncClient, room_id: str, text: str):
-    """Send a plain text message (no HTML formatting)."""
-    content = {
-        "msgtype": "m.text",
-        "body": text,
-    }
-    resp = await bot_client.room_send(
-        room_id=room_id,
-        message_type="m.room.message",
-        content=content,
-    )
-    if isinstance(resp, RoomSendResponse):
-        logger.info(f"Sent text => event_id={resp.event_id}")
-    else:
-        logger.warning(f"Failed to send text => {resp}")
-
-
-async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_content: str):
-    """
-    Send an HTML-formatted message with a plain-text fallback.
-    """
-    # For fallback, just strip tags (naive approach).
-    fallback_text = remove_html_tags(html_content)
-
-    content = {
-        "msgtype": "m.text",
-        "body": fallback_text,
-        "format": "org.matrix.custom.html",
-        "formatted_body": html_content
-    }
-    resp = await bot_client.room_send(
-        room_id=room_id,
-        message_type="m.room.message",
-        content=content,
-    )
-    if isinstance(resp, RoomSendResponse):
-        logger.info(f"Sent formatted text => event_id={resp.event_id}")
-    else:
-        logger.warning(f"Failed to send formatted text => {resp}")
-
-
-def remove_html_tags(html: str) -> str:
-    """Minimal HTML tag remover for fallback body."""
-    import re
-    return re.sub(r'<[^>]+>', '', html).strip()
-
-async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
-    """
-    Build context (including system prompt) + user message => GPT call.
-    Returns the text reply from GPT.
-    """
-    logger.debug("_call_gpt => building context for localpart=%s, room_id=%s", bot_localpart, room_id)
-    context_config = {"max_history": 10}
-    gpt_context = build_context(bot_localpart, room_id, context_config)
-
-    # Append the new user message
-    gpt_context.append({"role": "user", "content": user_message})
-
-    logger.debug("GPT context => %s", gpt_context)
-    reply = await get_gpt_response(
-        messages=gpt_context,
-        model="chatgpt-4o-latest",
-        temperature=0.7,
-        max_tokens=300
-    )
-    return reply
-
 === luna_command_extensions/luna_message_handler4.py ===
 """
 luna_message_handler4.py
@@ -5224,6 +4272,11 @@ We assume there's no color code being injected – any mention highlighting is
 still a client-side theme/notifications setting.
 """
 
+import os
+import time
+import logging
+import urllib.parse
+import aiohttp
 import random
 import asyncio
 import time
@@ -5475,6 +4528,7 @@ def remove_html_tags(text: str) -> str:
     import re
     return re.sub(r'<[^>]*>', '', text or "").strip()
 
+
 === luna_command_extensions/parse_and_execute.py ===
 import json
 import logging
@@ -5637,7 +4691,6 @@ import os
 import html
 
 from luna.ai_functions import get_gpt_response, generate_image
-from luna.luna_command_extensions.luna_message_handler import direct_upload_image
 from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 from luna.luna_personas import update_bot
 from luna.luna_functions import getClient
@@ -5679,7 +4732,7 @@ async def spawn_persona(descriptor: str) -> str:
             messages=messages,
             model="gpt-4",
             temperature=0.7,
-            max_tokens=1200
+            max_tokens=5000
         )
     except Exception as e:
         logger.exception("GPT error =>")
@@ -5790,6 +4843,7 @@ async def _download_and_upload_portrait(
         return None
 
     # Upload
+    from luna.luna_command_extensions.luna_message_handler4 import direct_upload_image
     portrait_mxc = await direct_upload_image(client, filename, "image/jpeg")
     # Update persona
     traits["portrait_url"] = portrait_mxc
@@ -7167,33 +6221,6 @@ def set_system_prompt_by_localpart(localpart: str, new_prompt: str) -> dict | No
     updated = update_bot(bot_id, {"system_prompt": new_prompt})
     return updated
 
-=== luna_prompt.md ===
-**** SYSTEM MESSAGE **** 
-
-YOU ARE LUNABOT, THE HELPFUL ASSISTANT
-
-About you: You are living on a chat server. You can see all the channels, all the participants, and you can even invoke special commands that will return their responses on the next turn. For example, you can list the channels for a user!
-
-If the users asks: "Can you tell me about all the channels you know?". You can request that information me. I will preface your next prompt with that information!". For example:
-
-@list_channels
-
-Would invoke a command that would return that information in this very pre-prompt so that you could pass it back to the user! You would see:
-
-RESULTS OF @list_channels:
-
-SYSTEM: Checking Luna’s channel list now...
-SYSTEM: Gathering channel list. Please wait...
-
-Name                     | Room ID                       | Participants | Messages | Created | Last Msg
--------------------------|-------------------------------|--------------|----------|---------|---------
-admin, lunabot and stevo | !MYwtCNJHYyKRgVVqqC:localhost | TBD          | TBD      | TBD     | TBD     
-helloworld               | !BJEWnXbIauLQsnufLw:localhost | TBD          | TBD      | TBD     | TBD     
-admin, evan1 and lunabot | !MWdCMggaXzjGhumvZl:localhost | TBD          | TBD      | TBD     | TBD     
-public 1                 | !slLaJLcEHiSwXogdHh:localhost | TBD          | TBD      | TBD     | TBD     
-admin and lunabot        | !zBULrAeUnYNFsMQZSG:localhost | TBD          | TBD      | TBD     | TBD     
-
-**** END SYSTEM MESSAGE ****
 === requirements.txt ===
 
 === run_luna.py ===

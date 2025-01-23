@@ -82,21 +82,6 @@ async def get_gpt_response(
                      elapsed, len(text))
 
         return text
-
-    except openai.error.APIConnectionError as e:
-        logger.exception("[get_gpt_response] Network problem connecting to OpenAI => %s", e)
-        return (
-            "I'm sorry, but I'm having network troubles at the moment. "
-            "Could you check your internet connection and try again soon?"
-        )
-
-    except openai.error.RateLimitError as e:
-        logger.exception("[get_gpt_response] OpenAI rate limit error => %s", e)
-        return (
-            "I'm sorry, I'm a bit overwhelmed right now and have hit my usage limits. "
-            "Please try again in a little while!"
-        )
-
     except Exception as e:
         # This catches any other error type
         logger.exception("[get_gpt_response] Unhandled exception calling GPT => %s", e)
@@ -107,7 +92,7 @@ async def get_gpt_response(
     
 logger = logging.getLogger(__name__)
 
-def generate_image(prompt: str, size: str = "1024x1024") -> str:
+async def generate_image(prompt: str, size: str = "1024x1024") -> str:
     """
     Generates an image using OpenAI's API and returns the URL of the generated image.
     """

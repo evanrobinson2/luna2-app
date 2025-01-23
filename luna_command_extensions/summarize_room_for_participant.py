@@ -4,6 +4,16 @@ from luna.luna_command_extensions.chunk_and_summarize import chunk_and_summarize
 
 logger = logging.getLogger(__name__)
 
+
+async def summarize_room_for_participant(
+    room_name: str,
+    participant_perspective: str,
+    abstraction_level: int = 1,
+    chunk_size: int = 2000
+) -> str:
+    print("Deprecated. This has been replaced by an in-chat in-room command cmd_summarize")
+    logger.info("Deprecated. This has been replaced by an in-chat in-room command cmd_summarize")
+
 async def summarize_room_for_participant(
     room_name: str,
     participant_perspective: str,

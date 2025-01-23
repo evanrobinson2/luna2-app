@@ -17,6 +17,10 @@ from luna.luna_command_extensions.summarize_room_for_participant import summariz
 logger = logging.getLogger(__name__)
 
 def cmd_summarize_room(args, loop):
+    logger.info("Retired, use cmd_summarize instead.")
+    print("Retired, use cmd_summarize instead.")
+
+def cmd_summarize_room_dep(args, loop):
     """
     Usage: summarize_room <room_name> <participant_name> [--level N] [--chunk M]
 
