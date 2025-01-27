@@ -298,40 +298,6 @@ async def list_rooms() -> list[dict]:
 
     return all_rooms_info
 
-
-async def list_rooms_dep() -> list[dict]:
-    """
-    Returns a list of rooms that DIRECTOR_CLIENT knows about, 
-    including participant names.
-
-    Each dict in the returned list includes:
-       {
-         "room_id": "<string>",
-         "name": "<string>",
-         "joined_members_count": <int>,
-         "participants": [<list of user IDs or display names>]
-       }
-    """
-    if not DIRECTOR_CLIENT:
-        logger.warning("list_rooms called, but DIRECTOR_CLIENT is None.")
-        return []
-
-    logger.info("[luna_functions] [list_rooms] Entering List Rooms.")
-    rooms_info = []
-    for room_id, room_obj in DIRECTOR_CLIENT.rooms.items():
-        room_name = room_obj.display_name or "(unnamed)"
-        participant_list = [user_id for user_id in room_obj.users.keys()]
-
-        rooms_info.append({
-            "room_id": room_id,
-            "name": room_name,
-            "joined_members_count": len(participant_list),
-            "participants": participant_list
-        })
-
-    return rooms_info
-
-
 # ──────────────────────────────────────────────────────────
 # ADMIN API FOR CREATING USERS
 # ──────────────────────────────────────────────────────────

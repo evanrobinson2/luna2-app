@@ -22,6 +22,10 @@ import os
 from luna.luna_command_extensions.cmd_summarize import cmd_summarize
 from luna.luna_command_extensions.image_helpers import direct_upload_image
 from luna.luna_command_extensions.spawn_persona import cmd_spawn
+from luna.luna_command_extensions.create_room2 import create_room2_command
+from luna.luna_command_extensions.spawn_ensemble import spawn_ensemble_command
+from luna.luna_command_extensions.assemble_command import assemble_command
+from luna.luna_command_extensions.command_helpers import _set_power_level
 from luna.luna_personas import read_bot, update_bot
 
 CONFIG_PATH = "data/config/config.yaml"
@@ -83,24 +87,6 @@ async def create_room(
     except Exception as e:
         logger.exception("[create_room] Error =>")
         return f"Error creating room => {e}"
-
-
-async def _set_power_level(bot_client: AsyncClient, room_id: str, user_id: str, power: int):
-    """Helper to set a user's power level in a given room."""
-    state_resp = await bot_client.room_get_state_event(room_id, "m.room.power_levels", "")
-    current_content = state_resp.event.source.get("content", {})
-
-    users_dict = current_content.get("users", {})
-    users_dict[user_id] = power
-    current_content["users"] = users_dict
-
-    await bot_client.room_send_state(
-        room_id=room_id,
-        event_type="m.room.power_levels",
-        state_key="",
-        content=current_content,
-    )
-
 
 async def invite_user(bot_client: AsyncClient, user_id: str, room_localpart: str) -> str:
     """
@@ -495,6 +481,56 @@ async def handle_console_command(bot_client: AsyncClient, room_id: str, message_
 
         return await command_func(bot_client, sender, localpart, topic, is_public)
 
+    elif command_name == "create_room2":
+        # We want (bot_client, invoking_room_id, event.event_id, raw_args, sender)
+        if not args:
+            return (
+                "Usage:\n"
+                "!create_room2 --name=<localpart> [--invite=@user1:localhost,@user2:localhost] "
+                "[--set_avatar=true] [--additional_flag='<json>'] \"<prompt>\"\n\n"
+                "Examples:\n"
+                "!create_room2 --name=bridgedeck \"A futuristic starship bridge\"\n"
+                "!create_room2 --name=researchlab --invite=@dr_koratel:localhost --set_avatar=true "
+                "\"A cutting-edge science facility on the frontier\"\n\n"
+                "Details:\n"
+                "  --name=<localpart>     Localpart for the new room alias, e.g. 'bridge' => #bridge:localhost.\n"
+                "  --invite=<list>        Comma-separated user IDs to invite, e.g. @ensignlira:localhost.\n"
+                "  --set_avatar=true      If set to 'true', generate & set a room avatar from the prompt.\n"
+                "  --additional_flag='<json>'  JSON object with extra style or metadata, e.g. {\"genre\":\"starfleet\"}.\n"
+                "  \"<prompt>\"           The final positional argument describing the room’s theme/context.\n"
+            )
+        raw_args_str = " ".join(args)
+        await command_func(bot_client, room_id, event.event_id, raw_args_str, sender)
+        return None
+    
+    elif command_name == "spawn_ensemble":
+        # This command wants (bot_client, room_id, event_id, raw_args, sender).
+        # If user didn't provide any leftover tokens, show usage:
+        if not args:
+            return (
+                "Usage: !spawn_ensemble \"<high-level group instructions>\"\n\n"
+                "Example:\n"
+                "!spawn_ensemble \"We need 3 cunning Orion Syndicate spies, each with a unique codename.\""
+            )
+        # Rejoin leftover tokens into one string. 
+        raw_args_str = " ".join(args)
+        # Call the ensemble function. It returns None (all output is in-thread).
+        await command_func(bot_client, room_id, event.event_id, raw_args_str, sender)
+        return None
+
+    elif command_name == "assemble":
+        # If user typed just "!assemble" with no leftover tokens, show usage.
+        if not args:
+            return (
+                "Usage: !assemble \"<description>\"\n\n"
+                "Example:\n"
+                "!assemble \"A crack squad of assassins, bring them to my headquarters\"\n"
+                "GPT will generate: roomLocalpart, roomPrompt, 1-3 persona descriptors.\n"
+            )
+        raw_args_str = " ".join(args)
+        await command_func(bot_client, room_id, event.event_id, raw_args_str, sender)
+        return None
+
     elif command_name == "set_avatar":
         # We expect exactly two arguments: <localpart> and <mxc_uri_or_mediaID>
         if len(args) < 2:
@@ -692,6 +728,7 @@ async def cmd_set_avatar(args: str) -> str:
 # -------------------------------------------------------------
 COMMAND_ROUTER = {
     "create_room": create_room,    # async
+    "create_room2": create_room2_command,
     "invite_user": invite_user,    # async
     "list_rooms":  list_rooms,     # async
     "help":        help_command,   # async
@@ -701,6 +738,8 @@ COMMAND_ROUTER = {
     "draw":        draw_command,   # now posts the actual image
     "luna":        luna_gpt,
     "spawn":       cmd_spawn,
+    "spawn_ensemble": spawn_ensemble_command,
     "set_avatar":  cmd_set_avatar,
+    "assemble":     assemble_command,
     "summarize":   cmd_summarize
 }

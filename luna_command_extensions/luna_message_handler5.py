@@ -1,10 +1,12 @@
 """
-luna_message_handler4.py
+luna_message_handler5.py
 
 Admin-only behavior, but now GPT fallback is interpreted as Markdown and sent
 via 'org.matrix.custom.html', so it can render bold/italics/etc. in the client.
-We assume there's no color code being injected – any mention highlighting is
-still a client-side theme/notifications setting.
+
+We have updated this version so that role-play channel responses are posted
+in a thread (using "m.relates_to": { "rel_type": "m.thread", ... }). DM behavior
+remains unchanged, posting in the main timeline.
 """
 
 import time
@@ -30,16 +32,16 @@ from luna import bot_messages_store
 logger = logging.getLogger(__name__)
 BOT_START_TIME = time.time() * 1000
 
-async def handle_luna_message4(bot_client: AsyncClient, bot_localpart: str, room, event: RoomMessageText):
+async def handle_luna_message5(bot_client: AsyncClient, bot_localpart: str, room, event: RoomMessageText):
     """
     1) Ignores old/self messages
     2) Must be text
     3) Saves inbound
     4) If DM (2 participants) => handle commands or GPT
-       Else => role-play channel => commands => respond by DM
+       Else => role-play channel => commands => respond in-thread
     """
     message_body = event.body or ""
-    logger.info("handle_luna_message4: room=%s from=%s => %r",
+    logger.info("handle_luna_message5: room=%s from=%s => %r",
                 room.room_id, event.sender, message_body)
 
     # 3) store inbound
@@ -74,11 +76,13 @@ async def handle_luna_message4(bot_client: AsyncClient, bot_localpart: str, room
     else:
         await _handle_roleplay_channel(bot_client, bot_localpart, room, event, message_body)
 
+
 async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_body):
     """
     2-participant DM:
-      - If command => handle, respond in same room
+      - If command => handle, respond in same room (main timeline)
       - Else => GPT fallback => interpret as Markdown
+      - No thread usage here, unchanged from previous logic.
     """
     await _start_typing(bot_client, room.room_id)
 
@@ -86,7 +90,7 @@ async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_bod
         # commands
         reply_text = await handle_console_command(bot_client, room.room_id, message_body, event.sender, event)
 
-        if "<table" in reply_text:
+        if "<table" in (reply_text or ""):
             # Possibly HTML from e.g. !help
             await send_formatted_text(bot_client, room.room_id, reply_text)
         else:
@@ -107,11 +111,12 @@ async def _handle_dm_channel(bot_client, bot_localpart, room, event, message_bod
     
     await _stop_typing(bot_client, room.room_id)
 
+
 async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, message_body):
     """
     If 3+ participants => role-play context:
-      - Only respond to commands => respond right in the same room thread
-      - Tag each response with "context_cue": "SYSTEM RESPONSE"
+      - Only respond to commands => respond in a thread referencing the user’s event
+      - Tag each response with context_cue="SYSTEM RESPONSE"
     """
     # 1) If the message does NOT start with '!', ignore
     if not message_body.startswith("!"):
@@ -131,19 +136,21 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
             event
         )
 
-        if not command_reply == None:
-            # 4) If the command output includes tables (<table>), we send HTML
+        if command_reply is not None:
+            # 4) If the command output includes tables (<table>), we send HTML - in thread
             if "<table" in command_reply:
-                await send_formatted_text(
+                await send_formatted_text_in_thread(
                     bot_client, 
                     room.room_id, 
+                    event.event_id,           # parent's event_id
                     command_reply,
                     context_cue="SYSTEM RESPONSE"
                 )
             else:
-                await send_text(
+                await send_text_in_thread(
                     bot_client, 
                     room.room_id, 
+                    event.event_id,
                     command_reply,
                     context_cue="SYSTEM RESPONSE"
                 )
@@ -152,6 +159,7 @@ async def _handle_roleplay_channel(bot_client, bot_localpart, room, event, messa
         # 5) Stop typing no matter what
         await bot_client.sync(timeout=500) 
         await _stop_typing(bot_client, room.room_id)
+
 
 async def _start_typing(bot_client: AsyncClient, room_id: str):
     try:
@@ -166,6 +174,7 @@ async def _stop_typing(bot_client: AsyncClient, room_id: str):
         logger.debug("Typing stop => %s", room_id)
     except Exception as e:
         logger.warning("Could not send typing stop => %s", e)
+
 
 async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
     context_config = {"max_history": 10}
@@ -182,12 +191,15 @@ async def _call_gpt(bot_localpart: str, room_id: str, user_message: str) -> str:
     return reply
 
 # ---------------------------------------------------------------------
-# Senders
+# Senders for main timeline
 # ---------------------------------------------------------------------
 async def send_text(bot_client: AsyncClient, room_id: str, text: str, context_cue: str = None):
     """
-    Sends plain text. If `context_cue` is provided, we add it to the message content.
+    Sends plain text to the main timeline. If `context_cue` is provided, we add it to the message content.
     """
+    if text is None:
+        return
+
     content = {
         "msgtype": "m.text",
         "body": text
@@ -201,11 +213,15 @@ async def send_text(bot_client: AsyncClient, room_id: str, text: str, context_cu
     else:
         logger.warning("Failed to send text => %s", resp)
 
+
 async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_content: str, context_cue: str = None):
     """
     Sends HTML in 'formatted_body', with a stripped fallback in 'body'.
     This can handle any markdown->html or other markup.
     """
+    if html_content is None:
+        return
+
     fallback_text = remove_html_tags(html_content)
     content = {
         "msgtype": "m.text",
@@ -223,7 +239,74 @@ async def send_formatted_text(bot_client: AsyncClient, room_id: str, html_conten
     else:
         logger.warning("Failed to send formatted text => %s", resp)
 
+# ---------------------------------------------------------------------
+# Senders for thread
+# ---------------------------------------------------------------------
+async def send_text_in_thread(bot_client: AsyncClient, room_id: str, parent_event_id: str, text: str, context_cue: str = None):
+    """
+    Sends plain text as a threaded reply to parent_event_id.
+    """
+    if text is None:
+        return
+
+    content = {
+        "msgtype": "m.text",
+        "body": text,
+        "m.relates_to": {
+            "rel_type": "m.thread",
+            "event_id": parent_event_id
+        }
+    }
+
+    if context_cue:
+        content["context_cue"] = context_cue  # custom field
+
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content
+    )
+    if isinstance(resp, RoomSendResponse):
+        logger.info("Sent text in thread => event_id=%s in %s (parent=%s)",
+                    resp.event_id, room_id, parent_event_id)
+    else:
+        logger.warning("Failed to send text in thread => %s", resp)
+
+
+async def send_formatted_text_in_thread(bot_client: AsyncClient, room_id: str, parent_event_id: str, html_content: str, context_cue: str = None):
+    """
+    Sends HTML as a threaded reply to parent_event_id, with a stripped fallback in 'body'.
+    """
+    if html_content is None:
+        return
+
+    fallback_text = remove_html_tags(html_content)
+    content = {
+        "msgtype": "m.text",
+        "body": fallback_text,
+        "format": "org.matrix.custom.html",
+        "formatted_body": html_content,
+        "m.relates_to": {
+            "rel_type": "m.thread",
+            "event_id": parent_event_id
+        }
+    }
+
+    if context_cue:
+        content["context_cue"] = context_cue  # custom field
+
+    resp = await bot_client.room_send(
+        room_id=room_id,
+        message_type="m.room.message",
+        content=content
+    )
+    if isinstance(resp, RoomSendResponse):
+        logger.info("Sent formatted text in thread => event_id=%s in %s (parent=%s)",
+                    resp.event_id, room_id, parent_event_id)
+    else:
+        logger.warning("Failed to send formatted text in thread => %s", resp)
+
+
 def remove_html_tags(text: str) -> str:
     import re
     return re.sub(r'<[^>]*>', '', text or "").strip()
-

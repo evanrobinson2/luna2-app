@@ -73,16 +73,27 @@ async def spawn_persona(descriptor: str) -> str:
     backstory     = persona_data.get("backstory", "")
 
     # 3) Register & login the persona
-    spawn_msg, ephemeral_bot_client = await create_and_login_bot(
+    bot_result = await create_and_login_bot(
         bot_id=f"@{localpart}:localhost",
         password=password,
         displayname=displayname,
         system_prompt=system_prompt,
         traits=traits
     )
-    if not spawn_msg.startswith("Successfully created & logged in"):
-        return f"SYSTEM: Bot creation failed => {spawn_msg}"
+    bot_id = bot_result["bot_id"]
+    spawn_msg = bot_result["html"]                       # e.g. success/error message in HTML
+    ephemeral_bot_client = bot_result["client"]          # the AsyncClient instance
 
+    if not bot_result["ok"]:
+        # Something went wrong. You could return or raise an error, for example:
+        error_details = bot_result.get("error", "Unknown error")
+        raise RuntimeError(f"Persona creation failed: {error_details}")
+   
+    if bot_id.startswith('@'):
+        bot_id = bot_id[1:]  # Remove the first '@'
+    if bot_id.endswith(':localhost'):
+        bot_id = bot_id[:-10]  # Remove the last ':localhost'
+    
     # 4) Attempt to generate & upload a portrait
     #    We'll store the EXACT DALL·E prompt in 'final_prompt'
     final_prompt = descriptor.strip()  
@@ -90,7 +101,7 @@ async def spawn_persona(descriptor: str) -> str:
     try:
         portrait_url = await generate_image(final_prompt, size="1024x1024")
         if portrait_url:
-            portrait_mxc = await _download_and_upload_portrait(portrait_url, localpart, password, system_prompt, traits, ephemeral_bot_client)
+            portrait_mxc = await _download_and_upload_portrait(portrait_url, bot_id, password, system_prompt, traits, ephemeral_bot_client)
     except Exception as e:
         logger.warning("Portrait error => %s", e)
 
@@ -111,8 +122,12 @@ async def spawn_persona(descriptor: str) -> str:
         portrait_mxc=portrait_mxc,
         global_draw_appendix = global_draw_appendix 
     )
-    return card_html
 
+    logger.info(f"[spawn_persona] Spawning {localpart}")
+    return {
+        "html": card_html,
+        "bot_id": bot_id
+    }
 
 async def cmd_spawn(bot_client, descriptor):
     """
@@ -121,11 +136,13 @@ async def cmd_spawn(bot_client, descriptor):
     (table + optional <img>).
     """
     try:
-        card_html = await spawn_persona(descriptor)
+        result = await spawn_persona(descriptor)  # now returns a dict {"html": ..., "bot_id": ...}
+        card_html = result["html"]               # extract the HTML portion
         return card_html
     except Exception as e:
         logger.exception("cmd_spawn => error in spawn_persona")
         return f"SYSTEM: Error spawning persona => {e}"
+
 
 
 # ----------------------------------------------------------------------

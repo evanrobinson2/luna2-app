@@ -332,10 +332,9 @@ def cmd_create_user(args, loop):
       create_user alice supersecret
       create_user bob mypass --admin
 
-    Parses console arguments, then calls create_and_login_bot(...).
-    This ensures the new user is created on Synapse and ephemeral-logged into BOTS.
+    This function parses console arguments, then calls create_and_login_bot(...).
+    It ensures the new user is created on Synapse and ephemeral-logged into BOTS.
     """
-    import logging
     from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
 
     logger = logging.getLogger(__name__)
@@ -345,29 +344,53 @@ def cmd_create_user(args, loop):
         print("Usage: create_user <username> <password> [--admin]")
         return
 
-    username, password = parts[:2]
+    username, password = parts[0], parts[1]
     is_admin = False
     if len(parts) > 2 and parts[2].lower() == "--admin":
         is_admin = True
 
-    # Wrap in an async function so we can run it on the event loop:
+    # Construct a full Matrix ID (since create_and_login_bot expects '@...:localhost')
+    # You can modify how you build the bot_id if your naming differs
+    bot_id = f"@{username}:localhost"
+
+    # Simple defaults for these required parameters
+    displayname = username
+    system_prompt = "Default system prompt."
+    traits = {}
+
     async def create_and_login():
-        return await create_and_login_bot(username, password, is_admin)
+        # Call the new signature, returning a dict
+        return await create_and_login_bot(
+            bot_id=bot_id,
+            password=password,
+            displayname=displayname,
+            system_prompt=system_prompt,
+            traits=traits,
+            creator_user_id="@lunabot:localhost",
+            is_admin=is_admin
+        )
 
     future = asyncio.run_coroutine_threadsafe(create_and_login(), loop)
 
     def on_done(fut):
         try:
-            result = fut.result()
-            # For example: "Successfully created & logged in bot => @alice:localhost"
-            print(f"SYSTEM: {result}")
+            result = fut.result()  # This is the dict returned by create_and_login_bot
+
+            # result["ok"] is True on success, False on error
+            if result["ok"]:
+                # For success, we can print the HTML or a text summary
+                print(f"SYSTEM: {result['html']}")
+            else:
+                # On failure, also show the error text
+                print(f"SYSTEM: {result['html']}")
+                if result["error"]:
+                    print(f"SYSTEM: Error details => {result['error']}")
         except Exception as e:
             print(f"Error while creating user '{username}': {e}")
             logger.exception("Exception in cmd_create_user callback.")
 
     future.add_done_callback(on_done)
     print(f"SYSTEM: Creating & logging in user '{username}' (admin={is_admin})...")
-
 
 def cmd_show_shutdown(args, loop):
     """
@@ -755,107 +778,6 @@ def cmd_who_is(args, loop):
 
     print()
 
-def cmd_summon_long_prompt(args, loop):
-    """
-    Usage: summon_long_prompt "<giant blueprint text>"
-
-    We'll feed that blueprint to GPT with a small system instruction telling
-    it to create a well-formed persona definition, which we then parse + spawn.
-    """
-
-    import shlex
-    tokens = shlex.split(args, posix=True)
-    if not tokens:
-        print("Usage: summon_long_prompt \"<blueprint text>\"")
-        return
-
-    blueprint_text = tokens[0]  # Or re-join tokens if you allow multiple quoted sections
-
-    async def do_summon():
-        from luna.ai_functions import get_gpt_response  # or your new GPT call
-        # 1) Build the short instruction
-        system_inst = (
-            "You will receive a 'blueprint' text that describes how a new persona should behave.\n"
-            "You must return a JSON object with the following keys:\n"
-            "  localpart (string), displayname (string), system_prompt (string), traits (object)\n"
-            "No extra keys, no markdown.\n"
-            "If user does not specify a localpart, create one from the blueprint.\n"
-            "If user does not specify a displayname, guess it or do something generic.\n"
-            "Be as versose and dirctive as possible in your creation of the system prompt.\n"
-            "Instruct the bot to be absolutely willing to talk about prior messages and conversation history.\n"
-        )
-
-        # 2) GPT conversation array
-        conversation = [
-            {"role": "system", "content": system_inst},
-            {
-                "role": "user",
-                "content": (
-                    f"Below is the blueprint. Please parse it and produce your JSON:\n\n"
-                    f"{blueprint_text}"
-                ),
-            },
-        ]
-
-        # 3) Make GPT call
-        gpt_reply = await get_gpt_response(
-            messages=conversation,
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=500
-        )
-
-        # 4) Parse JSON, handle errors
-        import json
-        try:
-            persona_data = json.loads(gpt_reply)
-        except json.JSONDecodeError as e:
-            return f"GPT returned invalid JSON => {e}\n\n{gpt_reply}"
-
-        # 5) Validate required keys
-        for needed in ["localpart", "displayname", "system_prompt", "traits"]:
-            if needed not in persona_data:
-                return f"Missing required field '{needed}' in GPT output => {persona_data}"
-
-        # 6) Summon the bot
-        from luna.luna_command_extensions.create_and_login_bot import create_and_login_bot
-        new_bot_id = f"@{persona_data['localpart']}:localhost"
-        password = "somePassword123"  # or randomly generate
-
-        result_msg = await create_and_login_bot(
-            bot_id=new_bot_id,
-            password=password,
-            displayname=persona_data["displayname"],
-            system_prompt=persona_data["system_prompt"],
-            traits=persona_data["traits"]
-        )
-        return result_msg
-
-    future = asyncio.run_coroutine_threadsafe(do_summon(), loop)
-
-    def on_done(fut):
-        try:
-            outcome = fut.result()
-            print(f"SYSTEM: {outcome}")
-        except Exception as e:
-            print(f"SYSTEM: Summon error => {e}")
-
-    future.add_done_callback(on_done)
-    print("SYSTEM: Summoning a bot from your blueprint... please wait.")
-
-def cmd_spawn_squad(args, loop):
-    """
-    Usage: spawn <numBots> "<theme or style>"
-
-    Example:
-      spawn_squad 3 "A jazzy trio of improvisational bots"
-    """
-    # Import inside the function to avoid circular imports or to keep it minimal:
-    from luna.luna_command_extensions.spawner import cmd_spawn_squad as spawner_impl
-
-    # Just delegate all logic:
-    spawner_impl(args, loop)
-
 def cmd_run_json_script(args, loop):
     """
     Usage: run_script <script_file>
@@ -950,7 +872,6 @@ COMMAND_ROUTER = {
     "set_system_prompt_for": cmd_set_bot_system_prompt,
 
     "invite": cmd_invite_user,
-    "spawn": cmd_spawn_squad,
     "run_script": cmd_run_json_script,
     "generate_image" : cmd_generate_image
 }

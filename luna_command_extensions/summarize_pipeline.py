@@ -11,6 +11,7 @@ from nio import AsyncClient, RoomSendResponse
 from luna.bot_messages_store import BOT_MESSAGES_DB
 from luna.ai_functions import get_gpt_response
 from luna.luna_command_extensions.command_router import GLOBAL_PARAMS, load_config
+from luna.luna_command_extensions.command_helpers import _keep_typing, _post_in_thread, _strip_html_tags
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ async def run_summarize_pipeline(
     # 1) GPT #1 => Query
     qb_output = await _gpt_query_builder(user_prompt_str, room_id)
 
-    desc_sentence = ""
+    desc_sentence = "[run_summarize_pipeline] Unset Variable"
     # 3) Check if qb_output is valid JSON with "query", "confidence_level", "comments".
     if not qb_output or not qb_output.strip():
         # Fallback to a known safe query => last 50 messages
@@ -194,7 +195,6 @@ async def _gpt_query_builder(user_prompt: str, room_id) -> str:
     except Exception as e:
         logger.exception("[SummarizePipeline] GPT QueryBuilder error =>")
         return ""
-
 
 # ----------------------------------------------------------------
 # Execute the SQL query
@@ -355,89 +355,3 @@ async def _summarize_chunk(rows_chunk: list, user_prompt: str, sum_instructions:
     except Exception as e:
         logger.exception("[_summarize_chunk] GPT Summarizer error =>")
         return f"SYSTEM: Summarization failed for chunk #{chunk_index}."
-
-# ----------------------------------------------------------------
-# Post to the same thread
-# ----------------------------------------------------------------
-async def _post_in_thread(
-    bot_client: AsyncClient,
-    room_id: str,
-    parent_event_id: str,
-    message_text: str,
-    is_html: bool = False
-) -> None:
-    """
-    Helper to post partial or final messages in the same “thread” 
-    referencing the user’s original event. Using the 'm.in_reply_to' 
-    or 'rel_type=m.thread' approach depending on your Element client version.
-
-    For a modern approach: 
-      "m.relates_to": {
-        "rel_type": "m.thread",
-        "event_id": parent_event_id
-      }
-    """
-    # 1) Build content
-    content = {}
-    if not is_html:
-        # Plain text
-        content["msgtype"] = "m.text"
-        content["body"] = message_text
-    else:
-        # HTML
-        content["msgtype"] = "m.text"
-        content["body"] = _strip_html_tags(message_text)
-        content["format"] = "org.matrix.custom.html"
-        content["formatted_body"] = message_text
-
-    # 2) Add thread relation
-    #    If your server + client supports the stable “m.thread”, do:
-    content["m.relates_to"] = {
-        "rel_type": "m.thread",
-        "event_id": parent_event_id
-    }
-
-    # 3) Send
-    try:
-        resp = await bot_client.room_send(
-            room_id=room_id,
-            message_type="m.room.message",
-            content=content
-        )
-        if isinstance(resp, RoomSendResponse):
-            logger.info(f"Posted a summarizer message in-thread => event_id={resp.event_id}")
-        else:
-            logger.warning(f"Could not post summarizer message => {resp}")
-    except Exception as e:
-        logger.exception(f"[SummarizePipeline] Error posting in-thread => {e}")
-
-
-def _strip_html_tags(text: str) -> str:
-    import re
-    return re.sub(r"<[^>]*>", "", text or "").strip()
-
-async def _keep_typing(bot_client: AsyncClient, room_id: str, refresh_interval=3):
-    """
-    Periodically refresh the typing indicator in 'room_id' every 'refresh_interval' seconds.
-    Cancel this task to stop the typing indicator when done.
-    """
-    try:
-        while True:
-            # Send "typing=True" with a 30s timeout
-            await bot_client.room_typing(
-                room_id=room_id,
-                typing=True,
-                timeout=30000
-            )
-            await asyncio.sleep(refresh_interval)
-    except asyncio.CancelledError:
-        # Optionally send a final "typing=False" to clear the indicator
-        # before exiting, if desired:
-        try:
-            await bot_client.room_typing(
-                room_id=room_id,
-                typing=False,
-                timeout=0
-            )
-        except:
-            pass

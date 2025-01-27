@@ -28,6 +28,7 @@ from luna.luna_command_extensions.bot_invite_handler import handle_bot_invite
 from luna.luna_command_extensions.bot_member_event_handler import handle_bot_member_event
 
 from luna.luna_command_extensions.luna_message_handler4 import handle_luna_message4
+from luna.luna_command_extensions.luna_message_handler5 import handle_luna_message5
 
 from luna.bot_messages_store import load_messages
 
@@ -50,6 +51,7 @@ from luna.luna_command_extensions.command_router import load_config
 
 logger = logging.getLogger(__name__)
 
+# ported over to new luna
 def init_globals():
     """
     Loads the config.yaml file at startup and populates GLOBAL_PARAMS
@@ -64,7 +66,7 @@ def init_globals():
         logger.debug("Loaded global param %r => %r", key, value)
     logger.info("Global parameters initialized: %d params loaded.", len(globals_section))
 
-
+# ported over to new luna
 def configure_logging():
     """
     Configure Python logging to show debug in console
@@ -93,6 +95,7 @@ def configure_logging():
     )
     logger.debug("Exiting configure_logging function.")
 
+# not needed for new luna
 def start_console_thread(loop: asyncio.AbstractEventLoop):
     """
     Launch the console input loop in a background thread,
@@ -111,6 +114,7 @@ def start_console_thread(loop: asyncio.AbstractEventLoop):
         logger.exception(f"Failed to start console thread: {e}")
     logger.debug("Exiting start_console_thread function.")
 
+# ported over to new luna
 async def login_bots():
     """
     Reads 'data/luna_personalities.json', ephemeral-logs each bot,
@@ -165,10 +169,6 @@ async def run_bot_sync(bot_client: AsyncClient, localpart: str):
             # If no error, give control to other tasks
             await asyncio.sleep(0)
 
-# ------------------------------------------------------------------
-# HELPER CALLBACK FUNCTIONS
-# ------------------------------------------------------------------
-
 def make_message_callback(bot_client, localpart):
     """
     Returns a function that references exactly these arguments,
@@ -206,6 +206,7 @@ async def main_logic():
     
     init_globals()
     
+    # ported over to new Luna
     # A) Log in Luna (the "director" user)
     luna_client = await load_or_login_client(
         homeserver_url="http://localhost:8008",
@@ -217,8 +218,7 @@ async def main_logic():
     # -- 1) Attach Luna's event callbacks --
     # For messages:
     luna_client.add_event_callback(
-        #lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
-        lambda room, event: handle_luna_message4(luna_client, "lunabot", room, event),
+        lambda room, event: handle_luna_message5(luna_client, "lunabot", room, event),
         RoomMessageText
     )
 

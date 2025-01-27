@@ -47,7 +47,7 @@ def load_messages() -> None:
     into the global _in_memory_list to mimic the old JSON behavior.
     """
     global _in_memory_list
-    logger.info("[load_messages] Setting up the DB & loading messages into memory.")
+    logger.info("Setting up the DB & loading messages into memory.")
 
     # Ensure data folder if needed
     os.makedirs(os.path.dirname(BOT_MESSAGES_DB), exist_ok=True)
@@ -84,9 +84,9 @@ def load_messages() -> None:
             _in_memory_list.append(record)
 
         conn.close()
-        logger.info(f"[load_messages] Loaded {_in_memory_list.__len__()} rows from DB into memory.")
+        logger.info(f"Loaded {_in_memory_list.__len__()} rows from DB into memory.")
     except Exception as e:
-        logger.exception(f"[load_messages] Failed to set up DB or load messages: {e}")
+        logger.exception(f"Failed to set up DB or load messages: {e}")
         _in_memory_list = []
 
 
@@ -96,7 +96,7 @@ def save_messages() -> None:
     In an SQLite approach, appends are typically committed immediately.
     So this is effectively a no-op, or can re-sync memory with the DB if needed.
     """
-    logger.info("[save_messages] No-op in SQLite approach (data is committed on append).")
+    logger.info("No-op in SQLite approach (data is committed on append).")
 
 
 def append_message(
@@ -142,9 +142,9 @@ def append_message(
         }
         _in_memory_list.append(record)
 
-        logger.info(f"[append_message] Inserted event_id={event_id} for bot={bot_localpart} into DB.")
+        logger.info(f"Inserted event_id={event_id} for bot={bot_localpart} into DB.")
     except Exception as e:
-        logger.exception(f"[append_message] Error inserting message => {e}")
+        logger.exception(f"Error inserting message => {e}")
 
 
 def get_messages_for_bot(bot_localpart: str) -> List[Dict]:
@@ -181,10 +181,10 @@ def get_messages_for_bot(bot_localpart: str) -> List[Dict]:
             }
             results.append(record)
 
-        logger.info(f"[get_messages_for_bot] Found {len(results)} messages for '{bot_localpart}'.")
+        logger.info(f"Found {len(results)} messages for '{bot_localpart}'.")
         return results
 
     except Exception as e:
-        logger.exception(f"[get_messages_for_bot] Error selecting messages => {e}")
+        logger.exception(f"Error selecting messages => {e}")
         return []
 

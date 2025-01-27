@@ -90,8 +90,6 @@ async def get_gpt_response(
             "Could you try again later?"
         )
     
-logger = logging.getLogger(__name__)
-
 async def generate_image(prompt: str, size: str = "1024x1024") -> str:
     """
     Generates an image using OpenAI's API and returns the URL of the generated image.
