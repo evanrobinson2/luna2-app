@@ -1,0 +1,189 @@
+# luna_lang.py
+import asyncio
+import logging
+
+import openai
+import luna.GLOBALS as g
+from nio import RoomMessageText, AsyncClient
+from langchain.schema import AIMessage, HumanMessage
+
+from luna.GLOBALS import State
+from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
+from typing import Annotated, Dict
+
+def router_node(state: State) -> Dict[str, list]:
+    """
+    Checks the last user message text. If it's exactly 'help',
+    we route to help_node, else route to chatbot_node.
+    
+    We do that by returning an empty update dict + 
+    the name of the next node as a string in a tuple:
+      (update_dict, "help_node") or (update_dict, "chatbot")
+    
+    But in LangGraph, if we want dynamic branching, we 
+    return => {}, "help_node" or => {}, "chatbot"
+    """
+    # If there's no user message, just default to chatbot
+    if not state["messages"]:
+        return {}, "chatbot"
+
+    # Grab the last message if it’s a HumanMessage
+    last_msg = state["messages"][-1]
+    if isinstance(last_msg, HumanMessage):
+        text = last_msg.content.strip().lower()
+        if text == "help":
+            return {}, "help_node"
+    
+    # Default
+    return {}, "chatbot"
+
+
+def help_node(state: State) -> Dict[str, list]:
+    """
+    Minimal 'Help' node: returns an AIMessage with short instructions.
+    """
+    help_text = (
+        "You can type 'help' to see this message, or type anything else "
+        "to get a GPT-based response. (Later, we can add more tools!)"
+    )
+    return {"messages": [AIMessage(content=help_text)]}
+
+
+def chatbot_node(state: State):
+    """
+    A single node function that uses the global LLM to respond to user messages.
+    state["messages"] is a list of user/assistant messages (HumanMessage / AIMessage).
+    We'll call g.LLM.invoke(...) with that list, then return the new assistant message.
+    """
+
+    g.LOGGER.info("chatbot_node called with %d messages", len(state["messages"]))
+
+    if g.LLM is None:
+        g.LOGGER.error("Global LLM is None! Did _init_globals not run properly?")
+        raise RuntimeError("Global LLM not initialized.")
+
+    # Actually call the LLM
+    response_msg = g.LLM.invoke(state["messages"])
+
+    g.LOGGER.info("LLM returned an AIMessage of type: %s", type(response_msg).__name__)
+    return {"messages": [response_msg]}
+
+def draw_picture_node(state: g.State) -> Dict[str, list]:
+    """
+    A node that reads the last user message from 'state["messages"]' 
+    and uses DALL·E to generate an image. Then returns an AIMessage 
+    containing the image URL or an error message.
+    """
+    # 1) Extract the user prompt from the last message
+    user_prompts = [m for m in state["messages"] if m.type == "human"]
+    if not user_prompts:
+        return {"messages": []}  # No user messages? Return empty.
+
+    last_prompt = user_prompts[-1].content
+    
+    try:
+        urls = generate_dalle_image(last_prompt, num_images=1, size="512x512")
+        if urls:
+            content = f"Here is your image: {urls[0]}"
+        else:
+            content = "I couldn't generate an image for some reason."
+    except Exception as e:
+        content = f"Error calling DALL·E: {e}"
+
+    return {"messages": [AIMessage(content=content)]}
+
+
+async def handle_user_message(client: AsyncClient, localpart: str, room, event):
+    """
+    Called when a RoomMessageText is received in Matrix. 
+    For now, we still do the old direct approach:
+    - build state with the user text
+    - call chatbot_node
+    - reply
+    
+    Later, you could re-wire this to run the entire graph (router->help or chatbot).
+    """
+    # Ignore our own messages to prevent echo loops
+    if event.sender == client.user_id:
+        return
+
+    # Only handle text messages
+    if not isinstance(event, RoomMessageText):
+        return
+
+    bot_full_id = client.user
+    if event.sender == bot_full_id:
+        g.LOGGER.info("Ignoring message from myself: %s", event.sender)
+        return
+
+    # 1) ignore old
+    if event.server_timestamp < g.BOT_START_TIME:
+        g.LOGGER.info("Ignoring old event => %s", event.event_id)
+        return
+    
+    # Extract the user's message text
+    user_text = (event.body or "").strip()
+    if not user_text:
+        return
+
+    g.LOGGER.info(f"[handle_luna_message6] Received message in room {room.display_name or room.room_id} "
+                  f"from {event.sender}: {user_text}")
+
+    # (Currently, we do not use the new router_node in this function. 
+    #  We just do the old single-step GPT logic. 
+    #  If you want to use the new router->help flow in real matrix usage,
+    #  you'd do it similarly to how we show in run_luna_lang's console portion.)
+
+    # Build the “state” for a single GPT step
+    state = {
+        "messages": [HumanMessage(content=user_text)]
+    }
+
+    # Call chatbot_node for a single GPT reply
+    result = chatbot_node(state)
+
+    # Extract the GPT text
+    if "messages" in result and len(result["messages"]) > 0:
+        ai_message = result["messages"][-1]
+        if isinstance(ai_message, AIMessage):
+            response_text = ai_message.content
+        else:
+            response_text = str(ai_message)
+    else:
+        response_text = "No response."
+
+    # Send the reply back
+    try:
+        await client.room_send(
+            room_id=room.room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": response_text},
+        )
+    except Exception as e:
+        g.LOGGER.error(f"Error sending message to room {room.room_id}: {e}")
+
+
+def generate_dalle_image(prompt: str, num_images: int = 1, size: str = "512x512") -> list:
+    """
+    Calls OpenAI's DALL·E API to generate images from a text prompt.
+    
+    :param prompt: The user’s text describing what to draw.
+    :param num_images: How many images to generate (default 1).
+    :param size: "256x256", "512x512", or "1024x1024". 
+    :return: A list of URLs (strings), each pointing to an image.
+    """
+    if not g.OPENAI_API_KEY:
+        raise RuntimeError("No OPENAI_API_KEY found. Please set g.OPENAI_API_KEY first.")
+
+    openai.api_key = g.OPENAI_API_KEY
+
+    response = openai.Image.create(
+        prompt=prompt,
+        n=num_images,
+        size=size,
+        response_format="url"
+    )
+
+    urls = [item["url"] for item in response["data"]]
+    return urls
