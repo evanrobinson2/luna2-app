@@ -3,7 +3,7 @@
 #
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Callable
 import asyncio
 from nio import AsyncClient  # or wherever AsyncClient is actually imported from
 import time
@@ -41,7 +41,9 @@ GLOBAL_PARAMS: Dict[str, str] = {} # A dictionary of global parameters for the b
 LUNA_LOCK_FILE = "/tmp/luna.pid"
 # Store processed event IDs globally (or in a cache with TTL)
 PROCESSED_EVENTS: set = set()
+# Example global registry of atomic node functions
 
+NODE_REGISTRY: Dict[str, Callable] = {} #  Each entry is: "node_name": some_function
 class State(TypedDict):
     # We annotate with add_messages so returning {"messages": [some_new_msg]}
     # appends it instead of overwriting.
