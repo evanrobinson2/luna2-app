@@ -1,5 +1,6 @@
 # create_room2.py
 
+import luna.GLOBALS as g
 import asyncio
 import json
 import logging
@@ -7,7 +8,7 @@ import shlex
 import os
 import time
 import requests
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from nio import AsyncClient, RoomSendResponse
 from nio.api import RoomVisibility
@@ -53,6 +54,8 @@ async def create_room2_command(
     The function uses _keep_typing() to show a typing indicator and cancels it at the end.
     All messages are posted in the same thread as 'parent_event_id'.
     """
+
+    logger.info ("Entered create_room2_command...")
     steps_status = {
         "parse_args": None,
         "room_created": None,
@@ -156,6 +159,7 @@ async def create_room2_command(
         is_html=False
     )
 
+    g.LOGGER.info(f"Creating a public room with alias `#{name_localpart}:localhost`...")
     new_room_id = None
     alias = name_localpart
     try:
@@ -346,7 +350,7 @@ async def create_room2_command(
                 bot_client,
                 invoking_room_id,
                 parent_event_id,
-                f"Invited {len(invite_list)} users. Promoted {sender} to PL100.",
+                f"Invited {len(invite_list)+1} users. Promoted {sender} to PL100.",
                 is_html=False
             )
         except Exception as e:
@@ -418,4 +422,83 @@ async def create_room2_command(
     # 8) Done. Stop typing, return.
     typing_task.cancel()
     logger.info("[create_room2_command] Completed all steps.")
-    return
+    return new_room_id
+
+logger = logging.getLogger(__name__)
+
+async def create_room2_node(state: Dict) -> Dict:
+    """
+    Node that calls create_room2_command, using g.LUNA_CLIENT if no 'bot_client' is provided in state.
+
+    Expects in `state`:
+      - raw_args: str, the CLI-style string of arguments. If not provided and dictionary keys
+                  (e.g. "--name", "prompt") exist, these will be used to build raw_args.
+      - room_id: str, the room ID where the command was invoked (e.g. "!abc123:localhost")
+      - parent_event_id: str, the event ID for threading.
+      - sender: str, the user's Matrix ID (e.g. "@someone:localhost")
+    
+    If any of these are missing, the node will attempt to fallback or skip partial features.
+    """
+    logger.info("Entering create_room2_node...")
+
+    # Retrieve required fields from state
+    room_id = state.get("room_id")
+    sender = state.get("sender")
+    raw_args = state.get("raw_args", "")
+    parent_event_id = state.get("parent_event_id", "")
+
+    # Fallback to dictionary values if raw_args is empty.
+    if not raw_args and "--name" in state:
+        tokens = []
+        for key in ["--name", "--set_avatar", "--additional_flag"]:
+            if key in state:
+                tokens.append(f"{key}={state[key]}")
+        # Append a positional argument for the prompt if available.
+        if "prompt" in state:
+            tokens.append(state["prompt"])
+        raw_args = " ".join(tokens)
+        state["raw_args"] = raw_args  # Optionally update the state with the constructed raw_args.
+        logger.info("Constructed raw_args from state: %r", raw_args)
+
+    g.LOGGER.info(
+        "create_room2_node: room_id=%r, sender=%r, raw_args=%r, parent_event_id=%r",
+        room_id, sender, raw_args, parent_event_id
+    )
+
+    # Fallback to the global LUNA_CLIENT if no bot_client is provided.
+    bot_client = state.get("bot_client") or g.LUNA_CLIENT
+    if not bot_client:
+        err = "No 'bot_client' in state and g.LUNA_CLIENT is None. Can't proceed."
+        logger.error(err)
+        return {
+            "error": err,
+            "__next_node__": "chatbot_node"
+        }
+
+    logger.debug("Using bot_client: %s", bot_client)
+    logger.debug("raw_args: %r", raw_args)
+
+    # Warn if essential fields are missing.
+    if not sender:
+        logger.warning("Missing 'sender' in state; invites will be skipped.")
+    if not room_id:
+        logger.warning("Missing 'room_id' in state; in-thread updates will be skipped.")
+
+    # Call the underlying create_room2_command function.
+    try:
+        await create_room2_command(
+            bot_client=bot_client,
+            invoking_room_id=room_id,
+            parent_event_id=parent_event_id,
+            raw_args=raw_args,
+            sender=sender
+        )
+    except Exception as e:
+        logger.exception("Exception in create_room2_node: %s", e)
+        return {
+            "error": str(e),
+            "__next_node__": "chatbot_node"
+        }
+
+    logger.info("Completed create_room2_node.")
+    return {"__next_node__": "chatbot_node"}

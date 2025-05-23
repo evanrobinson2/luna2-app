@@ -28,6 +28,7 @@ DATABASE_PATH: str  = "data/bot_messages.db" # The path to the bot messages data
 HOMESERVER_URL="http://localhost:8008"
 LUNA_USERNAME="lunabot"
 LUNA_PASSWORD="12345"
+LUNA_CLIENT:AsyncClient = None
 PERSONALITIES_FILE="data/luna_personalities.json"
 BOT_START_TIME = time.time() * 1000
 OPENAI_API_KEY: str = ""
@@ -44,7 +45,9 @@ PROCESSED_EVENTS: set = set()
 # Example global registry of atomic node functions
 
 NODE_REGISTRY: Dict[str, Callable] = {} #  Each entry is: "node_name": some_function
-class State(TypedDict):
-    # We annotate with add_messages so returning {"messages": [some_new_msg]}
-    # appends it instead of overwriting.
-    messages: Annotated[list, add_messages]
+
+# class State(TypedDict):
+#     # We annotate with add_messages so returning {"messages": [some_new_msg]}
+#     # appends it instead of overwriting.
+#     messages: Annotated[list, add_messages]
+

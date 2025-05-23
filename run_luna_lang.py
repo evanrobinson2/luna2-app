@@ -225,16 +225,16 @@ async def _run_bot_sync(bot_client: AsyncClient, localpart: str):
         else:
             await asyncio.sleep(0)
 
-async def _matrix_sync_loop(luna_client: AsyncClient):
+async def _matrix_sync_loop(client: AsyncClient):
     try:
         g.LOGGER.info("Starting matrix sync loop...")
-        await luna_client.sync_forever(timeout=30000, full_state=True)
+        await client.sync_forever(timeout=30000, full_state=True)
     except Exception as e:
         g.LOGGER.error(f"Exception in matrix sync loop: {e}")
     finally:
         g.LOGGER.info("Matrix sync loop terminating. Attempting graceful client shutdown.")
-        if luna_client:
-            await luna_client.close()
+        if client:
+            await client.close()
 
 async def _console_loop():
     """
@@ -291,22 +291,22 @@ async def main():
     load_messages()
 
     ########## LOGIN as Luna
-    luna_client = await _login_matrix_client(
+    g.LUNA_CLIENT = await _login_matrix_client(
         g.HOMESERVER_URL, f"@{g.LUNA_USERNAME}:localhost", g.LUNA_PASSWORD
     )
 
     # attach event callbacks
-    luna_client.add_event_callback(
-        lambda room, event: handle_luna_message(luna_client, "lunabot", room, event),
+    g.LUNA_CLIENT.add_event_callback(
+        lambda room, event: handle_luna_message(g.LUNA_CLIENT, "lunabot", room, event),
         RoomMessageText
     )
     # invites, membership events:
-    luna_client.add_event_callback(
-        lambda r, e: handle_bot_invite(luna_client, "lunabot", r, e),
+    g.LUNA_CLIENT.add_event_callback(
+        lambda r, e: handle_bot_invite(g.LUNA_CLIENT, "lunabot", r, e),
         InviteMemberEvent
     )
-    luna_client.add_event_callback(
-        lambda r, e: handle_bot_member_event(luna_client, "lunabot", r, e),
+    g.LUNA_CLIENT.add_event_callback(
+        lambda r, e: handle_bot_member_event(g.LUNA_CLIENT, "lunabot", r, e),
         RoomMemberEvent
     )
 
@@ -334,13 +334,13 @@ async def main():
         tasks.append(t)
 
     # run matrix sync & console loops
-    sync_task = asyncio.create_task(_matrix_sync_loop(luna_client))
+    sync_task = asyncio.create_task(_matrix_sync_loop(g.LUNA_CLIENT))
     console_task = asyncio.create_task(_console_loop())
     done, pending = await asyncio.wait([sync_task, console_task], return_when=asyncio.FIRST_COMPLETED)
 
     # shutdown
-    await luna_client.logout()
-    await luna_client.close()
+    await g.LUNA_CLIENT.logout()
+    await g.LUNA_CLIENT.close()
     await _shutdown_all_bots()
 
     g.LOGGER.info("Shutting down. Bye.")
